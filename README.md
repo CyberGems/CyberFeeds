@@ -230,6 +230,8 @@ If you're enjoying CyberFeeds, I'd be truly grateful for your support! You can s
 
 CyberFeeds is distributed under the terms of the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full license text.
 
+---
+
 ## ❓ FAQ
 
 For frequently asked questions, troubleshooting guides, and detailed configuration instructions, visit the [FAQ](https://github.com/CyberGems/CyberFeeds/wiki/FAQ) or the [online documentation](https://cybergems.org/docs/cyberfeeds/FAQ).
