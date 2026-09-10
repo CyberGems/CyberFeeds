@@ -5,20 +5,15 @@
 <h1 align="center">CyberFeeds — RSS Reader</h1>
 
 <p align="center">
-  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest">
-    <img src="https://img.shields.io/badge/⚡_Download_Latest_Release-(Windows_64--bit)-0047B3?style=for-the-badge&logo=windows&logoColor=white" alt="Download Latest Release" />
-  </a>
-  <a href="https://github.com/CyberGems/CyberFeeds/releases">
-    <img src="https://img.shields.io/badge/All_Releases-Changelog-18181B?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" />
-  </a>
+  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%E2%9A%A1%20RELEASE%20v&style=for-the-badge&label=&labelColor=555555&color=555555" alt="Download Latest Release" /><img src="https://img.shields.io/badge/-(WINDOWS_64--BIT)-0047B3?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 64-bit" /></a>
+  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_Releases-Changelog-18181B?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" /></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License" />
-  <img src="https://img.shields.io/badge/platform-Windows-0078D4.svg?logo=windows&logoColor=white" alt="Platform" />
-  <img src="https://img.shields.io/badge/version-1.17.0-00F0FF.svg" alt="Version" />
-  <img src="https://img.shields.io/badge/Electron-34-512BD4.svg?logo=electron&logoColor=white" alt="Electron" />
-  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/%F0%9F%93%96_Wiki-Documentation-222222?style=flat-square&logo=github&logoColor=white" alt="Wiki" /></a>
+  <img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License" height="24" />&nbsp;
+  <img src="https://img.shields.io/badge/platform-Windows-0078D4.svg?logo=windows&logoColor=white" alt="Platform" height="24" />&nbsp;
+  <img src="https://img.shields.io/badge/Electron-34-512BD4.svg?logo=electron&logoColor=white" alt="Electron" height="24" />&nbsp;
+  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/%F0%9F%93%96_Wiki-Documentation-222222?style=flat-square&logo=github&logoColor=white" alt="Wiki" height="24" /></a>
 </p>
 
 A performance-first, full-featured **RSS/Atom feed reader** built with **Electron + React + TypeScript**. Subscribe to feeds, read articles with full-content extraction, manage your reading flow with star/read/unread/trash, and receive smart notifications when new articles are published.
