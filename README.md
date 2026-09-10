@@ -187,30 +187,6 @@ Additional shortcuts (Notifications, Settings, Fetch Now) are configurable in Se
 
 ---
 
-## ❓ Frequently Asked Questions
-
-### What feed formats does CyberFeeds support?
-
-RSS, Atom, and XML feeds. It also supports Reddit subreddits and user feeds natively, with a fallback chain from RSS to the Reddit JSON API.
-
-### Can I import my feeds from another reader?
-
-Yes. CyberFeeds supports OPML import and export, preserving your folder structure. Go to the sidebar menu and select **Import OPML**.
-
-### How do notifications work?
-
-CyberFeeds has a custom notification system that shows a native-looking popup when new articles are published. You can filter notifications by keywords, snooze them, choose position and monitor, and suppress them during fullscreen applications.
-
-### Where is my data stored?
-
-All data is stored locally in a SQLite database. No cloud sync, no accounts, no tracking. You can export a JSON backup at any time from Settings → Maintenance.
-
-### Does CyberFeeds support macOS and Linux?
-
-Windows is the primary target, but Electron builds for macOS and Linux are supported. Check the releases page for available platforms.
-
----
-
 ## ❤️ Donate
 
 **CyberFeeds** is one of the projects in [CyberGems](https://github.com/CyberGems#-all-apps--repositories), a personal set of daily-use tools for Windows. I've spent countless hours building and refining it for my own use, and it will continue to be maintained by me. I recently decided to share the entire suite with the world, completely free and open-source.
@@ -253,6 +229,10 @@ If you're enjoying CyberFeeds, I'd be truly grateful for your support! You can s
 ## 📄 License
 
 CyberFeeds is distributed under the terms of the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full license text.
+
+## ❓ FAQ
+
+For frequently asked questions, troubleshooting guides, and detailed configuration instructions, visit the [FAQ](https://github.com/CyberGems/CyberFeeds/wiki/FAQ) or the [online documentation](https://cybergems.org/docs/cyberfeeds/FAQ).
 
 ---
 
