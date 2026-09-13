@@ -78,13 +78,15 @@ export const translations = {
       readCountMany: 'read'
     },
     articleList: {
+      newArticlesPill: '{count} new articles',
+      newArticlePill: '1 new article',
       favorites: 'Favorites',
       allFeeds: 'All Articles',
       unreadArticles: 'Unread articles',
       readArticles: 'Read articles',
       monitoringActive: 'Automatic feed updates enabled',
       monitoringPaused: 'Automatic feed updates paused',
-      monitoringHeld: 'Paused while the window is focused — resumes on minimize',
+      monitoringHeld: 'Paused while the window is focused, resumes on minimize',
       feedFolder: 'Feed folder',
       pauseAutoUpdates: 'Pause automatic updates for all feeds',
       resumeAutoUpdates: 'Resume automatic updates for all feeds',
@@ -655,13 +657,15 @@ export const translations = {
       readCountMany: 'leídos'
     },
     articleList: {
+      newArticlesPill: '{count} artículos nuevos',
+      newArticlePill: '1 artículo nuevo',
       favorites: 'Favoritos',
       allFeeds: 'Todos los artículos',
       unreadArticles: 'Artículos sin leer',
       readArticles: 'Artículos leídos',
       monitoringActive: 'Actualización automática de feeds activada',
       monitoringPaused: 'Actualización automática de feeds en pausa',
-      monitoringHeld: 'Pausada mientras la ventana está enfocada — se reanuda al minimizar',
+      monitoringHeld: 'Pausada mientras la ventana está enfocada, se reanuda al minimizar',
       feedFolder: 'Carpeta de feed',
       pauseAutoUpdates: 'Pausar actualización automática de todos los feeds',
       resumeAutoUpdates: 'Reanudar actualización automática de todos los feeds',

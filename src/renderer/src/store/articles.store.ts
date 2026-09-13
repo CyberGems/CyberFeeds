@@ -16,12 +16,15 @@ interface ArticleQuery {
 interface ArticlesState {
   articles: Article[]
   totalCount: number
+  incomingCount: number
   loading: boolean
   loadingMore: boolean
   currentQuery: ArticleQuery
 
   load: (query: ArticleQuery) => Promise<void>
   loadMore: () => Promise<void>
+  setIncomingCount: (count: number) => void
+  applyIncomingArticles: () => Promise<void>
   markRead: (id: string, read: boolean) => Promise<void>
   markAllRead: (feedId?: string) => Promise<void>
   markAllFilteredRead: (starredOnly?: boolean) => Promise<void>
@@ -62,13 +65,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 export const useArticlesStore = create<ArticlesState>((set, get) => ({
   articles: [],
   totalCount: 0,
+  incomingCount: 0,
   loading: false,
   loadingMore: false,
   currentQuery: {},
 
   load: async (query) => {
     const requestId = ++latestLoadRequest
-    set({ loading: true, currentQuery: query, articles: [], totalCount: 0 })
+    set({ loading: true, currentQuery: query, articles: [], totalCount: 0, incomingCount: 0 })
     const q = { ...query, limit: PAGE_SIZE, offset: 0 }
     try {
       const [articles, totalCount] = await withTimeout(
@@ -237,6 +241,13 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       window.api.getArticles(q),
       window.api.getArticleCount(currentQuery)
     ])
-    set({ articles, totalCount })
+    set({ articles, totalCount, incomingCount: 0 })
+  },
+
+  setIncomingCount: (incomingCount) => set({ incomingCount }),
+
+  applyIncomingArticles: async () => {
+    set({ incomingCount: 0 })
+    await get().refresh()
   }
 }))

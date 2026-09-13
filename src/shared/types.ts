@@ -193,13 +193,13 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pollingEnabled: true,
   fetchOnStartup: true,
   fetchOnStartupDelay: 15,
-  pollOnlyWhenUnfocused: true,
+  pollOnlyWhenUnfocused: false,
   shortcuts: {
     // Default: only one hotkey enabled by default.
     // Show/Hide (tray + global shortcut): Alt+Shift+S
     showHide: { enabled: true, accelerator: 'Alt+Shift+S', global: true },
 
-    // Disabled by default — no accelerators so they don't appear unless the user sets them.
+    // Disabled by default: no accelerators so they don't appear unless the user sets them.
     notifications: { enabled: false, accelerator: '', global: false },
     settings: { enabled: false, accelerator: '', global: false },
     fetch: { enabled: false, accelerator: '', global: false }

@@ -154,27 +154,45 @@ export default function App(): JSX.Element {
 
   // Listen for new articles from main process
   useEffect(() => {
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null
-    const scheduleRefresh = (): void => {
-      if (refreshTimer) return
-      refreshTimer = setTimeout(() => {
-        refreshTimer = null
-        void refresh()
+    let checkTimer: ReturnType<typeof setTimeout> | null = null
+    const scheduleArticleCheck = (): void => {
+      if (checkTimer) return
+      checkTimer = setTimeout(async () => {
+        checkTimer = null
         void refreshUnreadCounts()
-      }, 200)
+
+        const { articles, totalCount, currentQuery } = useArticlesStore.getState()
+        if (Object.keys(currentQuery).length === 0) return
+
+        // If list is empty (e.g. initial view), load directly
+        if (articles.length === 0) {
+          void refresh()
+          return
+        }
+
+        // List is active: check if new articles arrived for the current query
+        try {
+          const newTotal = await window.api.getArticleCount(currentQuery)
+          if (newTotal > totalCount) {
+            useArticlesStore.getState().setIncomingCount(newTotal - totalCount)
+          }
+        } catch (err) {
+          console.error('[App] Failed to check for incoming articles:', err)
+        }
+      }, 300)
     }
 
     const unsub = window.api.onArticlesUpdated((data) => {
       if (data.feedId === useUIStore.getState().pendingFeedId) {
         useUIStore.getState().setPendingFeedId(null)
       }
-      scheduleRefresh()
+      scheduleArticleCheck()
     })
     return () => {
       unsub()
-      if (refreshTimer) clearTimeout(refreshTimer)
+      if (checkTimer) clearTimeout(checkTimer)
     }
-  }, [])
+  }, [refresh, refreshUnreadCounts])
 
   // Listen for open article requests (e.g. from notifier click)
   useEffect(() => {

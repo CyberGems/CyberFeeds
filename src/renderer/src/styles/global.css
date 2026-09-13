@@ -739,6 +739,67 @@ body {
   z-index: 8;
 }
 
+/* Floating pill: incoming new articles indicator (Twitter/X style) */
+.new-articles-pill {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #0d1117;
+  background: var(--accent);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  animation: pillSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+[data-theme="light"] .new-articles-pill {
+  color: #ffffff;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+.new-articles-pill:hover {
+  transform: translateX(-50%) translateY(-1px) scale(1.02);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5), 0 0 14px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.new-articles-pill:active {
+  transform: translateX(-50%) translateY(0) scale(0.98);
+}
+
+.new-articles-pill .pill-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+
+.new-articles-pill:hover .pill-arrow {
+  transform: translateY(-2px);
+}
+
+@keyframes pillSlideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
 /* Floating pill: count of articles below the fold (mirrors the notifier pill, accent-tinted) */
 .list-more-pill {
   position: absolute;

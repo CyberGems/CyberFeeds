@@ -186,6 +186,9 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const {
     articles,
     totalCount,
+    incomingCount,
+    applyIncomingArticles,
+    refresh: refreshArticles,
     loading,
     loadingMore,
     loadMore,
@@ -366,10 +369,11 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       } else {
         await fetchAll()
       }
+      await refreshArticles()
     } finally {
       setTimeout(() => useUIStore.setState({ isFetching: false }), 800)
     }
-  }, [selectedFolder, selectedFeed, fetchFolder, fetchFeed, fetchAll])
+  }, [selectedFolder, selectedFeed, fetchFolder, fetchFeed, fetchAll, refreshArticles])
 
   const refreshTooltip = React.useMemo(() => {
     if (selectedFolder) {
@@ -539,6 +543,16 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const scrollToTop = useCallback(() => {
     parentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
+
+  const handleApplyIncoming = useCallback(async () => {
+    scrollToTop()
+    await applyIncomingArticles()
+  }, [applyIncomingArticles, scrollToTop])
+
+  const pillLabel =
+    incomingCount === 1
+      ? t.articleList.newArticlePill
+      : t.articleList.newArticlesPill.replace('{count}', String(incomingCount))
 
   // Recompute when the dataset changes (feed switch, load-more, filter) — not per render.
   useEffect(() => {
@@ -943,8 +957,22 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         </Tooltip>
       </div>
 
-      {/* Virtual list */}
-      <div className="article-list-scroll" ref={parentRef} onScroll={handleListScroll}>
+      {/* Scrollable list container with floating top pill */}
+      <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {incomingCount > 0 && (
+          <button
+            type="button"
+            className="new-articles-pill"
+            onClick={handleApplyIncoming}
+            aria-label={pillLabel}
+          >
+            <ArrowUp size={12} className="pill-arrow" />
+            <span>{pillLabel}</span>
+          </button>
+        )}
+
+        {/* Virtual list */}
+        <div className="article-list-scroll" ref={parentRef} onScroll={handleListScroll}>
         {isEmptyLibrary ? (
           <div
             style={{
@@ -1071,6 +1099,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
             <div className="spinner" />
           </div>
         )}
+        </div>
       </div>
 
       {/* Bottom fade overlay — elegant gradient when content exceeds the viewport */}

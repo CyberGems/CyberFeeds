@@ -58,6 +58,18 @@ function migrate(): void {
     const shortcuts = JSON.stringify(DEFAULT_SETTINGS.shortcuts)
     db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)').run('shortcuts', shortcuts)
   } catch { /* already exists */ }
+  try {
+    const mig = db.prepare('SELECT value FROM settings WHERE key = ?').get('mig_poll_unfocused_v2')
+    if (!mig) {
+      const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('app') as { value: string } | undefined
+      if (row) {
+        const parsed = JSON.parse(row.value)
+        parsed.pollOnlyWhenUnfocused = false
+        db.prepare('UPDATE settings SET value = ? WHERE key = ?').run(JSON.stringify(parsed), 'app')
+      }
+      db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('mig_poll_unfocused_v2', '1')
+    }
+  } catch { /* ignore */ }
 }
 
 function createSchema(): void {
