@@ -2425,9 +2425,30 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.notif-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.notif-title-row .notif-title {
+  flex: 1;
+  min-width: 0;
+}
+.notif-title-row.is-compact {
+  align-items: center;
+}
 .notif-body {
   font-size: 11px;
   color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 .notif-actions {
   display: flex;
@@ -2452,6 +2473,15 @@ body {
 .notif-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+.notif-btn-compact {
+  width: 28px;
+  height: 26px;
+  justify-content: center;
+  padding: 5px 6px;
+}
+.notif-btn-compact .notif-action-label {
+  display: none;
 }
 .notif-time {
   font-size: 10px;

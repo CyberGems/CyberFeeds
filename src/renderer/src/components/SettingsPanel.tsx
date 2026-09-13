@@ -833,6 +833,22 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.settings.notifications.showThumbnails}</span>
                 </label>
 
+                <div className="form-group">
+                  <label className="form-label">{t.settings.notifications.displayMode}</label>
+                  <select
+                    className="form-select"
+                    value={local.notifications.displayMode || 'automatic'}
+                    onChange={e => updateNotif({ displayMode: e.target.value as AppSettings['notifications']['displayMode'] })}
+                  >
+                    <option value="automatic">{t.settings.notifications.displayModes.automatic}</option>
+                    <option value="detailed">{t.settings.notifications.displayModes.detailed}</option>
+                    <option value="compact">{t.settings.notifications.displayModes.compact}</option>
+                  </select>
+                  <p className="settings-card-hint" style={{ margin: '8px 0 0' }}>
+                    {t.settings.notifications.displayModeHint}
+                  </p>
+                </div>
+
                 <label className="toggle" style={{ marginBottom: 14 }}>
                   <div
                     className={`toggle-track ${local.notifications.disableOnFullscreen ? 'on' : ''}`}
@@ -991,6 +1007,34 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     value={local.notifications.maxStack}
                     onChange={e => updateNotif({ maxStack: Number(e.target.value) }, 300)}
                   />
+                  <p className="settings-card-hint" style={{ margin: '8px 0 0' }}>
+                    {t.settings.notifications.maxStackHint}
+                  </p>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">{t.settings.notifications.maxHeight}</label>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min={35}
+                    max={90}
+                    step={5}
+                    value={
+                      local.notifications.maxHeight >= 35 && local.notifications.maxHeight <= 90
+                        ? local.notifications.maxHeight
+                        : 65
+                    }
+                    onChange={e => {
+                      const value = Number(e.target.value)
+                      if (Number.isFinite(value) && value >= 35 && value <= 90) {
+                        updateNotif({ maxHeight: value }, 300)
+                      }
+                    }}
+                  />
+                  <p className="settings-card-hint" style={{ margin: '8px 0 0' }}>
+                    {t.settings.notifications.maxHeightHint}
+                  </p>
                 </div>
 
                 <div className="form-group" style={{ marginBottom: 0 }}>

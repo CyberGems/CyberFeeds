@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell, screen, ipcMain } from 'electron'
 import path from 'path'
+import fs from 'fs'
 import { is } from '@electron-toolkit/utils'
 import {
   initDb,
@@ -17,6 +18,13 @@ import { createTray, destroyTray } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
+
+// Keep development data isolated from the installed app's profile and database.
+if (is.dev) {
+  const devUserDataPath = path.join(app.getPath('appData'), 'CyberFeeds-dev')
+  fs.mkdirSync(devUserDataPath, { recursive: true })
+  app.setPath('userData', devUserDataPath)
+}
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock()

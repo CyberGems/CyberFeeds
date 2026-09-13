@@ -32,7 +32,7 @@ export const useFeedsStore = create<FeedsState>((set, get) => ({
   unreadCounts: {},
   articleCounts: {},
   trashCount: 0,
-  loading: false,
+  loading: true,
 
   loadAll: async () => {
     set({ loading: true })

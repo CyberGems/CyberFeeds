@@ -82,6 +82,8 @@ export interface AppSettings {
   instantSearch: boolean
 }
 
+export type NotificationDisplayMode = 'automatic' | 'detailed' | 'compact'
+
 export interface NotificationSettings {
   enabled: boolean
   position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
@@ -90,6 +92,7 @@ export interface NotificationSettings {
   marginX: number
   marginY: number
   maxWidth: number
+  /** Maximum popup height as a percentage of the selected display work area. */
   maxHeight: number
   duration: number
   fontSize: number
@@ -103,6 +106,8 @@ export interface NotificationSettings {
   /** Minutes applied by the single snooze button on notification cards. */
   snoozeMinutes: number
   openBehavior: 'browser' | 'app'
+  /** How notification cards choose between full and compact presentation. */
+  displayMode: NotificationDisplayMode
   showThumbnails: boolean
   preloadImages: boolean
   disableOnFullscreen: boolean
@@ -166,7 +171,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     marginX: 16,
     marginY: 16,
     maxWidth: 360,
-    maxHeight: 120,
+    // Percentage of the display work area reserved for the popup.
+    maxHeight: 65,
     duration: 6000,
     fontSize: 13,
     opacity: 0.97,
@@ -178,6 +184,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     snoozedUntil: null,
     snoozeMinutes: 30,
     openBehavior: 'app',
+    displayMode: 'automatic',
     showThumbnails: true,
     preloadImages: true,
     disableOnFullscreen: true,

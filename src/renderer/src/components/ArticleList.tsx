@@ -18,8 +18,11 @@ import {
   RefreshCw,
   Pause,
   Play,
-  X
+  X,
+  Plus,
+  Upload
 } from 'lucide-react'
+import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
 import { useUIStore } from '../store/ui.store'
 import { useFeedsStore } from '../store/feeds.store'
@@ -211,11 +214,22 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const [windowFocused, setWindowFocused] = useState(() =>
     typeof document !== 'undefined' ? document.hasFocus() : true
   )
-  const { feeds, folders, unreadCounts, fetchAll, fetchFeed, fetchFolder } = useFeedsStore()
+  const {
+    feeds,
+    folders,
+    unreadCounts,
+    loading: feedsLoading,
+    loadAll,
+    fetchAll,
+    fetchFeed,
+    fetchFolder
+  } = useFeedsStore()
   const { settings, togglePolling } = useSettingsStore()
   const { t } = useTranslation()
   const [searchInput, setSearchInput] = useState(search)
   const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [importingOpml, setImportingOpml] = useState(false)
+  const [opmlMessage, setOpmlMessage] = useState('')
   const parentRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const prevSelectedId = useRef<string | null>(null)
@@ -282,9 +296,30 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     ? folders.find((folder) => folder.id === selectedFeedId.slice('folder:'.length))
     : undefined
   const isLoadingNewFeed = pendingFeedId === selectedFeedId && articles.length === 0
+  const isEmptyLibrary = !feedsLoading && feeds.length === 0 && selectedFeedId === null
   const isAllArticles = selectedFeedId === null && !unreadOnly && !readOnly
   const isUnreadArticles = selectedFeedId === null && unreadOnly
   const isReadArticles = selectedFeedId === null && readOnly
+
+  const handleImportOpml = useCallback(async (): Promise<void> => {
+    setImportingOpml(true)
+    setOpmlMessage('')
+    try {
+      const result = await window.api.importOpml()
+      if (result.canceled) return
+
+      await loadAll()
+      setOpmlMessage(`✓ ${result.added} ${t.sidebar.feedsAdded}`)
+      setTimeout(() => setOpmlMessage(''), 3000)
+    } catch (error) {
+      console.error('[Feeds] OPML import failed:', error)
+      setOpmlMessage(t.sidebar.importFailed)
+      setTimeout(() => setOpmlMessage(''), 3000)
+    } finally {
+      setImportingOpml(false)
+    }
+  }, [loadAll, t])
+
   const title =
     selectedFeedId === 'starred'
       ? t.articleList.favorites
@@ -907,7 +942,79 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
 
       {/* Virtual list */}
       <div className="article-list-scroll" ref={parentRef} onScroll={handleListScroll}>
-        {loading || isLoadingNewFeed ? (
+        {isEmptyLibrary ? (
+          <div
+            style={{
+              minHeight: 300,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10,
+              padding: '40px 24px',
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              fontSize: 13
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 14,
+                color: 'var(--accent)',
+                background: '#0a1420',
+                border: '1px solid var(--accent)'
+              }}
+              aria-hidden="true"
+            >
+              <img
+                src={logoPng}
+                alt=""
+                width={32}
+                height={32}
+                style={{ objectFit: 'contain' }}
+              />
+            </div>
+            <div style={{ color: 'var(--text-primary)', fontSize: 17, fontWeight: 600 }}>
+              {t.articleList.emptyLibraryTitle}
+            </div>
+            <div style={{ maxWidth: 320, lineHeight: 1.5 }}>
+              {t.articleList.emptyLibraryDescription}
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                gap: 8,
+                marginTop: 6
+              }}
+            >
+              <button className="btn btn-primary" onClick={() => useUIStore.getState().openPanel('addFeed')}>
+                <Plus size={14} />
+                {t.sidebar.addFeed}
+              </button>
+              <button className="btn btn-secondary" onClick={handleImportOpml} disabled={importingOpml}>
+                {importingOpml ? (
+                  <div className="spinner" style={{ width: 14, height: 14 }} />
+                ) : (
+                  <Upload size={14} />
+                )}
+                {t.sidebar.importOpml}
+              </button>
+            </div>
+            {opmlMessage && (
+              <div role="status" aria-live="polite" style={{ color: 'var(--text-secondary)', marginTop: 2 }}>
+                {opmlMessage}
+              </div>
+            )}
+          </div>
+        ) : loading || isLoadingNewFeed ? (
           <div className="feed-loading-state" role="status" aria-live="polite">
             <div className="feed-loading-orbit" aria-hidden="true">
               <div className="feed-loading-orbit-dot" />

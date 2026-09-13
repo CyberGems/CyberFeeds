@@ -1,6 +1,6 @@
 import { useEffect, useReducer, useRef, useState, useCallback } from 'react'
 import { X, ExternalLink, ChevronDown, Bell, BellOff, Clock, Check, Eye, Settings } from 'lucide-react'
-import type { NotificationHistoryItem, NotificationSettings } from '@shared/types'
+import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from '@shared/types'
 import { translations } from '@shared/translations'
 import Tooltip from '../src/components/Tooltip'
 
@@ -46,6 +46,7 @@ interface State {
   stack: NotificationHistoryItem[]
   settings: NotificationSettings | null
   unseenCount: number
+  displayMode: NotificationDisplayMode
 }
 
 type Action =
@@ -54,6 +55,7 @@ type Action =
       stack: NotificationHistoryItem[]
       settings: NotificationSettings
       unseenCount: number
+      displayMode: NotificationDisplayMode
     }
   | { type: 'DISMISS'; id: string }
   | { type: 'CLEAR' }
@@ -61,7 +63,12 @@ type Action =
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'SET_STACK':
-      return { stack: action.stack, settings: action.settings, unseenCount: action.unseenCount }
+      return {
+        stack: action.stack,
+        settings: action.settings,
+        unseenCount: action.unseenCount,
+        displayMode: action.displayMode
+      }
     case 'DISMISS':
       return { ...state, stack: state.stack.filter((n) => n.id !== action.id) }
     case 'CLEAR':
@@ -72,7 +79,12 @@ function reducer(state: State, action: Action): State {
 }
 
 export default function NotifierApp(): JSX.Element {
-  const [state, dispatch] = useReducer(reducer, { stack: [], settings: null, unseenCount: 0 })
+  const [state, dispatch] = useReducer(reducer, {
+    stack: [],
+    settings: null,
+    unseenCount: 0,
+    displayMode: 'automatic'
+  })
   const [lang, setLang] = useState<'en' | 'es'>('en')
   const scrollRef = useRef<HTMLDivElement>(null)
   const [belowCount, setBelowCount] = useState(0)
@@ -174,12 +186,26 @@ export default function NotifierApp(): JSX.Element {
 
   useEffect(() => {
     const unsub = window.api.onNotifierStack(
-      (stack: object[], settingsPayload: object, language?: string, unseenCount?: number) => {
+      (
+        stack: object[],
+        settingsPayload: object,
+        language?: string,
+        unseenCount?: number,
+        resolvedDisplayMode?: string
+      ) => {
+        const payloadSettings = settingsPayload as NotificationSettings
+        const displayMode: NotificationDisplayMode =
+          resolvedDisplayMode === 'compact' || resolvedDisplayMode === 'detailed'
+            ? resolvedDisplayMode
+            : payloadSettings.displayMode === 'compact' || payloadSettings.displayMode === 'detailed'
+              ? payloadSettings.displayMode
+              : 'detailed'
         dispatch({
           type: 'SET_STACK',
           stack: stack as NotificationHistoryItem[],
-          settings: settingsPayload as NotificationSettings,
-          unseenCount: Number(unseenCount) || 0
+          settings: payloadSettings,
+          unseenCount: Number(unseenCount) || 0,
+          displayMode
         })
         if (!isHovering.current) {
           const duration = Number((settingsPayload as NotificationSettings)?.duration) || 6000
@@ -295,7 +321,7 @@ export default function NotifierApp(): JSX.Element {
       clearTimeout(timer2)
       clearTimeout(timer3)
     }
-  }, [state.stack, state.settings?.maxStack, computeBelowCount, measureAndResize])
+  }, [state.stack, state.settings?.maxStack, state.displayMode, computeBelowCount, measureAndResize])
 
   const [dismissingIds, setDismissingIds] = useState<Set<string>>(() => new Set())
 
@@ -349,7 +375,6 @@ export default function NotifierApp(): JSX.Element {
 
   if (state.stack.length === 0) return <div />
 
-  const maxStack = Math.max(1, Number(state.settings?.maxStack) || 2)
   const showMoreIndicator = belowCount > 0
   const snoozeMinutes = state.settings?.snoozeMinutes ?? 30
   const snoozeLabel = formatSnoozeLabel(snoozeMinutes)
@@ -357,6 +382,7 @@ export default function NotifierApp(): JSX.Element {
   const snoozeTooltip = t.notifier.snoozeTooltip.replace('{time}', snoozeLabel)
   const cardOpenTooltip =
     state.settings?.openBehavior === 'browser' ? t.notifier.openTooltip : t.notifier.viewTooltip
+  const isCompact = state.displayMode === 'compact'
 
   return (
     <div
@@ -498,13 +524,13 @@ export default function NotifierApp(): JSX.Element {
         style={{
           flex: 1,
           minHeight: 0,
-          overflowY: state.stack.length > maxStack ? 'auto' : 'hidden',
+          overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
           gap: 6,
           paddingTop: 4,
           // Keep card right edge aligned whether or not the scrollbar is visible
-          paddingRight: state.stack.length > maxStack ? 0 : 16,
+          paddingRight: scrollbarW > 0 ? 0 : 16,
           scrollbarWidth: 'thin',
           scrollbarColor: 'rgba(255,255,255,0.15) transparent'
         }}
@@ -516,7 +542,7 @@ export default function NotifierApp(): JSX.Element {
             className={`notif-card ${dismissingIds.has(item.id) ? 'dismissing' : ''}`}
             onClick={() => handleOpen(item)}
           >
-            {item.thumbnail && state.settings?.showThumbnails && (
+            {!isCompact && item.thumbnail && state.settings?.showThumbnails && (
               <div className="notif-thumbnail">
                 <img
                   src={item.thumbnail}
@@ -528,7 +554,7 @@ export default function NotifierApp(): JSX.Element {
                 />
               </div>
             )}
-            <div className="notif-header">
+            {!isCompact && <div className="notif-header">
               {item.icon ? (
                 <img
                   src={item.icon}
@@ -581,15 +607,27 @@ export default function NotifierApp(): JSX.Element {
                   <X size={12} />
                 </button>
               </Tooltip>
-            </div>
+            </div>}
             <Tooltip label={cardOpenTooltip} placement="bottom">
               <div className="notif-content-wrap">
-                <div className="notif-title">{item.title}</div>
-                {item.body && (
-                  <div
-                    className="notif-body"
-                    style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                  >
+                <div className={`notif-title-row${isCompact ? ' is-compact' : ''}`}>
+                  <div className="notif-title">{item.title}</div>
+                  {isCompact && (
+                    <Tooltip label={t.notifier.dismissTooltip} placement="bottom">
+                      <button
+                        className="notif-close"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDismiss(item.id)
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
+                {!isCompact && item.body && (
+                  <div className="notif-body">
                     {item.body}
                   </div>
                 )}
@@ -598,7 +636,8 @@ export default function NotifierApp(): JSX.Element {
             <div className="notif-actions" onClick={(e) => e.stopPropagation()}>
               <Tooltip label={t.notifier.markReadTooltip} placement="bottom">
                 <button
-                  className="notif-btn"
+                  className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
+                  aria-label={t.notifier.markRead}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                   onClick={() => {
                     window.api.markNotificationRead(item.articleId || '')
@@ -606,7 +645,7 @@ export default function NotifierApp(): JSX.Element {
                   }}
                 >
                   <Check size={11} />
-                  {t.notifier.markRead}
+                  <span className="notif-action-label">{t.notifier.markRead}</span>
                 </button>
               </Tooltip>
               {item.feedId && (
@@ -619,7 +658,10 @@ export default function NotifierApp(): JSX.Element {
                   placement="bottom"
                 >
                   <button
-                    className="notif-btn"
+                    className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
+                    aria-label={
+                      confirmMuteFeedId === item.feedId ? t.notifier.confirmMute : t.notifier.mute
+                    }
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -636,43 +678,49 @@ export default function NotifierApp(): JSX.Element {
                     onClick={() => handleMuteClick(item.feedId!)}
                   >
                     <BellOff size={11} />
-                    {confirmMuteFeedId === item.feedId ? t.notifier.confirmMute : t.notifier.mute}
+                    <span className="notif-action-label">
+                      {confirmMuteFeedId === item.feedId ? t.notifier.confirmMute : t.notifier.mute}
+                    </span>
                   </button>
                 </Tooltip>
               )}
               {item.feedId && (
                 <Tooltip label={t.notifier.viewTooltip} placement="bottom">
                   <button
-                    className="notif-btn"
+                    className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
+                    aria-label={t.notifier.view}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     onClick={() => handleViewInApp(item)}
                   >
                     <Eye size={11} />
-                    {t.notifier.view}
+                    <span className="notif-action-label">{t.notifier.view}</span>
                   </button>
                 </Tooltip>
               )}
               {item.link && (
                 <Tooltip label={t.notifier.openTooltip} placement="bottom">
                   <button
-                    className="notif-btn"
+                    className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
+                    aria-label={t.notifier.open}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     onClick={() => handleOpenInBrowser(item)}
                   >
                     <ExternalLink size={11} />
-                    {t.notifier.open}
+                    <span className="notif-action-label">{t.notifier.open}</span>
                   </button>
                 </Tooltip>
               )}
-              <Tooltip
-                label={t.notifier.receivedAt.replace(
-                  '{time}',
-                  formatAbsoluteTime(item.createdAt, lang)
-                )}
-                placement="bottom"
-              >
-                <span className="notif-time">{formatReceivedAt(item.createdAt, t)}</span>
-              </Tooltip>
+              {!isCompact && (
+                <Tooltip
+                  label={t.notifier.receivedAt.replace(
+                    '{time}',
+                    formatAbsoluteTime(item.createdAt, lang)
+                  )}
+                  placement="bottom"
+                >
+                  <span className="notif-time">{formatReceivedAt(item.createdAt, t)}</span>
+                </Tooltip>
+              )}
             </div>
           </div>
         ))}

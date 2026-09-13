@@ -154,8 +154,8 @@ const api = {
   resizeNotifier: (height: number) => ipcRenderer.send('notifier:resize', height),
   setHover: (isHovering: boolean) => ipcRenderer.send('notifier:hover', isHovering),
   pickSoundFile: () => ipcRenderer.invoke('notifications:pickSoundFile'),
-  onNotifierStack: (cb: (stack: object[], settings: object, language?: string, unseenCount?: number) => void) => {
-    const handler = (_: unknown, stack: object[], settings: object, language?: string, unseenCount?: number) => cb(stack, settings, language, unseenCount)
+  onNotifierStack: (cb: (stack: object[], settings: object, language?: string, unseenCount?: number, displayMode?: string) => void) => {
+    const handler = (_: unknown, stack: object[], settings: object, language?: string, unseenCount?: number, displayMode?: string) => cb(stack, settings, language, unseenCount, displayMode)
     ipcRenderer.on('notifier:stack', handler)
     return () => { ipcRenderer.removeListener('notifier:stack', handler) }
   },

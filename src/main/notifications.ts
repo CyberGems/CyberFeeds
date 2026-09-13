@@ -1,4 +1,5 @@
 import { BrowserWindow, screen, ipcMain, shell, app } from 'electron'
+import type { Display } from 'electron'
 import path from 'path'
 import url from 'url'
 import fs from 'fs'
@@ -7,7 +8,7 @@ import { is } from '@electron-toolkit/utils'
 import * as db from './db'
 import { restoreMainWindow } from './index'
 import { translations } from '../shared/translations'
-import type { NotificationHistoryItem, NotificationSettings } from './types'
+import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from './types'
 import { setTrayActivity } from './tray'
 
 let notifierWindow: BrowserWindow | null = null
@@ -18,12 +19,16 @@ let lastSoundTime = 0
 let isHovering = false
 
 // Pixel height of each notification card (content + gap)
-const CARD_BASE_H = 138
+const CARD_BASE_H = 165
 const THUMB_H = 105 // 100px img + gap
 const CARD_GAP = 6
 const CLEAR_BAR_H = 34
 const WIN_PAD = 16
 const HARD_CAP = 50
+const DEFAULT_MAX_HEIGHT_PERCENT = 65
+const MIN_MAX_HEIGHT_PERCENT = 35
+const MAX_MAX_HEIGHT_PERCENT = 90
+const CARD_COMPACT_H = 92
 // Extra width reserved for the scrollbar so action buttons aren't cramped/clipped
 // when the stack overflows and the scrollbar appears.
 const SCROLLBAR_W = 16
@@ -34,6 +39,16 @@ function contentWidth(s: NotificationSettings): number {
   const lang = db.getSettings().language || 'en'
   const minW = MIN_WIDTH_BY_LANG[lang] ?? 350
   return Math.max(s.maxWidth || 350, minW)
+}
+
+function maxHeightPercent(s: NotificationSettings): number {
+  const value = Number(s.maxHeight)
+  // maxHeight used to default to 120 and was never exposed in the UI. Treat
+  // that legacy value as unset instead of accidentally making the popup 120%.
+  if (!Number.isFinite(value) || value < MIN_MAX_HEIGHT_PERCENT || value > MAX_MAX_HEIGHT_PERCENT) {
+    return DEFAULT_MAX_HEIGHT_PERCENT
+  }
+  return Math.round(value)
 }
 
 export function initNotifier(s: NotificationSettings): void {
@@ -76,19 +91,11 @@ export function updateNotifierSettings(s: NotificationSettings): void {
   }
 }
 
-/**
- * Calculate (x, y) for the notifier window given EXPLICIT width+height.
- * Never reads win.getBounds() — avoids Windows timing lag after setSize().
- */
-function calcPosition(
-  winW: number,
-  winH: number,
-  s: NotificationSettings
-): { x: number; y: number } {
+function resolveDisplay(s: NotificationSettings): Display {
   const displays = screen.getAllDisplays()
   const primaryDisplay = screen.getPrimaryDisplay()
 
-  let display: any = null
+  let display: Display | null = null
 
   // 0. Active monitor mode: displayId === -1 places notifications on monitor where mouse cursor is
   if (s.displayId === -1) {
@@ -108,7 +115,7 @@ function calcPosition(
       d.bounds.y === saved.y &&
       d.bounds.width === saved.width &&
       d.bounds.height === saved.height
-    )
+    ) ?? null
     if (display) {
       // Auto-align setting if ID changed mid-run
       if (display.id !== s.displayId) {
@@ -124,7 +131,7 @@ function calcPosition(
 
   // 2. Fallback to ID
   if (!display) {
-    display = displays.find(d => d.id === s.displayId)
+    display = displays.find(d => d.id === s.displayId) ?? null
   }
 
   // 3. Fallback to primary display
@@ -133,7 +140,60 @@ function calcPosition(
     display = primaryDisplay
   }
 
-  const { workArea: wa } = display
+  return display
+}
+
+function maxNotifierHeight(s: NotificationSettings): number {
+  const { workArea: wa } = resolveDisplay(s)
+  const margin = Math.max(4, Math.round(Number(s.marginY) || 16))
+  const availableHeight = Math.max(1, wa.height - margin * 2)
+  return Math.max(1, Math.min(availableHeight, Math.round((wa.height * maxHeightPercent(s)) / 100)))
+}
+
+function resolveDisplayMode(s: NotificationSettings, cardCount: number): NotificationDisplayMode {
+  if (s.displayMode === 'compact' || s.displayMode === 'detailed') return s.displayMode
+
+  const maxStack = Math.max(1, Number(s.maxStack) || 2)
+  const visibleCards = Math.min(Math.max(1, cardCount), maxStack)
+  const visible = displayStack.slice(0, visibleCards)
+  const thumbCount = s.showThumbnails ? visible.filter((n) => n.thumbnail).length : 0
+  const gaps = Math.max(0, visibleCards - 1) * CARD_GAP
+  const peekH = cardCount > maxStack ? 44 : 0
+  const detailedHeight =
+    visibleCards * CARD_BASE_H + thumbCount * THUMB_H + gaps + WIN_PAD + CLEAR_BAR_H + peekH
+
+  return detailedHeight > maxNotifierHeight(s) ? 'compact' : 'detailed'
+}
+
+function estimatedWindowHeight(
+  cardCount: number,
+  s: NotificationSettings,
+  mode: NotificationDisplayMode
+): number {
+  const maxStack = Math.max(1, Number(s.maxStack) || 2)
+  const visibleCards = Math.min(Math.max(1, cardCount), maxStack)
+  const gaps = Math.max(0, visibleCards - 1) * CARD_GAP
+  const visible = displayStack.slice(0, visibleCards)
+  const thumbCount = mode === 'detailed' && s.showThumbnails
+    ? visible.filter((n) => n.thumbnail).length
+    : 0
+  const cardHeight = mode === 'compact' ? CARD_COMPACT_H : CARD_BASE_H
+  const peekH = cardCount > maxStack ? 44 : 0
+
+  return visibleCards * cardHeight + thumbCount * THUMB_H + gaps + WIN_PAD + CLEAR_BAR_H + peekH
+}
+
+/**
+ * Calculate (x, y) for the notifier window given EXPLICIT width+height.
+ * Never reads win.getBounds() — avoids Windows timing lag after setSize().
+ */
+function calcPosition(
+  winW: number,
+  winH: number,
+  s: NotificationSettings
+): { x: number; y: number } {
+  const { workArea: wa } = resolveDisplay(s)
+
   const mx = Math.round(s.marginX)
   const isBottom = (s.position || '').startsWith('bottom')
   // Bottom toasts sit above a leftover window pad; keep them a bit closer to
@@ -150,10 +210,17 @@ function calcPosition(
   }
 
   const p = map[s.position] ?? map['bottom-right']
-  return { x: Math.round(p.x), y: Math.round(p.y) }
+  const minX = wa.x + mx
+  const maxX = Math.max(minX, wa.x + wa.width - winW - mx)
+  const minY = wa.y + my
+  const maxY = Math.max(minY, wa.y + wa.height - winH - my)
+  return {
+    x: Math.min(maxX, Math.max(minX, Math.round(p.x))),
+    y: Math.min(maxY, Math.max(minY, Math.round(p.y)))
+  }
 }
 
-/** Resize window to fit N cards (capped at maxStack), then place it correctly. */
+/** Resize window to fit N cards without exceeding the selected display. */
 function applyPositionToWindow(
   win: BrowserWindow,
   cardCount: number,
@@ -162,15 +229,8 @@ function applyPositionToWindow(
   // Always reserve scrollbar gutter width so cards aren't clipped on the right
   // when there is no overflow (Windows frameless windows + action-button row).
   const winW = contentWidth(s) + SCROLLBAR_W
-  const maxStack = Math.max(1, Number(s.maxStack) || 2)
-  const visibleCards = Math.min(Math.max(1, cardCount), maxStack)
-  const clearBar = cardCount > 0 ? CLEAR_BAR_H : 0
-  const gaps = Math.max(0, visibleCards - 1) * CARD_GAP
-  const visible = displayStack.slice(0, visibleCards)
-  const thumbCount = s.showThumbnails ? visible.filter(n => n.thumbnail).length : 0
-
-  const peekH = cardCount > maxStack ? 44 : 0
-  const winH = visibleCards * CARD_BASE_H + thumbCount * THUMB_H + gaps + WIN_PAD + clearBar + peekH
+  const mode = resolveDisplayMode(s, cardCount)
+  const winH = Math.min(estimatedWindowHeight(cardCount, s, mode), maxNotifierHeight(s))
 
   const { x, y } = calcPosition(winW, winH, s)
   const bounds = { x, y, width: winW, height: winH }
@@ -276,7 +336,14 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
     applyPositionToWindow(win, displayStack.length, s)
 
     // 2. Send stack to renderer
-    win.webContents.send('notifier:stack', displayStack, s, db.getSettings().language || 'en', db.getUnseenNotificationCount())
+    win.webContents.send(
+      'notifier:stack',
+      displayStack,
+      s,
+      db.getSettings().language || 'en',
+      db.getUnseenNotificationCount(),
+      resolveDisplayMode(s, displayStack.length)
+    )
 
     // 3. Re-apply alwaysOnTop to ensure window stays in foreground
     //    (Windows can demote z-order after repeated hide/show cycles)
@@ -717,7 +784,8 @@ async function showSettingsPreview(
     displayStack,
     effectiveSettings,
     lang,
-    db.getUnseenNotificationCount()
+    db.getUnseenNotificationCount(),
+    resolveDisplayMode(effectiveSettings, displayStack.length)
   )
   win.setAlwaysOnTop(true, 'screen-saver')
   if (!win.isVisible()) win.showInactive()
@@ -807,7 +875,7 @@ export function registerNotifierIpc(): void {
     if (!notifierWindow || notifierWindow.isDestroyed() || !height || height <= 0) return
     const s = settings
     const winW = contentWidth(s) + SCROLLBAR_W
-    const targetH = Math.round(height)
+    const targetH = Math.min(Math.round(height), maxNotifierHeight(s))
     const currentBounds = notifierWindow.getBounds()
     if (currentBounds.height === targetH && currentBounds.width === winW) return
     const { x, y } = calcPosition(winW, targetH, s)

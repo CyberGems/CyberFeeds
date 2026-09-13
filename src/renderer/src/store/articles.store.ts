@@ -41,6 +41,23 @@ interface ArticlesState {
 }
 
 const PAGE_SIZE = 60
+const ARTICLE_LOAD_TIMEOUT_MS = 15_000
+
+let latestLoadRequest = 0
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Article loading timed out after ${timeoutMs}ms`)), timeoutMs)
+      })
+    ])
+  } finally {
+    if (timer) clearTimeout(timer)
+  }
+}
 
 export const useArticlesStore = create<ArticlesState>((set, get) => ({
   articles: [],
@@ -50,13 +67,23 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
   currentQuery: {},
 
   load: async (query) => {
+    const requestId = ++latestLoadRequest
     set({ loading: true, currentQuery: query, articles: [], totalCount: 0 })
     const q = { ...query, limit: PAGE_SIZE, offset: 0 }
-    const [articles, totalCount] = await Promise.all([
-      window.api.getArticles(q),
-      window.api.getArticleCount(query)
-    ])
-    set({ articles, totalCount, loading: false })
+    try {
+      const [articles, totalCount] = await withTimeout(
+        Promise.all([window.api.getArticles(q), window.api.getArticleCount(query)]),
+        ARTICLE_LOAD_TIMEOUT_MS
+      )
+      if (requestId !== latestLoadRequest) return
+      set({ articles, totalCount })
+    } catch (error) {
+      if (requestId !== latestLoadRequest) return
+      console.error('[Articles] Failed to load articles:', error)
+      set({ articles: [], totalCount: 0 })
+    } finally {
+      if (requestId === latestLoadRequest) set({ loading: false })
+    }
   },
 
   loadMore: async () => {
