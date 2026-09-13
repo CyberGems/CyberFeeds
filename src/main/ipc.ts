@@ -770,15 +770,26 @@ export function registerIpc(): void {
     menu.popup()
   })
 
-  ipcMain.handle('showReadOnlyContextMenu', (event, linkUrl?: string, selectedText?: string, imageUrl?: string) => {
+  ipcMain.handle('showReadOnlyContextMenu', (event, linkUrl?: string, selectedText?: string, imageUrl?: string, titleText?: string) => {
     const lang = db.getSettings().language || 'en'
     const t = translations[lang].mainProcess.webviewCtx
     const wc = event.sender
     const template: MenuItemConstructorOptions[] = []
     const query = typeof selectedText === 'string' ? selectedText.trim() : ''
     const hasSelection = query.length > 0
+    const title = typeof titleText === 'string' ? titleText.trim() : ''
+
+    if (title) {
+      template.push({
+        label: t.copyTitle,
+        click: () => {
+          clipboard.writeText(title)
+        }
+      })
+    }
 
     if (linkUrl) {
+      if (template.length > 0) template.push({ type: 'separator' })
       template.push(
         {
           label: t.openLink,

@@ -556,6 +556,7 @@ export const translations = {
         quit: 'Exit'
       },
       webviewCtx: {
+        copyTitle: 'Copy title',
         openLink: 'Open Link',
         copyLinkAddress: 'Copy Link Address',
         copyImage: 'Copy Image',
@@ -1133,6 +1134,7 @@ export const translations = {
         quit: 'Salir'
       },
       webviewCtx: {
+        copyTitle: 'Copiar título',
         openLink: 'Abrir enlace',
         copyLinkAddress: 'Copiar dirección del enlace',
         copyImage: 'Copiar imagen',

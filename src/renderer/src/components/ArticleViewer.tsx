@@ -371,6 +371,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }
 
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
+  const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
+  const isReddit = Boolean(article && (article.link?.includes('reddit.com') || (article as any).feedUrl?.includes('reddit.com')))
   const ytThumbnail = ytVideoId ? (article.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
   const rawHtml = fullHtml || article.content || `<p>${article.snippet}</p>`
   const cleanedHtml = ytVideoId
@@ -453,19 +455,21 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             <span className="viewer-toolbar-label">{t.articleViewer.summary}</span>
           </button>
         </Tooltip>
-        <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
-          <button
-            className="btn btn-ghost has-label"
-            style={{
-              fontSize: 12,
-              color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
-            }}
-            onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
-          >
-            <BookOpen size={13} />
-            <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
-          </button>
-        </Tooltip>
+        {!isYt && !isReddit && (
+          <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
+            <button
+              className="btn btn-ghost has-label"
+              style={{
+                fontSize: 12,
+                color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
+              }}
+              onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
+            >
+              <BookOpen size={13} />
+              <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
+            </button>
+          </Tooltip>
+        )}
         {loading && (
           <div
             className="viewer-toolbar-loading"
@@ -583,8 +587,11 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           if (img && (img as HTMLImageElement).src) {
             imageUrl = (img as HTMLImageElement).src
           }
+          // Detect right-click on title
+          const titleEl = target.closest('.reader-title')
+          const titleText = titleEl ? article.title : ''
           const selectedText = window.getSelection()?.toString() ?? ''
-          window.api.showReadOnlyContextMenu(linkUrl, selectedText, imageUrl)
+          window.api.showReadOnlyContextMenu(linkUrl, selectedText, imageUrl, titleText)
         }}
       >
         <div className="reader-wrap" style={{ maxWidth: settings.readingMaxWidth || 720 }}>
@@ -592,8 +599,12 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             <Tooltip label={t.articleViewer.openDefaultBrowser} placement="bottom">
               <a
                 href="#"
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.preventDefault()
+                  const selection = window.getSelection()?.toString()
+                  if (selection && selection.trim().length > 0) return
                   window.api.openExternal(article.link)
                 }}
                 onMouseOver={() => setHoveredLink(article.link)}
@@ -609,7 +620,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
               <FeedFavicon icon={article.feedIcon} title={article.feedTitle} size={15} />
             )}
             {article.feedTitle && <span style={{ fontWeight: 500 }}>{article.feedTitle}</span>}
-            {article.author && (
+            {article.author && article.author.trim().toLowerCase() !== article.feedTitle?.trim().toLowerCase() && (
               <>
                 <span>·</span>
                 <span>{article.author}</span>
@@ -841,7 +852,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             }}
             onMouseLeave={() => setHoveredLink(null)}
           />
-          {!fullHtml && !loading && (
+          {!fullHtml && !loading && !isYt && !isReddit && (
             <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
               <button
                 className="btn btn-ghost has-label"

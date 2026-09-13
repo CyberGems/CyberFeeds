@@ -1013,6 +1013,13 @@ body {
   line-height: 1.35;
   margin-bottom: 12px;
   color: var(--text-primary);
+  user-select: text;
+  -webkit-user-select: text;
+}
+.reader-title a {
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
 }
 .reader-title a:hover {
   color: var(--accent);

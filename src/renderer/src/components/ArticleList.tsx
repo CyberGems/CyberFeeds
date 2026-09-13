@@ -1378,7 +1378,7 @@ const ArticleItem = memo(
               {article.feedTitle}
             </span>
           )}
-          {article.author && (
+          {article.author && article.author.trim().toLowerCase() !== article.feedTitle?.trim().toLowerCase() && (
             <>
               {article.feedTitle && <span style={{ flexShrink: 0 }}>·</span>}
               <span
