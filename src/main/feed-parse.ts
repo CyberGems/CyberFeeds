@@ -13,7 +13,11 @@ import {
 import {
   isYouTubeUrl,
   resolveYouTubeFeedUrl,
-  getYouTubeCanonicalGuid
+  getYouTubeCanonicalGuid,
+  extractYouTubeVideoId,
+  extractYouTubeDescription,
+  extractYouTubeViews,
+  buildYouTubeArticleContent
 } from '../shared/youtube'
 
 const rssParser = new RssParser({
@@ -21,6 +25,15 @@ const rssParser = new RssParser({
   headers: {
     'User-Agent': FEED_USER_AGENT,
     Accept: 'application/rss+xml, application/xml, text/xml, */*'
+  },
+  customFields: {
+    item: [
+      ['media:group', 'mediaGroup'],
+      ['media:description', 'mediaDescription'],
+      ['media:community', 'mediaCommunity'],
+      ['yt:videoId', 'ytVideoId'],
+      ['yt:channelId', 'ytChannelId']
+    ]
   }
 })
 
@@ -163,6 +176,20 @@ export async function robustParse(url: string): Promise<any> {
         const ytGuid = getYouTubeCanonicalGuid(item)
         if (ytGuid) {
           item.guid = ytGuid
+          const videoId = extractYouTubeVideoId(ytGuid) || extractYouTubeVideoId(item.link || '')
+          const ytDesc = extractYouTubeDescription(item)
+          const views = extractYouTubeViews(item)
+          if (videoId) {
+            item.link = `https://www.youtube.com/watch?v=${videoId}`
+            item.content = buildYouTubeArticleContent({
+              videoId,
+              title: item.title?.trim() || '(No title)',
+              description: ytDesc,
+              views,
+              author: typeof item.author === 'object' ? item.author?.name : (item.creator || item.author)
+            })
+            item.contentSnippet = ytDesc || item.contentSnippet
+          }
         }
         return item
       })
@@ -225,6 +252,7 @@ export async function robustParse(url: string): Promise<any> {
     }
 
     const channelLink = extractLinkString(channel.link)
+    const isYtFeed = isYouTubeUrl(targetUrl) || isYouTubeUrl(channelLink)
 
     const rawItems = Array.isArray(channel.item) ? channel.item :
                      Array.isArray(channel.entry) ? channel.entry :
@@ -234,11 +262,33 @@ export async function robustParse(url: string): Promise<any> {
     const items = rawItems.map((item: any) => {
       const title = item.title?.['#text'] || item.title || 'Untitled'
       const link = extractLinkString(item.link)
-      const content = item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
-      const pubDate = item.pubDate || item.published || item.updated || ''
-      const guid = getYouTubeCanonicalGuid(item) || item.guid?.['#text'] || item.guid || item.id || link
+      const ytGuid = getYouTubeCanonicalGuid(item)
+      const isYt = Boolean(ytGuid || isYtFeed || isYouTubeUrl(link))
+      const ytDesc = isYt ? extractYouTubeDescription(item) : ''
+      const videoId = (ytGuid ? extractYouTubeVideoId(ytGuid) : null) || extractYouTubeVideoId(link)
 
-      return { title, link, content, pubDate, guid, isoDate: pubDate }
+      let content = item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
+      if (isYt && videoId) {
+        content = buildYouTubeArticleContent({
+          videoId,
+          title: String(title).trim(),
+          description: ytDesc,
+          views: extractYouTubeViews(item)
+        })
+      }
+
+      const pubDate = item.pubDate || item.published || item.updated || ''
+      const guid = ytGuid || item.guid?.['#text'] || item.guid || item.id || link
+
+      return {
+        title,
+        link: videoId ? `https://www.youtube.com/watch?v=${videoId}` : link,
+        content,
+        contentSnippet: ytDesc || undefined,
+        pubDate,
+        guid,
+        isoDate: pubDate
+      }
     })
 
     if (items.length === 0) {

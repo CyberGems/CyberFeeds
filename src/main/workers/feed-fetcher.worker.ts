@@ -18,7 +18,10 @@ import {
   resolveYouTubeFeedUrl,
   getYouTubeCanonicalGuid,
   extractYouTubeVideoId,
-  getYouTubeThumbnailUrl
+  getYouTubeThumbnailUrl,
+  extractYouTubeDescription,
+  extractYouTubeViews,
+  buildYouTubeArticleContent
 } from '../../shared/youtube'
 
 const USER_AGENT = FEED_USER_AGENT
@@ -57,6 +60,15 @@ const parser = new RssParser({
   headers: {
     'User-Agent': USER_AGENT,
     Accept: 'application/rss+xml, application/xml, text/xml, */*'
+  },
+  customFields: {
+    item: [
+      ['media:group', 'mediaGroup'],
+      ['media:description', 'mediaDescription'],
+      ['media:community', 'mediaCommunity'],
+      ['yt:videoId', 'ytVideoId'],
+      ['yt:channelId', 'ytChannelId']
+    ]
   }
 })
 
@@ -244,7 +256,7 @@ async function fetchRedditWithFallbacks(feedId: string, url: string): Promise<Fe
       if (!text || text.trim().toLowerCase().startsWith('<!doctype html')) continue
       const feed = await parser.parseString(text)
       const lastFetched = Date.now()
-      const articles: ParsedArticle[] = (feed.items || []).slice(0, 100).map(item => {
+      const articles: ParsedArticle[] = (feed.items || []).slice(0, 100).map((item: any) => {
         const rawGuid = item.guid || item.id || item.link || item.title || String(Math.random())
         const guid = getRedditGuid(rawGuid) || rawGuid
         const id = makeId(feedId, guid)
@@ -339,10 +351,19 @@ async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
       rawItems.forEach((item: any) => {
         const title = item.title?.['#text'] || item.title || 'Untitled'
         const link = item.link?.['@_href'] || item.link || ''
-        const content = item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
+        const ytDesc = extractYouTubeDescription(item)
+        const content = ytDesc || item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
         const pubDate = item.pubDate || item.published || item.updated || ''
         const guid = getYouTubeCanonicalGuid(item) || item.guid?.['#text'] || item.guid || item.id || link
-        items.push({ title, link, content, contentSnippet: truncate(cleanHtml(content), 300), pubDate, guid })
+        items.push({
+          ...item,
+          title,
+          link,
+          content,
+          contentSnippet: truncate(cleanHtml(content), 400),
+          pubDate,
+          guid
+        })
       })
 
       if (items.length === 0) {
@@ -358,19 +379,38 @@ async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
       const ytGuid = getYouTubeCanonicalGuid(item)
       const guid = ytGuid || item.guid || item.id || item.link || item.title || String(Math.random())
       const id = makeId(feedId, guid)
-      const rawContent = item['content:encoded'] || item.content || item.contentSnippet || ''
-      const rawSnippet = item.contentSnippet || cleanHtml(rawContent)
+      let rawContent = item['content:encoded'] || item.content || item.contentSnippet || ''
+      let rawSnippet = item.contentSnippet || cleanHtml(rawContent)
       const pubDate = item.pubDate ? new Date(item.pubDate).getTime() : lastFetched
 
       let thumbnail = extractThumbnail(item)
       let link = item.link || ''
-      if (ytGuid) {
-        const videoId = extractYouTubeVideoId(ytGuid)
+      const isYt = Boolean(ytGuid || isYouTubeUrl(link) || isYouTubeUrl(targetUrl))
+
+      if (isYt) {
+        const videoId =
+          (ytGuid ? extractYouTubeVideoId(ytGuid) : null) ||
+          extractYouTubeVideoId(link) ||
+          (item.ytVideoId ? String(item.ytVideoId) : null)
+        const ytDesc = extractYouTubeDescription(item)
+        const views = extractYouTubeViews(item)
+        const authorName = typeof item.author === 'object' ? item.author?.name : (item.creator || item.author)
+
         if (videoId) {
+          link = `https://www.youtube.com/watch?v=${videoId}`
           if (!thumbnail || !thumbnail.includes('ytimg.com')) {
             thumbnail = getYouTubeThumbnailUrl(videoId)
           }
-          link = `https://www.youtube.com/watch?v=${videoId}`
+          rawContent = buildYouTubeArticleContent({
+            videoId,
+            title: item.title?.trim() || '(No title)',
+            description: ytDesc,
+            views,
+            author: authorName
+          })
+        }
+        if (ytDesc) {
+          rawSnippet = ytDesc
         }
       }
 
@@ -381,8 +421,8 @@ async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
         link,
         pubDate: isNaN(pubDate) ? lastFetched : pubDate,
         content: rawContent,
-        snippet: truncate(cleanHtml(rawSnippet), 300),
-        author: item.creator || item.author || undefined,
+        snippet: truncate(cleanHtml(rawSnippet), 400),
+        author: typeof item.author === 'object' ? item.author?.name : (item.creator || item.author || undefined),
         guid,
         thumbnail
       }

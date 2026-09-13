@@ -8,6 +8,7 @@ import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
+import { isYouTubeUrl, extractYouTubeVideoId } from '@shared/youtube'
 
 function formatFullDate(ts: number, lang: string): string {
   return new Date(ts).toLocaleString(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -367,10 +368,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     )
   }
 
+  const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
   const rawHtml = fullHtml || article.content || `<p>${article.snippet}</p>`
-  const bodyHtml = article.thumbnail
-    ? removeDuplicateFeaturedImage(rawHtml, article.thumbnail, article.link)
+  const cleanedHtml = ytVideoId
+    ? rawHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
     : rawHtml
+  const bodyHtml = article.thumbnail
+    ? removeDuplicateFeaturedImage(cleanedHtml, article.thumbnail, article.link)
+    : cleanedHtml
   const safeHtml = stripUnplayableMedia(DOMPurify.sanitize(bodyHtml, {
     ALLOWED_TAGS: [
       'p',
@@ -395,6 +400,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       'video',
       'source',
       'picture',
+      'iframe',
       'br',
       'hr',
       'table',
@@ -420,7 +426,12 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       'height',
       'controls',
       'type',
-      'media'
+      'media',
+      'allow',
+      'allowfullscreen',
+      'frameborder',
+      'sandbox',
+      'referrerpolicy'
     ],
     FORCE_BODY: true
   }))
@@ -604,25 +615,58 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             <span>{formatFullDate(article.pubDate, language)}</span>
           </div>
 
-          {article.thumbnail && settings.showArticleThumbnails && (
+          {ytVideoId ? (
             <div
-              className="reader-featured-image"
+              className="reader-youtube-player"
               style={{
+                position: 'relative',
+                width: '100%',
+                paddingBottom: '56.25%',
+                height: 0,
                 margin: '20px 0',
                 borderRadius: '8px',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                overflow: 'hidden',
+                background: '#000',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
                 border: '1px solid var(--border)'
               }}
             >
-              <img
-                src={article.thumbnail}
-                alt={article.title}
-                onError={(e) => {
-                  const el = (e.target as HTMLElement).closest('.reader-featured-image') as HTMLElement | null
-                  if (el) el.remove()
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?rel=0`}
+                title={article.title}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 0
                 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
               />
             </div>
+          ) : (
+            article.thumbnail && settings.showArticleThumbnails && (
+              <div
+                className="reader-featured-image"
+                style={{
+                  margin: '20px 0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid var(--border)'
+                }}
+              >
+                <img
+                  src={article.thumbnail}
+                  alt={article.title}
+                  onError={(e) => {
+                    const el = (e.target as HTMLElement).closest('.reader-featured-image') as HTMLElement | null
+                    if (el) el.remove()
+                  }}
+                />
+              </div>
+            )
           )}
 
           {showSummary && summary && (

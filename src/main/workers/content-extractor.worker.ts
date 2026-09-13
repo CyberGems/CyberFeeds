@@ -135,8 +135,49 @@ function extractArticle(html: string, baseUrl: string): string {
   return content.innerHTML || ''
 }
 
+import {
+  isYouTubeUrl,
+  extractYouTubeVideoId,
+  buildYouTubeArticleContent
+} from '../../shared/youtube'
+
 parentPort!.on('message', async (req: ExtractRequest) => {
   try {
+    if (isYouTubeUrl(req.url)) {
+      const videoId = extractYouTubeVideoId(req.url)
+      if (videoId) {
+        let title = 'YouTube Video'
+        let author = ''
+        try {
+          const oembedRes = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`)
+          if (oembedRes.ok) {
+            const data = (await oembedRes.json()) as any
+            title = data.title || title
+            author = data.author_name || author
+          }
+        } catch { /* ignore */ }
+
+        let description = ''
+        try {
+          const html = await fetchUrl(`https://www.youtube.com/watch?v=${videoId}`)
+          const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i) ||
+                            html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*)["']/i)
+          if (descMatch && descMatch[1]) {
+            description = descMatch[1]
+          }
+        } catch { /* ignore */ }
+
+        const extracted = buildYouTubeArticleContent({
+          videoId,
+          title,
+          description,
+          author
+        })
+        parentPort!.postMessage({ reqId: req.reqId, html: extracted } as ExtractResult)
+        return
+      }
+    }
+
     const html = await fetchUrl(req.url)
     const extracted = extractArticle(html, req.url)
     parentPort!.postMessage({ reqId: req.reqId, html: extracted } as ExtractResult)

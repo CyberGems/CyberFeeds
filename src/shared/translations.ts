@@ -178,7 +178,9 @@ export const translations = {
       openDefaultBrowser: 'Open in browser',
       dismiss: 'Dismiss',
       backToTop: 'Back to top',
-      loadingFull: 'Loading full article...'
+      loadingFull: 'Loading full article...',
+      watchOnYouTube: 'Watch on YouTube',
+      views: 'views'
     },
     settings: {
       title: 'Settings',
@@ -694,7 +696,9 @@ export const translations = {
       openDefaultBrowser: 'Abrir en el navegador',
       dismiss: 'Cerrar',
       backToTop: 'Volver arriba',
-      loadingFull: 'Cargando artículo completo...'
+      loadingFull: 'Cargando artículo completo...',
+      watchOnYouTube: 'Ver en YouTube',
+      views: 'vistas'
     },
     settings: {
       title: 'Configuración',

@@ -148,15 +148,7 @@ export default function NotificationHistoryPanel(): JSX.Element {
           {item.title}
         </div>
         {item.body && (
-          <div
-            className="notif-body"
-            style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              marginTop: 2
-            }}
-          >
+          <div className="notif-body">
             {item.body}
           </div>
         )}
