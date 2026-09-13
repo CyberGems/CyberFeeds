@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react'
 import {
   Settings, Monitor, Bell, Zap, Sliders, Palette, Database,
-  Stethoscope, Keyboard, X
+  Stethoscope, Keyboard, X, Upload, Download, FileJson, FolderOpen, RotateCcw, Trash2
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -10,7 +10,7 @@ import { useAlert } from '../hooks/useAlert'
 import ConfirmDialog from './ConfirmDialog'
 import AlertDialog from './AlertDialog'
 import Tooltip from './Tooltip'
-import type { AppSettings, KeyboardShortcuts } from '../types'
+import { DEFAULT_SETTINGS, type AppSettings, type KeyboardShortcuts } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useFeedsStore } from '../store/feeds.store'
 import { FeedFavicon } from './ArticleList'
@@ -193,11 +193,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const { closePanel: storeClosePanel, openPanel } = useUIStore()
   const closePanel = onClose || storeClosePanel
   const { settings, save } = useSettingsStore()
-  const { feeds, folders } = useFeedsStore()
+  const { feeds, folders, loadAll, deleteAllFeeds } = useFeedsStore()
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm()
   const { alert, alertState, handleClose } = useAlert()
   const [local, setLocal] = useState<AppSettings>({ ...settings })
   const [importing, setImporting] = useState(false)
+  const [opmlImporting, setOpmlImporting] = useState(false)
   const [displays, setDisplays] = useState<DisplayInfo[]>([])
   const [testing, setTesting] = useState(false)
   const initialTab = useUIStore((s) => s.settingsInitialTab) as ActiveTab | null
@@ -406,6 +407,114 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       await alert({
         title: t.settings.backup.dialogs.importFailTitle,
         message: t.settings.backup.dialogs.importFailMsg.replace('{error}', result.error),
+        variant: 'error'
+      })
+    }
+  }
+
+  const handleImportOpml = async (): Promise<void> => {
+    setOpmlImporting(true)
+    try {
+      const result = await window.api.importOpml() as { canceled?: boolean; added?: number }
+      if (result.canceled) return
+
+      await loadAll()
+      await alert({
+        title: t.settings.backupData.opmlImportSuccessTitle,
+        message: t.settings.backupData.opmlImportSuccessMsg.replace('{count}', String(result.added ?? 0)),
+        variant: 'success'
+      })
+    } catch (error) {
+      await alert({
+        title: t.settings.backupData.opmlImportFailTitle,
+        message: t.settings.backupData.opmlImportFailMsg.replace(
+          '{error}',
+          error instanceof Error ? error.message : String(error)
+        ),
+        variant: 'error'
+      })
+    } finally {
+      setOpmlImporting(false)
+    }
+  }
+
+  const handleExportOpml = async (): Promise<void> => {
+    try {
+      const result = await window.api.exportOpml() as { canceled?: boolean; ok?: boolean }
+      if (result.canceled || !result.ok) return
+
+      await alert({
+        title: t.settings.backupData.opmlExportSuccessTitle,
+        message: t.settings.backupData.opmlExportSuccessMsg,
+        variant: 'success'
+      })
+    } catch (error) {
+      await alert({
+        title: t.settings.backupData.opmlExportFailTitle,
+        message: t.settings.backupData.opmlExportFailMsg.replace(
+          '{error}',
+          error instanceof Error ? error.message : String(error)
+        ),
+        variant: 'error'
+      })
+    }
+  }
+
+  const handleResetSettings = async (): Promise<void> => {
+    const confirmed = await confirm({
+      title: t.settings.backupData.resetSettingsConfirmTitle,
+      message: t.settings.backupData.resetSettingsConfirmMsg,
+      confirmText: t.settings.backupData.resetSettingsConfirmBtn,
+      cancelText: t.sidebar.cancel,
+      variant: 'danger'
+    })
+    if (!confirmed) return
+
+    try {
+      const next = structuredClone(DEFAULT_SETTINGS)
+      setLocal(next)
+      localRef.current = next
+      await save(next)
+      window.location.reload()
+    } catch (error) {
+      await alert({
+        title: t.settings.backupData.resetSettingsFailTitle,
+        message: t.settings.backupData.resetSettingsFailMsg.replace(
+          '{error}',
+          error instanceof Error ? error.message : String(error)
+        ),
+        variant: 'error'
+      })
+    }
+  }
+
+  const handleDeleteAllFeeds = async (): Promise<void> => {
+    if (feeds.length === 0) return
+
+    const confirmed = await confirm({
+      title: t.settings.backupData.deleteFeedsConfirmTitle,
+      message: t.settings.backupData.deleteFeedsConfirmMsg.replace('{count}', String(feeds.length)),
+      confirmText: t.settings.backupData.deleteFeedsConfirmBtn,
+      cancelText: t.sidebar.cancel,
+      variant: 'danger'
+    })
+    if (!confirmed) return
+
+    try {
+      const result = await deleteAllFeeds()
+      await alert({
+        title: t.settings.backupData.deleteFeedsSuccessTitle,
+        message: t.settings.backupData.deleteFeedsSuccessMsg.replace('{count}', String(result.deleted)),
+        variant: 'success'
+      })
+      window.location.reload()
+    } catch (error) {
+      await alert({
+        title: t.settings.backupData.deleteFeedsFailTitle,
+        message: t.settings.backupData.deleteFeedsFailMsg.replace(
+          '{error}',
+          error instanceof Error ? error.message : String(error)
+        ),
         variant: 'error'
       })
     }
@@ -1259,20 +1368,53 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           {activeTab === 'backupMaintenance' && (
             <>
               <div className="settings-card">
-                <h3>{t.settings.backup.title}</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <Database size={14} />
+                  {t.settings.tabs.backupMaintenance}
+                </h3>
+                <p className="settings-card-hint">{t.settings.backupData.explanation}</p>
+              </div>
+
+              <div className="settings-card">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <FileJson size={14} />
+                  {t.settings.backupData.backupsSection}
+                </h3>
                 <p className="settings-card-hint">{t.settings.backup.explanation}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className="btn btn-secondary" onClick={handleExportBackup}>
+                    <Upload size={14} />
                     {t.settings.backup.exportBtn}
                   </button>
                   <button type="button" className="btn btn-secondary" onClick={handleImportBackup} disabled={importing}>
-                    {importing ? <div className="spinner" style={{ width: 13, height: 13 }} /> : t.settings.backup.importBtn}
+                    {importing ? <div className="spinner" style={{ width: 13, height: 13 }} /> : <Download size={14} />}
+                    {t.settings.backup.importBtn}
                   </button>
                 </div>
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.maintenance.title}</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <FolderOpen size={14} />
+                  {t.settings.backupData.feedListsSection}
+                </h3>
+                <p className="settings-card-hint">{t.settings.backupData.opmlExplanation}</p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button type="button" className="btn btn-secondary" onClick={handleImportOpml} disabled={opmlImporting}>
+                    {opmlImporting ? <div className="spinner" style={{ width: 13, height: 13 }} /> : <Download size={14} />}
+                    {t.settings.backupData.importOpml}
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={handleExportOpml}>
+                    <Upload size={14} />
+                    {t.settings.backupData.exportOpml}
+                  </button>
+                </div>
+              </div>
+
+              <div className="settings-card">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  {t.settings.maintenance.title}
+                </h3>
                 <p className="settings-card-hint">{t.settings.maintenance.explanation}</p>
                 <p className="settings-card-hint">{t.settings.maintenance.trashRetention}</p>
                 <div className="form-group">
@@ -1305,7 +1447,24 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.sidebar.feedsDoctor}</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <FolderOpen size={14} />
+                  {t.settings.backupData.storageSection}
+                </h3>
+                <p className="settings-card-hint">{t.settings.backupData.storageExplanation}</p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}
+                  onClick={() => window.api.openDataFolder()}
+                >
+                  <FolderOpen size={14} />
+                  {t.settings.backupData.openDataFolder}
+                </button>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8 }}>
+                  <Stethoscope size={14} />
+                  {t.sidebar.feedsDoctor}
+                </h3>
                 <p className="settings-card-hint">{t.doctor.explanation}</p>
                 <button
                   type="button"
@@ -1316,6 +1475,50 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   <Stethoscope size={14} />
                   {t.sidebar.feedsDoctor}
                 </button>
+              </div>
+
+              <div className="settings-card">
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--red)' }}>
+                  <Trash2 size={14} />
+                  {t.settings.backupData.dangerSection}
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                        {t.settings.backupData.resetSettingsTitle}
+                      </div>
+                      <p className="settings-card-hint" style={{ margin: '4px 0 0' }}>
+                        {t.settings.backupData.resetSettingsExplanation}
+                      </p>
+                    </div>
+                    <button type="button" className="btn btn-danger" style={{ fontSize: 12 }} onClick={handleResetSettings}>
+                      <RotateCcw size={14} />
+                      {t.settings.backupData.resetSettingsButton}
+                    </button>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid var(--border-muted)', paddingTop: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                        {t.settings.backupData.deleteFeedsTitle}
+                      </div>
+                      <p className="settings-card-hint" style={{ margin: '4px 0 0' }}>
+                        {t.settings.backupData.deleteFeedsExplanation}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      style={{ fontSize: 12 }}
+                      onClick={handleDeleteAllFeeds}
+                      disabled={feeds.length === 0}
+                    >
+                      <Trash2 size={14} />
+                      {t.settings.backupData.deleteFeedsButton}
+                    </button>
+                  </div>
+                </div>
               </div>
             </>
           )}

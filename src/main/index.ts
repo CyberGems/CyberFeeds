@@ -355,21 +355,24 @@ app.whenReady().then(() => {
   createTray(mainWindow)
 
   // Wire new-article notifications
-  setOnNewArticles((feedId, inserted, feedTitle, feedIcon) => {
-    for (const article of inserted) {
-      const item: NotificationHistoryItem = {
-        id: crypto.randomUUID(),
-        title: article.title,
-        body: article.snippet,
-        link: article.link,
-        feedName: feedTitle,
-        icon: feedIcon,
-        thumbnail: article.thumbnail,
-        createdAt: Date.now(),
-        feedId: feedId,
-        articleId: article.id
+  setOnNewArticles((feedId, inserted, feedTitle, feedIcon, options) => {
+    const suppressForFeed = options?.suppressNotificationFeedIds?.includes(feedId) ?? false
+    if (!options?.suppressNotifications && !suppressForFeed) {
+      for (const article of inserted) {
+        const item: NotificationHistoryItem = {
+          id: crypto.randomUUID(),
+          title: article.title,
+          body: article.snippet,
+          link: article.link,
+          feedName: feedTitle,
+          icon: feedIcon,
+          thumbnail: article.thumbnail,
+          createdAt: Date.now(),
+          feedId: feedId,
+          articleId: article.id
+        }
+        showNotification(item)
       }
-      showNotification(item)
     }
     // Tell renderer to refresh article count
     if (mainWindow && !mainWindow.isDestroyed()) {

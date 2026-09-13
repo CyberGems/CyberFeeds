@@ -158,6 +158,20 @@ export function registerIpc(): void {
     return { ok: true }
   })
 
+  ipcMain.handle('feeds:deleteAll', () => {
+    // Stop an in-flight sync before removing its feed rows. Any already queued
+    // poll is allowed to settle harmlessly against an empty feed list.
+    polling.cancelActivePoll()
+    const deleted = db.deleteAllFeeds()
+    const current = db.getSettings()
+    if ((current.notifications.feedFilters ?? []).length > 0) {
+      const notifications = { ...current.notifications, feedFilters: [] }
+      db.saveSettings({ ...current, notifications })
+      updateNotifierSettings(notifications)
+    }
+    return { ok: true, deleted }
+  })
+
   ipcMain.handle('feeds:fetchOne', async (_, id: string) => {
     const feed = db.getFeedById(id)
     if (!feed) return { error: 'Feed not found' }
@@ -410,44 +424,65 @@ export function registerIpc(): void {
     if (result.canceled || !result.filePaths[0]) return { canceled: true }
 
     const imported = importOpml(result.filePaths[0])
-    let added = 0
+    const existingUrls = new Set(db.getFeeds().map(feed => normalizeFeedUrl(feed.url)))
+    const folders = db.getFolders()
+    const foldersByName = new Map(folders.map(folder => [folder.name, folder]))
+    const newFeeds: Feed[] = []
 
     for (const item of imported.feeds) {
-      const existing = db.getFeeds().find(f => f.url === item.url)
-      if (existing) continue
+      const feedUrl = normalizeFeedUrl(item.url)
+      if (existingUrls.has(feedUrl)) continue
 
-      // Find or create folder
+      // Find or create each imported folder once, instead of querying SQLite
+      // for every outline in the OPML document.
       let folderId = ''
       if (item.folderName) {
-        const folders = db.getFolders()
-        const existing = folders.find(f => f.name === item.folderName)
-        if (existing) {
-          folderId = existing.id
+        const existingFolder = foldersByName.get(item.folderName)
+        if (existingFolder) {
+          folderId = existingFolder.id
         } else {
-          const newFolder: Folder = { id: uuid(), name: item.folderName, sortOrder: folders.length }
+          const newFolder: Folder = {
+            id: uuid(),
+            name: item.folderName,
+            sortOrder: foldersByName.size
+          }
           db.addFolder(newFolder)
+          foldersByName.set(item.folderName, newFolder)
           folderId = newFolder.id
         }
       }
 
       try {
-        // Attempt to get favicon
         let icon: string | undefined
         try {
-          const domain = new URL(item.link || item.url).hostname
+          const domain = new URL(item.link || feedUrl).hostname
           icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
         } catch { /* no icon */ }
 
-        const feed: Feed = { id: uuid(), title: item.title, url: item.url, link: item.link, folderId, icon, errorCount: 0 }
-        db.addFeed(feed)
-        added++
-      } catch { /* skip duplicate */ }
+        newFeeds.push({
+          id: uuid(),
+          title: item.title,
+          url: feedUrl,
+          link: item.link,
+          folderId,
+          icon,
+          errorCount: 0
+        })
+        existingUrls.add(feedUrl)
+      } catch { /* skip malformed entry */ }
     }
 
-    // Fetch all feeds
-    polling.pollFeeds()
+    db.addFeeds(newFeeds)
 
-    return { added, total: imported.feeds.length }
+    // Initial OPML sync is deliberately silent and throttled. Imported feeds
+    // often contain a historical backlog that should not become hundreds of
+    // desktop notifications or parallel image downloads.
+    if (newFeeds.length > 0) {
+      void polling.pollFeeds(newFeeds, undefined, { suppressNotifications: true, concurrency: 2 })
+        .catch(error => console.error('[OPML] Initial sync failed:', error))
+    }
+
+    return { added: newFeeds.length, total: imported.feeds.length }
   })
 
   ipcMain.handle('opml:export', async (event) => {

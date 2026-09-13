@@ -10,6 +10,7 @@ let pollingTimer: ReturnType<typeof setInterval> | null = null
 let startupPollTimer: ReturnType<typeof setTimeout> | null = null
 let isPolling = false
 let pendingPoll = false
+let pendingPollOptions: PollOptions | null = null
 let activeWorker: Worker | null = null
 let pollWatchdog: ReturnType<typeof setTimeout> | null = null
 
@@ -21,9 +22,18 @@ function clearWatchdog(): void {
     pollWatchdog = null
   }
 }
-let onNewArticlesCallback: ((feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string) => void) | null = null
+export interface PollOptions {
+  /** Do not create notification history or popups for an initial/backfill sync. */
+  suppressNotifications?: boolean
+  /** Suppress only feeds that have never completed a first fetch yet. */
+  suppressNotificationFeedIds?: string[]
+  /** Lower this for large imports to reduce CPU, memory, and connection pressure. */
+  concurrency?: number
+}
 
-export function setOnNewArticles(cb: (feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string) => void): void {
+let onNewArticlesCallback: ((feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void) | null = null
+
+export function setOnNewArticles(cb: (feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void): void {
   onNewArticlesCallback = cb
 }
 
@@ -36,13 +46,36 @@ function getWorkerPath(): string {
   return path.join(app.getAppPath(), 'out', 'main', 'feed-fetcher.worker.js')
 }
 
-export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promise<void> {
+function runPendingPoll(): void {
+  if (!pendingPoll) return
+
+  const options = pendingPollOptions ?? undefined
+  pendingPoll = false
+  pendingPollOptions = null
+  void pollFeeds(undefined, undefined, options)
+}
+
+export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options: PollOptions = {}): Promise<void> {
   if (isPolling) {
     pendingPoll = true
+    pendingPollOptions = {
+      ...pendingPollOptions,
+      ...options,
+      // A silent import must not be followed by a normal poll that turns the
+      // just-imported backlog into a notification storm.
+      suppressNotifications: Boolean(pendingPollOptions?.suppressNotifications || options.suppressNotifications),
+      suppressNotificationFeedIds: [
+        ...new Set([
+          ...(pendingPollOptions?.suppressNotificationFeedIds ?? []),
+          ...(options.suppressNotificationFeedIds ?? [])
+        ])
+      ]
+    }
     return
   }
   isPolling = true
   pendingPoll = false
+  pendingPollOptions = null
 
   const settings = db.getSettings()
   if (!settings.pollingEnabled && !feeds) {
@@ -64,6 +97,17 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
   }
 
   const feedsToFetch = feeds || db.getFeeds().filter(f => !f.disabled)
+  const uninitializedFeedIds = !feeds
+    ? feedsToFetch.filter(feed => feed.lastFetched == null).map(feed => feed.id)
+    : []
+  const pollOptions: PollOptions = uninitializedFeedIds.length > 0
+    ? {
+        ...options,
+        suppressNotificationFeedIds: [
+          ...new Set([...(options.suppressNotificationFeedIds ?? []), ...uninitializedFeedIds])
+        ]
+      }
+    : options
   console.log(`[Polling] Starting poll cycle for ${feedsToFetch.length} feeds (Manual: ${!!feeds})`)
 
   if (feedsToFetch.length === 0) {
@@ -80,7 +124,12 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
   const worker = new Worker(workerPath, {
     workerData: {
       feeds: feedsToFetch.map(f => ({ id: f.id, url: f.url })),
-      concurrency: 5
+      concurrency: (() => {
+        const requestedConcurrency = Number(pollOptions.concurrency ?? 5)
+        return Number.isFinite(requestedConcurrency)
+          ? Math.max(1, Math.min(5, Math.round(requestedConcurrency)))
+          : 5
+      })()
     }
   })
   activeWorker = worker
@@ -100,9 +149,7 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
     worker.terminate()
     isPolling = false
     complete()
-    if (pendingPoll) {
-      pollFeeds()
-    }
+    runPendingPoll()
   }, POLL_WATCHDOG_MS)
 
   worker.on('message', (result: { feedId: string; articles: any[]; error?: string; lastFetched: number; done?: boolean }) => {
@@ -127,10 +174,8 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
         console.error('[Polling] Trash cleanup error:', err)
       }
       complete()
-      if (pendingPoll) {
-        console.log('[Polling] Starting pending poll...')
-        pollFeeds()
-      }
+      if (pendingPoll) console.log('[Polling] Starting pending poll...')
+      runPendingPoll()
       return
     }
 
@@ -153,7 +198,7 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
       console.log(`[Polling] Feed ${feedId}: ${articles.length} found, ${inserted.length} new.`)
       if (inserted.length > 0 && onNewArticlesCallback) {
         const feed = db.getFeedById(feedId)
-        onNewArticlesCallback(feedId, inserted, feed?.title || '', feed?.icon || undefined)
+        onNewArticlesCallback(feedId, inserted, feed?.title || '', feed?.icon || undefined, pollOptions)
       }
     } else {
       console.log(`[Polling] Feed ${feedId}: No articles found.`)
@@ -165,18 +210,14 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
     console.error('[Polling] Worker error:', err)
     isPolling = false
     complete()
-    if (pendingPoll) {
-      pollFeeds()
-    }
+    runPendingPoll()
   })
 
   worker.on('exit', () => {
     clearWatchdog()
     isPolling = false
     complete()
-    if (pendingPoll) {
-      pollFeeds()
-    }
+    runPendingPoll()
   })
 }
 
@@ -185,14 +226,14 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void): Promis
  * progress. `pollFeeds` remains fire-and-forget for scheduled polling, while
  * UI actions need an accurate completion boundary.
  */
-export function pollFeedsAndWait(feeds?: Feed[]): Promise<void> {
+export function pollFeedsAndWait(feeds?: Feed[], options?: PollOptions): Promise<void> {
   return new Promise((resolve) => {
     const startWhenIdle = (): void => {
       if (isPolling) {
         setTimeout(startWhenIdle, 50)
         return
       }
-      void pollFeeds(feeds, resolve)
+      void pollFeeds(feeds, resolve, options)
     }
     startWhenIdle()
   })

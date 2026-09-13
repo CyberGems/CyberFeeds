@@ -14,6 +14,7 @@ interface FeedsState {
   addFeed: (url: string, folderId: string, customTitle?: string) => Promise<{ error?: string; feed?: Feed }>
   updateFeed: (id: string, changes: Partial<Feed>) => Promise<void>
   deleteFeed: (id: string) => Promise<void>
+  deleteAllFeeds: () => Promise<{ deleted: number }>
   addFolder: (name: string) => Promise<Folder>
   updateFolder: (id: string, name: string) => Promise<void>
   deleteFolder: (id: string) => Promise<void>
@@ -85,6 +86,14 @@ export const useFeedsStore = create<FeedsState>((set, get) => ({
         }
       })
     }
+  },
+
+  deleteAllFeeds: async () => {
+    const result = await window.api.deleteAllFeeds() as { ok?: boolean; deleted?: number }
+    if (result?.ok) {
+      set({ feeds: [], folders: [], unreadCounts: {}, articleCounts: {}, trashCount: 0 })
+    }
+    return { deleted: result?.deleted ?? 0 }
   },
 
   addFolder: async (name) => {

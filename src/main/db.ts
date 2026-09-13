@@ -190,6 +190,30 @@ export function addFeed(feed: Feed): void {
   `).run(feed.id, feed.title, feed.url, feed.link ?? null, feed.folderId, feed.icon ?? null, feed.lastFetched ?? null, feed.errorCount, feed.disabled ? 1 : 0)
 }
 
+export function addFeeds(feeds: Feed[]): void {
+  if (feeds.length === 0) return
+
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO feeds (id, title, url, link, folderId, icon, lastFetched, errorCount, disabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `)
+  db.transaction(() => {
+    for (const feed of feeds) {
+      stmt.run(
+        feed.id,
+        feed.title,
+        feed.url,
+        feed.link ?? null,
+        feed.folderId,
+        feed.icon ?? null,
+        feed.lastFetched ?? null,
+        feed.errorCount,
+        feed.disabled ? 1 : 0
+      )
+    }
+  })()
+}
+
 export function updateFeed(feed: Partial<Feed> & { id: string }): void {
   const sets: string[] = []
   const values: any[] = []
@@ -211,6 +235,16 @@ export function deleteFeed(id: string): void {
     db.prepare('DELETE FROM articles WHERE feedId = ?').run(id)
     db.prepare('DELETE FROM feeds WHERE id = ?').run(id)
   })()
+}
+
+/** Delete every feed and its articles while keeping the user's folders intact. */
+export function deleteAllFeeds(): number {
+  const count = (db.prepare('SELECT COUNT(*) as c FROM feeds').get() as { c: number }).c
+  db.transaction(() => {
+    db.prepare('DELETE FROM articles').run()
+    db.prepare('DELETE FROM feeds').run()
+  })()
+  return count
 }
 
 export function getFeedById(id: string): Feed | undefined {

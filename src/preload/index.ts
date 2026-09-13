@@ -5,6 +5,7 @@ const api = {
   // Feeds
   getFeeds: () => ipcRenderer.invoke('feeds:getAll'),
   addFeed: (url: string, folderId: string, customTitle?: string) => ipcRenderer.invoke('feeds:add', url, folderId, customTitle),
+  deleteAllFeeds: () => ipcRenderer.invoke('feeds:deleteAll'),
   previewFeed: (url: string) => ipcRenderer.invoke('feeds:preview', url),
   updateFeed: (id: string, changes: object) => ipcRenderer.invoke('feeds:update', id, changes),
   deleteFeed: (id: string) => ipcRenderer.invoke('feeds:delete', id),

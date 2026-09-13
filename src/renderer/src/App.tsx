@@ -154,14 +154,26 @@ export default function App(): JSX.Element {
 
   // Listen for new articles from main process
   useEffect(() => {
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null
+    const scheduleRefresh = (): void => {
+      if (refreshTimer) return
+      refreshTimer = setTimeout(() => {
+        refreshTimer = null
+        void refresh()
+        void refreshUnreadCounts()
+      }, 200)
+    }
+
     const unsub = window.api.onArticlesUpdated((data) => {
       if (data.feedId === useUIStore.getState().pendingFeedId) {
         useUIStore.getState().setPendingFeedId(null)
       }
-      refresh()
-      refreshUnreadCounts()
+      scheduleRefresh()
     })
-    return unsub
+    return () => {
+      unsub()
+      if (refreshTimer) clearTimeout(refreshTimer)
+    }
   }, [])
 
   // Listen for open article requests (e.g. from notifier click)
