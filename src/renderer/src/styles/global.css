@@ -1019,7 +1019,7 @@ body {
 .reader-title a {
   user-select: text;
   -webkit-user-select: text;
-  cursor: text;
+  cursor: pointer;
 }
 .reader-title a:hover {
   color: var(--accent);
