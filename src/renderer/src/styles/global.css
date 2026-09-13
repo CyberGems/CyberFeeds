@@ -1268,6 +1268,7 @@ body {
   display: flex;
   justify-content: flex-end;
   transition: background-color 0.12s ease;
+  -webkit-app-region: no-drag;
 }
 .panel-overlay.is-peeking {
   background: transparent !important;
@@ -1286,6 +1287,7 @@ body {
   flex-direction: column;
   height: 100%;
   animation: slideIn 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 .panel-overlay.closing .panel {
   animation: slideOut 0.2s ease forwards;
@@ -1313,6 +1315,10 @@ body {
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+.panel-header button {
+  -webkit-app-region: no-drag;
 }
 .panel-header h2 {
   font-size: 15px;

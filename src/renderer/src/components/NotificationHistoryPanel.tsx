@@ -226,17 +226,29 @@ export default function NotificationHistoryPanel(): JSX.Element {
         </h2>
         {newNotifications.length > 0 && (
           <Tooltip label={t.notificationHistory.markAllSeen} placement="bottom">
-            <button className="btn btn-ghost btn-icon" onClick={handleMarkAllSeen}>
+            <button
+              className="btn btn-ghost btn-icon no-drag"
+              onClick={handleMarkAllSeen}
+              aria-label={t.notificationHistory.markAllSeen}
+            >
               <CheckCheck size={15} style={{ color: 'var(--accent)' }} />
             </button>
           </Tooltip>
         )}
         <Tooltip label={t.notificationHistory.clearAll} placement="bottom">
-          <button className="btn btn-ghost btn-icon" onClick={handleClear}>
+          <button
+            className="btn btn-ghost btn-icon no-drag"
+            onClick={handleClear}
+            aria-label={t.notificationHistory.clearAll}
+          >
             <Trash2 size={14} />
           </button>
         </Tooltip>
-        <button className="btn btn-ghost btn-icon" onClick={closePanel}>
+        <button
+          className="btn btn-ghost btn-icon no-drag"
+          onClick={closePanel}
+          aria-label={t.topBar.close}
+        >
           <X size={15} />
         </button>
       </div>
