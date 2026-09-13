@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useCallback, useRef } from 'react'
 import DOMPurify from 'dompurify'
-import { ExternalLink, Star, FileText, Rss, Share2, Check, ArrowUp, BookOpen } from 'lucide-react'
+import { ExternalLink, Star, FileText, Rss, Share2, Check, ArrowUp, BookOpen, Play, X } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -8,7 +8,7 @@ import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
-import { isYouTubeUrl, extractYouTubeVideoId } from '@shared/youtube'
+import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
 
 function formatFullDate(ts: number, lang: string): string {
   return new Date(ts).toLocaleString(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -167,6 +167,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null)
   const [linkCopied, setLinkCopied] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollRaf = useRef<number | undefined>(undefined)
@@ -187,6 +188,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
     setLinkCopied(false)
     setShowScrollTop(false)
+    setIsPlayingVideo(false)
     if (contentRef.current) contentRef.current.scrollTop = 0
     const found = articles.find((a) => a.id === selectedArticleId)
     if (found) {
@@ -369,12 +371,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }
 
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
+  const ytThumbnail = ytVideoId ? (article.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
   const rawHtml = fullHtml || article.content || `<p>${article.snippet}</p>`
   const cleanedHtml = ytVideoId
     ? rawHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
     : rawHtml
-  const bodyHtml = article.thumbnail
-    ? removeDuplicateFeaturedImage(cleanedHtml, article.thumbnail, article.link)
+  const effectiveThumb = ytThumbnail || article.thumbnail
+  const bodyHtml = effectiveThumb
+    ? removeDuplicateFeaturedImage(cleanedHtml, effectiveThumb, article.link)
     : cleanedHtml
   const safeHtml = stripUnplayableMedia(DOMPurify.sanitize(bodyHtml, {
     ALLOWED_TAGS: [
@@ -616,36 +620,145 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           </div>
 
           {ytVideoId ? (
-            <div
-              className="reader-youtube-player"
-              style={{
-                position: 'relative',
-                width: '100%',
-                paddingBottom: '56.25%',
-                height: 0,
-                margin: '20px 0',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                background: '#000',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-                border: '1px solid var(--border)'
-              }}
-            >
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?rel=0`}
-                title={article.title}
+            isPlayingVideo ? (
+              <div
+                className="reader-youtube-player-wrapper"
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  border: 0
+                  margin: '20px 0'
                 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    marginBottom: '8px'
+                  }}
+                >
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => setIsPlayingVideo(false)}
+                    style={{
+                      fontSize: '12px',
+                      padding: '4px 10px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      color: 'var(--text-secondary)'
+                    }}
+                    title={t.articleViewer.closePlayer}
+                  >
+                    <X size={13} />
+                    <span>{t.articleViewer.closePlayer}</span>
+                  </button>
+                </div>
+                <div
+                  className="reader-youtube-player"
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    paddingBottom: '56.25%',
+                    height: 0,
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    background: '#000',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
+                    border: '1px solid var(--border)'
+                  }}
+                >
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=1&rel=0`}
+                    title={article.title}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      border: 0
+                    }}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            ) : settings.showArticleThumbnails && ytThumbnail ? (
+              <div
+                className="reader-featured-image reader-youtube-thumbnail-wrapper"
+                style={{
+                  position: 'relative',
+                  margin: '20px 0',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid var(--border)',
+                  overflow: 'hidden',
+                  cursor: 'pointer',
+                  backgroundColor: '#000'
+                }}
+                onClick={() => setIsPlayingVideo(true)}
+                title={t.articleViewer.playVideoInApp}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setIsPlayingVideo(true)
+                  }
+                }}
+              >
+                <img
+                  src={ytThumbnail}
+                  alt={article.title}
+                  style={{
+                    width: '100%',
+                    display: 'block',
+                    maxHeight: '480px',
+                    objectFit: 'cover'
+                  }}
+                  onError={(e) => {
+                    const el = (e.target as HTMLElement).closest('.reader-featured-image') as HTMLElement | null
+                    if (el) el.remove()
+                  }}
+                />
+                <div
+                  className="reader-youtube-play-overlay"
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'rgba(0, 0, 0, 0.28)'
+                  }}
+                >
+                  <div
+                    className="reader-youtube-play-btn"
+                    style={{
+                      width: '68px',
+                      height: '48px',
+                      background: '#ff0000',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)'
+                    }}
+                  >
+                    <Play size={22} fill="#ffffff" color="#ffffff" style={{ marginLeft: 2 }} />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ margin: '16px 0' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsPlayingVideo(true)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                >
+                  <Play size={14} fill="currentColor" />
+                  <span>{t.articleViewer.playVideoInApp}</span>
+                </button>
+              </div>
+            )
           ) : (
             article.thumbnail && settings.showArticleThumbnails && (
               <div

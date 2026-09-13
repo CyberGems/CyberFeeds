@@ -180,7 +180,10 @@ export const translations = {
       backToTop: 'Back to top',
       loadingFull: 'Loading full article...',
       watchOnYouTube: 'Watch on YouTube',
-      views: 'views'
+      views: 'views',
+      playVideo: 'Play video',
+      playVideoInApp: 'Play video in CyberFeeds',
+      closePlayer: 'Close video'
     },
     settings: {
       title: 'Settings',
@@ -308,6 +311,44 @@ export const translations = {
         articleList: 'Article List: {size}px',
         explanation: 'Column widths can be adjusted by dragging the dividers in the main layout.'
       },
+      backupData: {
+        explanation: 'Manage backups, feed lists, maintenance, and local data.',
+        backupsSection: 'Backups',
+        feedListsSection: 'Feed Lists',
+        opmlExplanation: 'Import or export your feeds and folders as an OPML file.',
+        importOpml: 'Import OPML',
+        exportOpml: 'Export OPML',
+        opmlImportSuccessTitle: 'OPML Imported',
+        opmlImportSuccessMsg: '{count} feeds added successfully.',
+        opmlImportFailTitle: 'Failed to import OPML',
+        opmlImportFailMsg: 'Could not import the OPML file: {error}',
+        opmlExportSuccessTitle: 'OPML Exported',
+        opmlExportSuccessMsg: 'Feed list exported successfully.',
+        opmlExportFailTitle: 'Failed to export OPML',
+        opmlExportFailMsg: 'Could not export the OPML file: {error}',
+        storageSection: 'Storage & Diagnostics',
+        storageExplanation: 'Open CyberFeeds data or run diagnostics when you need to inspect the local library.',
+        openDataFolder: 'Open Data Folder',
+        dangerSection: 'Danger Zone',
+        resetSettingsTitle: 'Reset All Settings',
+        resetSettingsExplanation: 'Reset preferences to their default values. Feeds and articles will not be touched.',
+        resetSettingsButton: 'Reset Settings',
+        resetSettingsConfirmTitle: 'Reset all settings?',
+        resetSettingsConfirmMsg: 'All CyberFeeds preferences will return to defaults. Your feeds and articles will not be modified.',
+        resetSettingsConfirmBtn: 'Reset Settings',
+        resetSettingsFailTitle: 'Could not reset settings',
+        resetSettingsFailMsg: 'Could not reset settings: {error}',
+        deleteFeedsTitle: 'Delete All Feeds',
+        deleteFeedsExplanation: 'Permanently remove all feeds and their articles. Empty folders will be kept.',
+        deleteFeedsButton: 'Delete All Feeds',
+        deleteFeedsConfirmTitle: 'Delete all feeds?',
+        deleteFeedsConfirmMsg: 'Permanently remove {count} feeds and all their articles. Empty folders will be kept. This action cannot be undone.',
+        deleteFeedsConfirmBtn: 'Delete All Feeds',
+        deleteFeedsSuccessTitle: 'Feeds Deleted',
+        deleteFeedsSuccessMsg: '{count} feeds and their articles were removed.',
+        deleteFeedsFailTitle: 'Could not delete feeds',
+        deleteFeedsFailMsg: 'The feeds could not be deleted: {error}'
+      },
       backup: {
         title: 'Global Backup & Restore',
         explanation:
@@ -425,7 +466,22 @@ export const translations = {
       noFolder: 'No folder',
       editNameLabel: 'Edit Feed Name',
       placeholderName: 'Enter custom feed name...',
-      previewItemsLabel: 'Preview Items'
+      previewItemsLabel: 'Preview Items',
+      examplesToggle: 'Browse Examples',
+      examplesHint: 'Choose an example to populate the URL and preview it. It will not be added yet.',
+      exampleCategories: {
+        reddit: 'Reddit',
+        youtube: 'YouTube',
+        news: 'News',
+        rss: 'Blogs & RSS'
+      },
+      examples: {
+        redditTechnology: 'r/technology',
+        redditProgramming: 'r/programming',
+        youtubeTed: 'TED',
+        hackerNews: 'Hacker News',
+        githubBlog: 'GitHub Blog'
+      }
     },
     addFolder: {
       title: 'New Folder',
@@ -698,7 +754,10 @@ export const translations = {
       backToTop: 'Volver arriba',
       loadingFull: 'Cargando artículo completo...',
       watchOnYouTube: 'Ver en YouTube',
-      views: 'vistas'
+      views: 'vistas',
+      playVideo: 'Reproducir video',
+      playVideoInApp: 'Reproducir video en CyberFeeds',
+      closePlayer: 'Cerrar video'
     },
     settings: {
       title: 'Configuración',
@@ -827,6 +886,44 @@ export const translations = {
         explanation:
           'El ancho de las columnas se puede ajustar arrastrando los divisores en el diseño principal.'
       },
+      backupData: {
+        explanation: 'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.',
+        backupsSection: 'Copias de seguridad',
+        feedListsSection: 'Listas de feeds',
+        opmlExplanation: 'Importa o exporta tus feeds y carpetas como un archivo OPML.',
+        importOpml: 'Importar OPML',
+        exportOpml: 'Exportar OPML',
+        opmlImportSuccessTitle: 'OPML importado',
+        opmlImportSuccessMsg: 'Se añadieron {count} feeds correctamente.',
+        opmlImportFailTitle: 'Error al importar OPML',
+        opmlImportFailMsg: 'No se pudo importar el archivo OPML: {error}',
+        opmlExportSuccessTitle: 'OPML exportado',
+        opmlExportSuccessMsg: 'La lista de feeds se exportó correctamente.',
+        opmlExportFailTitle: 'Error al exportar OPML',
+        opmlExportFailMsg: 'No se pudo exportar el archivo OPML: {error}',
+        storageSection: 'Almacenamiento y diagnóstico',
+        storageExplanation: 'Abre los datos de CyberFeeds o ejecuta diagnósticos cuando necesites revisar la biblioteca local.',
+        openDataFolder: 'Abrir carpeta de datos',
+        dangerSection: 'Zona de peligro',
+        resetSettingsTitle: 'Restablecer todos los ajustes',
+        resetSettingsExplanation: 'Restaura las preferencias a sus valores predeterminados. Tus feeds y artículos no se tocarán.',
+        resetSettingsButton: 'Restablecer ajustes',
+        resetSettingsConfirmTitle: '¿Restablecer todos los ajustes?',
+        resetSettingsConfirmMsg: 'Todas las preferencias de CyberFeeds volverán a sus valores predeterminados. Tus feeds y artículos no se modificarán.',
+        resetSettingsConfirmBtn: 'Restablecer ajustes',
+        resetSettingsFailTitle: 'No se pudieron restablecer los ajustes',
+        resetSettingsFailMsg: 'No se pudieron restablecer los ajustes: {error}',
+        deleteFeedsTitle: 'Eliminar todos los feeds',
+        deleteFeedsExplanation: 'Elimina permanentemente todos los feeds y sus artículos. Las carpetas vacías se conservarán.',
+        deleteFeedsButton: 'Eliminar todos los feeds',
+        deleteFeedsConfirmTitle: '¿Eliminar todos los feeds?',
+        deleteFeedsConfirmMsg: 'Se eliminarán permanentemente {count} feeds y todos sus artículos. Las carpetas vacías se conservarán. Esta acción no se puede deshacer.',
+        deleteFeedsConfirmBtn: 'Eliminar todos los feeds',
+        deleteFeedsSuccessTitle: 'Feeds eliminados',
+        deleteFeedsSuccessMsg: 'Se eliminaron {count} feeds y sus artículos.',
+        deleteFeedsFailTitle: 'No se pudieron eliminar los feeds',
+        deleteFeedsFailMsg: 'No se pudieron eliminar los feeds: {error}'
+      },
       backup: {
         title: 'Copia de seguridad y restauración global',
         explanation:
@@ -946,7 +1043,22 @@ export const translations = {
       noFolder: 'Sin carpeta',
       editNameLabel: 'Editar nombre del feed',
       placeholderName: 'Introduce un nombre personalizado...',
-      previewItemsLabel: 'Artículos de vista previa'
+      previewItemsLabel: 'Artículos de vista previa',
+      examplesToggle: 'Ver ejemplos',
+      examplesHint: 'Elige uno para rellenar la URL y previsualizarlo. Todavía no se añadirá.',
+      exampleCategories: {
+        reddit: 'Reddit',
+        youtube: 'YouTube',
+        news: 'Noticias',
+        rss: 'Blogs y RSS'
+      },
+      examples: {
+        redditTechnology: 'r/technology',
+        redditProgramming: 'r/programming',
+        youtubeTed: 'TED',
+        hackerNews: 'Hacker News',
+        githubBlog: 'Blog de GitHub'
+      }
     },
     addFolder: {
       title: 'Nueva carpeta',
