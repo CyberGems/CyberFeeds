@@ -67,7 +67,7 @@ export default function App(): JSX.Element {
   const [sidebarDragging, setSidebarDragging] = useState(false)
   const [listDragging, setListDragging] = useState(false)
   const [listRowDragging, setListRowDragging] = useState(false)
-  const { startDrag: startSidebarDrag } = useColumnResize('sidebar', 220, 140, 480)
+  const { startDrag: startSidebarDrag } = useColumnResize('sidebar', 220, 260, 480)
   const { startDrag: startListDrag } = useColumnResize('articleList', 320, 180, 620)
   const { startDrag: startListRowDrag } = useRowResize('articleList', 320, 160, 600)
 

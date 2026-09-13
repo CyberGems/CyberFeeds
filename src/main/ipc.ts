@@ -131,15 +131,27 @@ export function registerIpc(): void {
   ipcMain.handle('feeds:preview', async (_, url: string) => {
     try {
       let previewUrl = normalizeFeedUrl(url)
+      let channelPageUrl: string | undefined
       if (isYouTubeUrl(previewUrl)) {
+        if (!previewUrl.includes('youtube.com/feeds/videos.xml')) {
+          channelPageUrl = previewUrl.startsWith('http') ? previewUrl : `https://${previewUrl}`
+        }
         const ytFeed = await resolveYouTubeFeedUrl(previewUrl)
         if (ytFeed) previewUrl = ytFeed
       }
       const parsed = await robustParse(previewUrl)
+      let icon: string | undefined
+      try {
+        const feedLink = parsed.link || channelPageUrl || previewUrl
+        const domain = new URL(feedLink).hostname
+        icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
+      } catch { /* no icon */ }
+
       return {
         title: parsed.title,
         description: parsed.description,
         link: parsed.link,
+        icon,
         items: (parsed.items || []).slice(0, 5).map(i => ({ title: i.title, pubDate: i.pubDate, link: i.link }))
       }
     } catch (err) {

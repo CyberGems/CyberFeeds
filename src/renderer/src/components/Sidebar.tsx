@@ -423,9 +423,9 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
             </button>
           </Tooltip>
 
-          <button className="add-feed-btn" style={{ flex: 1 }} onClick={() => openPanel('addFeed')}>
+          <button className="add-feed-btn sidebar-add-feed" style={{ flex: 1 }} onClick={() => openPanel('addFeed')}>
             <Plus size={13} />
-            {t.sidebar.addFeed}
+            <span>{t.sidebar.addFeed}</span>
           </button>
           <Tooltip label={t.sidebar.importOpml} placement="top">
             <button
@@ -437,7 +437,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
               {importing ? (
                 <div className="spinner" style={{ width: 12, height: 12 }} />
               ) : (
-                <Upload size={13} />
+                <Download size={13} />
               )}
             </button>
           </Tooltip>
@@ -447,7 +447,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
               style={{ flex: 0, padding: '6px 8px' }}
               onClick={() => window.api.exportOpml()}
             >
-              <Download size={13} />
+              <Upload size={13} />
             </button>
           </Tooltip>
           <Tooltip label={t.sidebar.feedsDoctor} placement="top">

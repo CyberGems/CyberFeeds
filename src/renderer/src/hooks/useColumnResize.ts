@@ -19,7 +19,7 @@ export function useColumnResize(
       const stored = localStorage.getItem(storageKey)
       if (stored) return Math.min(max, Math.max(min, Number(stored)))
     } catch { /* ignore */ }
-    return defaultWidth
+    return Math.min(max, Math.max(min, defaultWidth))
   })
 
   // Apply CSS var on mount and when committed width changes

@@ -20,7 +20,7 @@ import {
   Play,
   X,
   Plus,
-  Upload
+  Download
 } from 'lucide-react'
 import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
@@ -1003,7 +1003,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                 {importingOpml ? (
                   <div className="spinner" style={{ width: 14, height: 14 }} />
                 ) : (
-                  <Upload size={14} />
+                  <Download size={14} />
                 )}
                 {t.sidebar.importOpml}
               </button>

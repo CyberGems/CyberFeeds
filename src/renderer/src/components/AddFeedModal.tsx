@@ -1,9 +1,57 @@
 import React, { useState, useEffect } from 'react'
-import { X, Globe } from 'lucide-react'
+import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss } from 'lucide-react'
 import { useFeedsStore } from '../store/feeds.store'
 import { useUIStore } from '../store/ui.store'
 import { useTranslation } from '../hooks/useTranslation'
 import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
+import { FeedFavicon } from './ArticleList'
+
+type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss'
+
+const FEED_EXAMPLES: Array<{
+  id: string
+  category: FeedExampleCategory
+  labelKey: 'redditTechnology' | 'redditProgramming' | 'youtubeTed' | 'hackerNews' | 'githubBlog'
+  url: string
+}> = [
+  {
+    id: 'reddit-technology',
+    category: 'reddit',
+    labelKey: 'redditTechnology',
+    url: 'https://www.reddit.com/r/technology'
+  },
+  {
+    id: 'reddit-programming',
+    category: 'reddit',
+    labelKey: 'redditProgramming',
+    url: 'https://www.reddit.com/r/programming'
+  },
+  {
+    id: 'youtube-ted',
+    category: 'youtube',
+    labelKey: 'youtubeTed',
+    url: 'https://www.youtube.com/@TED'
+  },
+  {
+    id: 'hacker-news',
+    category: 'news',
+    labelKey: 'hackerNews',
+    url: 'https://news.ycombinator.com/rss'
+  },
+  {
+    id: 'github-blog',
+    category: 'rss',
+    labelKey: 'githubBlog',
+    url: 'https://github.blog/feed/'
+  }
+]
+
+function FeedExampleIcon({ category }: { category: FeedExampleCategory }): JSX.Element {
+  if (category === 'reddit') return <MessageCircle size={14} />
+  if (category === 'youtube') return <Youtube size={14} />
+  if (category === 'news') return <Newspaper size={14} />
+  return <Rss size={14} />
+}
 
 export default function AddFeedModal(): JSX.Element {
   const [url, setUrl] = useState('')
@@ -12,6 +60,7 @@ export default function AddFeedModal(): JSX.Element {
   const [previewing, setPreviewing] = useState(false)
   const [preview, setPreview] = useState<any>(null)
   const [error, setError] = useState('')
+  const [showExamples, setShowExamples] = useState(false)
   const customTitleRef = React.useRef<HTMLInputElement>(null)
   const urlRef = React.useRef<HTMLInputElement>(null)
   const { t, language } = useTranslation()
@@ -21,14 +70,32 @@ export default function AddFeedModal(): JSX.Element {
   const { closePanel, selectFeed, setPendingFeedId } = useUIStore()
   const overlayDismiss = useOverlayDismiss(closePanel)
 
-  const handlePreview = async (): Promise<void> => {
-    if (!url.trim()) return
+  const previewUrl = async (candidateUrl: string): Promise<void> => {
+    if (!candidateUrl.trim()) return
     setPreviewing(true)
     setError('')
-    const result = await window.api.previewFeed(url)
-    setPreviewing(false)
-    if (result.error) { setError(result.error); return }
-    setPreview(result)
+    try {
+      const result = await window.api.previewFeed(candidateUrl)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      setPreview(result)
+    } finally {
+      setPreviewing(false)
+    }
+  }
+
+  const handlePreview = async (): Promise<void> => {
+    await previewUrl(url)
+  }
+
+  const handleExampleSelect = async (example: (typeof FEED_EXAMPLES)[number]): Promise<void> => {
+    setUrl(example.url)
+    setPreview(null)
+    setError('')
+    setShowExamples(false)
+    await previewUrl(example.url)
   }
 
   const handleAdd = async (): Promise<void> => {
@@ -80,6 +147,46 @@ export default function AddFeedModal(): JSX.Element {
               </button>
             </div>
           </div>
+          <div className="add-feed-examples">
+            <button
+              type="button"
+              className="add-feed-examples-toggle"
+              onClick={() => setShowExamples(value => !value)}
+              aria-expanded={showExamples}
+            >
+              <span>{t.addFeed.examplesToggle}</span>
+              <ChevronDown
+                size={13}
+                style={{ transform: showExamples ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }}
+              />
+            </button>
+            {showExamples && (
+              <div className="add-feed-examples-panel">
+                <div className="add-feed-examples-hint">{t.addFeed.examplesHint}</div>
+                <div className="add-feed-examples-grid">
+                  {FEED_EXAMPLES.map(example => (
+                    <button
+                      key={example.id}
+                      type="button"
+                      className="add-feed-example"
+                      onClick={() => void handleExampleSelect(example)}
+                      disabled={previewing}
+                    >
+                      <span className="add-feed-example-icon">
+                        <FeedExampleIcon category={example.category} />
+                      </span>
+                      <span className="add-feed-example-copy">
+                        <span className="add-feed-example-label">{t.addFeed.examples[example.labelKey]}</span>
+                        <span className="add-feed-example-category">
+                          {t.addFeed.exampleCategories[example.category]}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div className="form-group">
             <label className="form-label">{t.addFeed.folderLabel}</label>
             <select className="form-select" value={folderId} onChange={e => setFolderId(e.target.value)}>
@@ -92,26 +199,44 @@ export default function AddFeedModal(): JSX.Element {
 
           {preview && (
             <div style={{ background: 'var(--bg-2)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 12 }}>
-              <div className="form-group" style={{ marginBottom: 12 }}>
-                <label className="form-label" style={{ fontSize: 11, opacity: 0.7, color: 'var(--accent)' }}>{t.addFeed.editNameLabel}</label>
-                <input 
-                  ref={customTitleRef}
-                  className="form-input" 
-                  style={{ 
-                    fontSize: 14, 
-                    fontWeight: 600, 
-                    padding: '8px 12px', 
-                    background: 'var(--bg-1)',
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
                     border: '1px solid var(--border)',
-                    boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+                    borderRadius: 'var(--radius-sm)',
+                    background: 'var(--bg-1)'
                   }}
-                  defaultValue={preview.title || ''}
-                  placeholder={t.addFeed.placeholderName}
-                  autoComplete="off"
-                  spellCheck="false"
-                  data-lpignore="true"
-                  data-1p-ignore="true"
-                />
+                  aria-hidden="true"
+                >
+                  <FeedFavicon icon={preview.icon} title={preview.title} size={26} />
+                </div>
+                <div className="form-group" style={{ flex: 1, minWidth: 0, marginBottom: 12 }}>
+                  <label className="form-label" style={{ fontSize: 11, opacity: 0.7, color: 'var(--accent)' }}>{t.addFeed.editNameLabel}</label>
+                  <input
+                    ref={customTitleRef}
+                    className="form-input"
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 600,
+                      padding: '8px 12px',
+                      background: 'var(--bg-1)',
+                      border: '1px solid var(--border)',
+                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.2)'
+                    }}
+                    defaultValue={preview.title || ''}
+                    placeholder={t.addFeed.placeholderName}
+                    autoComplete="off"
+                    spellCheck="false"
+                    data-lpignore="true"
+                    data-1p-ignore="true"
+                  />
+                </div>
               </div>
               {preview.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8, opacity: 0.8 }}>{preview.description}</div>}
               <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: 4, fontWeight: 700 }}>{t.addFeed.previewItemsLabel}</div>
