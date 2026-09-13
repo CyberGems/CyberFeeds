@@ -534,12 +534,16 @@ export const translations = {
     notificationHistory: {
       newCount: 'new',
       clearAll: 'Clear all',
+      markAllSeen: 'Mark all as seen',
       empty: 'No notifications',
       alreadySeen: 'Already Seen'
     },
     mainProcess: {
       tray: {
         showHide: 'Show / Hide',
+        recentNotifications: 'Recent notifications',
+        noRecentNotifications: 'No recent notifications',
+        viewAllNotifications: 'View all notifications...',
         notifications: 'Notifications...',
         settings: 'Configuration...',
         updateFeeds: 'Update feeds',
@@ -1112,12 +1116,16 @@ export const translations = {
     notificationHistory: {
       newCount: 'nuevas',
       clearAll: 'Limpiar todo',
+      markAllSeen: 'Marcar todas como vistas',
       empty: 'Sin notificaciones',
       alreadySeen: 'Ya vistas'
     },
     mainProcess: {
       tray: {
         showHide: 'Mostrar / Ocultar',
+        recentNotifications: 'Notificaciones recientes',
+        noRecentNotifications: 'Sin notificaciones recientes',
+        viewAllNotifications: 'Ver todas las notificaciones...',
         notifications: 'Notificaciones...',
         settings: 'Configuración...',
         updateFeeds: 'Actualizar feeds',

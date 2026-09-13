@@ -415,6 +415,7 @@ export function registerIpc(): void {
 
   ipcMain.handle('notifications:clearHistory', () => {
     db.clearNotificationHistory()
+    rebuildTrayMenu()
     return { ok: true }
   })
 
@@ -422,6 +423,7 @@ export function registerIpc(): void {
   // can compute the same unseen count as the main-window badge.
   ipcMain.handle('notifications:markChecked', (_e, ts?: number) => {
     db.setNotificationsLastChecked(typeof ts === 'number' ? ts : Date.now())
+    rebuildTrayMenu()
     return { ok: true }
   })
 

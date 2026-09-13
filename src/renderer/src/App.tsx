@@ -210,10 +210,7 @@ export default function App(): JSX.Element {
   // Listen for real-time notifications to update unseen badge count
   useEffect(() => {
     const unsub = window.api.onNewNotification(() => {
-      const state = useUIStore.getState()
-      if (state.activePanel !== 'history') {
-        useUIStore.setState({ unseenNotificationsCount: state.unseenNotificationsCount + 1 })
-      }
+      useUIStore.setState((s) => ({ unseenNotificationsCount: s.unseenNotificationsCount + 1 }))
     })
     return unsub
   }, [])

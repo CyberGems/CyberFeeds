@@ -9,7 +9,7 @@ import * as db from './db'
 import { restoreMainWindow } from './index'
 import { translations } from '../shared/translations'
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from './types'
-import { setTrayActivity } from './tray'
+import { setTrayActivity, rebuildTrayMenu } from './tray'
 
 let notifierWindow: BrowserWindow | null = null
 const displayStack: NotificationHistoryItem[] = []
@@ -713,6 +713,7 @@ export async function showNotification(item: NotificationHistoryItem): Promise<v
   // History and the main-window badge update immediately. The popup and sound
   // are deferred until the batch has passed fullscreen filtering and rendering.
   db.addNotificationHistory(item)
+  rebuildTrayMenu()
 
   const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow && !w.isDestroyed())
   if (mainWin && !mainWin.isDestroyed()) {

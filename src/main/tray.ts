@@ -1,4 +1,4 @@
-import { Tray, Menu, app, BrowserWindow, nativeImage, globalShortcut, screen, shell } from 'electron'
+import { Tray, Menu, app, BrowserWindow, nativeImage, globalShortcut, screen, shell, net } from 'electron'
 import path from 'path'
 import { pollFeeds } from './polling'
 import { restoreMainWindow } from './index'
@@ -17,6 +17,79 @@ let currentFrame = 1
 let currentScaleFactor = 0
 let cachedIdleImage: Electron.NativeImage | null = null
 const cachedFrames: Electron.NativeImage[] = []
+
+const trayFaviconCache = new Map<string, Electron.NativeImage>()
+let menuRebuildTimer: NodeJS.Timeout | null = null
+
+function scheduleMenuRebuild(): void {
+  if (menuRebuildTimer) clearTimeout(menuRebuildTimer)
+  menuRebuildTimer = setTimeout(() => {
+    menuRebuildTimer = null
+    buildMenu()
+  }, 150)
+}
+
+function getTrayIcon(iconUrl?: string): Electron.NativeImage | undefined {
+  if (!iconUrl) return undefined
+  if (trayFaviconCache.has(iconUrl)) {
+    return trayFaviconCache.get(iconUrl)
+  }
+
+  if (iconUrl.startsWith('data:')) {
+    try {
+      const img = nativeImage.createFromDataURL(iconUrl)
+      if (!img.isEmpty()) {
+        const resized = img.resize({ width: 16, height: 16, quality: 'best' })
+        trayFaviconCache.set(iconUrl, resized)
+        return resized
+      }
+    } catch {
+      // ignore
+    }
+    return undefined
+  }
+
+  if (iconUrl.startsWith('http://') || iconUrl.startsWith('https://')) {
+    void fetchTrayFavicon(iconUrl)
+  }
+  return undefined
+}
+
+async function fetchTrayFavicon(url: string): Promise<void> {
+  if (trayFaviconCache.has(url)) return
+  try {
+    const res = await net.fetch(url)
+    if (res.ok) {
+      const buf = Buffer.from(await res.arrayBuffer())
+      const img = nativeImage.createFromBuffer(buf)
+      if (!img.isEmpty()) {
+        const resized = img.resize({ width: 16, height: 16, quality: 'best' })
+        trayFaviconCache.set(url, resized)
+        scheduleMenuRebuild()
+      }
+    }
+  } catch {
+    // Ignore fetch failure
+  }
+}
+
+function formatTrayNotificationTitle(item: { title: string; feedName?: string }): string {
+  const maxTitleLen = 50
+  const maxFeedLen = 18
+  const cleanTitle = (item.title || '').replace(/\s+/g, ' ').trim()
+  const truncatedTitle =
+    cleanTitle.length > maxTitleLen ? cleanTitle.slice(0, maxTitleLen) + '…' : cleanTitle
+
+  let raw = truncatedTitle
+  if (item.feedName) {
+    const cleanFeed = item.feedName.replace(/\s+/g, ' ').trim()
+    const truncatedFeed =
+      cleanFeed.length > maxFeedLen ? cleanFeed.slice(0, maxFeedLen) + '…' : cleanFeed
+    raw = `[${truncatedFeed}] ${truncatedTitle}`
+  }
+  // Escape ampersands so Windows doesn't interpret them as shortcut mnemonics
+  return raw.replace(/&/g, '&&')
+}
 
 function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
   const resourcesDir = path.join(__dirname, '../../resources')
@@ -269,6 +342,11 @@ function buildMenu(): void {
   const t = translations[lang].mainProcess.tray
   const shortcuts = settings.shortcuts as KeyboardShortcuts
 
+  const recentItems = db.getRecentNotifications(15)
+  const unseenCount = db.getUnseenNotificationCount()
+  const recentLabel =
+    unseenCount > 0 ? `${t.recentNotifications} (${unseenCount})` : t.recentNotifications
+
   const resourcesDir = path.join(__dirname, '../../resources')
   const iconsDir = path.join(resourcesDir, 'menu-icons')
   const iconShowHide = nativeImage.createFromPath(path.join(iconsDir, 'show-hide.png'))
@@ -348,6 +426,48 @@ function buildMenu(): void {
           _mainWindow.webContents.send('settings:pollingToggled', pollingEnabled)
         }
       }
+    },
+    {
+      label: recentLabel,
+      icon: iconNotifications,
+      submenu:
+        recentItems.length === 0
+          ? [
+              {
+                label: t.noRecentNotifications,
+                enabled: false
+              }
+            ]
+          : [
+              ...recentItems.map((item) => ({
+                label: formatTrayNotificationTitle(item),
+                icon: getTrayIcon(item.icon),
+                click: () => {
+                  const win = _mainWindow
+                  if (!win || win.isDestroyed()) return
+                  restoreMainWindow()
+                  if (item.feedId && item.articleId) {
+                    win.webContents.send('app:openArticle', {
+                      feedId: item.feedId,
+                      articleId: item.articleId
+                    })
+                  } else if (item.link) {
+                    shell.openExternal(item.link)
+                  }
+                }
+              })),
+              { type: 'separator' as const },
+              {
+                label: t.viewAllNotifications,
+                icon: iconNotifications,
+                click: () => {
+                  const win = _mainWindow
+                  if (!win || win.isDestroyed()) return
+                  restoreMainWindow()
+                  win.webContents.send('app:openHistory')
+                }
+              }
+            ]
     },
     {
       label: t.notifications,
@@ -441,6 +561,10 @@ export function destroyTray(): void {
   if (animTimer) {
     clearInterval(animTimer)
     animTimer = null
+  }
+  if (menuRebuildTimer) {
+    clearTimeout(menuRebuildTimer)
+    menuRebuildTimer = null
   }
   unregisterGlobalShortcuts()
   if (tray && !tray.isDestroyed()) {

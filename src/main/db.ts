@@ -523,6 +523,17 @@ export function getNotificationHistory(limit = 200): NotificationHistoryItem[] {
   return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC LIMIT ?').all(limit) as NotificationHistoryItem[]
 }
 
+export function getRecentNotifications(limit = 15): (NotificationHistoryItem & { feedId?: string })[] {
+  return db.prepare(`
+    SELECT nh.*, COALESCE(a.feedId, '') as feedId, COALESCE(nh.icon, f.icon, '') as icon
+    FROM notification_history nh
+    LEFT JOIN articles a ON nh.articleId = a.id
+    LEFT JOIN feeds f ON a.feedId = f.id
+    ORDER BY nh.createdAt DESC
+    LIMIT ?
+  `).all(limit) as (NotificationHistoryItem & { feedId?: string })[]
+}
+
 export function addNotificationHistory(item: NotificationHistoryItem): void {
   db.prepare(`
     INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt)

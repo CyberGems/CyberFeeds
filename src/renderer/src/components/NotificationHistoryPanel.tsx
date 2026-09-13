@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { X, Bell, Trash2, ExternalLink, Check, Eye } from 'lucide-react'
+import { X, Bell, Trash2, ExternalLink, Check, Eye, CheckCheck } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useArticlesStore } from '../store/articles.store'
@@ -27,8 +27,6 @@ function formatAbsoluteTime(ts: number, locale: string): string {
   })
 }
 
-let lastCheckedBackup: number | null = null
-
 export default function NotificationHistoryPanel(): JSX.Element {
   const { closePanel, selectArticle, selectFeed } = useUIStore()
   const { settings } = useSettingsStore()
@@ -39,29 +37,34 @@ export default function NotificationHistoryPanel(): JSX.Element {
 
   useEffect(() => {
     window.api.getNotificationHistory().then(setHistory)
-
-    const now = Date.now()
     const rawChecked = localStorage.getItem('lastCheckedNotificationsTime')
     const prevChecked = Number(rawChecked || 0)
-
-    let referenceTime = prevChecked
-    if (rawChecked && now - prevChecked < 5000 && lastCheckedBackup !== null) {
-      referenceTime = lastCheckedBackup
-    } else {
-      lastCheckedBackup = prevChecked
-    }
-
-    setLastCheckedTime(referenceTime)
-
-    // Mark as checked now
-    localStorage.setItem('lastCheckedNotificationsTime', String(now))
-    window.api.markNotificationsChecked(now)
-    useUIStore.setState({ unseenNotificationsCount: 0 })
+    setLastCheckedTime(prevChecked)
   }, [])
+
+  useEffect(() => {
+    const unsub = window.api.onNewNotification((item) => {
+      setHistory((prev) => [item, ...prev.filter((x) => x.id !== item.id)])
+    })
+    return unsub
+  }, [])
+
+  const handleMarkAllSeen = async (): Promise<void> => {
+    const now = Date.now()
+    setLastCheckedTime(now)
+    localStorage.setItem('lastCheckedNotificationsTime', String(now))
+    await window.api.markNotificationsChecked(now)
+    useUIStore.setState({ unseenNotificationsCount: 0 })
+  }
 
   const handleClear = async (): Promise<void> => {
     await window.api.clearNotificationHistory()
     setHistory([])
+    const now = Date.now()
+    setLastCheckedTime(now)
+    localStorage.setItem('lastCheckedNotificationsTime', String(now))
+    await window.api.markNotificationsChecked(now)
+    useUIStore.setState({ unseenNotificationsCount: 0 })
   }
 
   // Partition into new and seen notifications
@@ -221,6 +224,13 @@ export default function NotificationHistoryPanel(): JSX.Element {
             </span>
           )}
         </h2>
+        {newNotifications.length > 0 && (
+          <Tooltip label={t.notificationHistory.markAllSeen} placement="bottom">
+            <button className="btn btn-ghost btn-icon" onClick={handleMarkAllSeen}>
+              <CheckCheck size={15} style={{ color: 'var(--accent)' }} />
+            </button>
+          </Tooltip>
+        )}
         <Tooltip label={t.notificationHistory.clearAll} placement="bottom">
           <button className="btn btn-ghost btn-icon" onClick={handleClear}>
             <Trash2 size={14} />
