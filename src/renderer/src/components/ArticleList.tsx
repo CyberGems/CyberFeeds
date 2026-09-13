@@ -696,12 +696,14 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', minWidth: 0 }}>
           {selectedFeedId === 'starred' ? (
             <Star size={16} fill="var(--star)" color="var(--star)" style={{ marginRight: 4 }} />
+          ) : isTrash ? (
+            <Trash2 size={16} color="var(--accent)" style={{ marginRight: 4 }} />
           ) : isUnreadArticles ? (
             <Mail size={16} color="var(--accent)" style={{ marginRight: 4 }} />
           ) : isReadArticles ? (
-            <MailOpen size={16} color="var(--text-secondary)" style={{ marginRight: 4 }} />
+            <MailOpen size={16} color="var(--accent)" style={{ marginRight: 4 }} />
           ) : isAllArticles ? (
-            <Library size={16} color="#EF8021" style={{ marginRight: 4 }} />
+            <Library size={16} color="var(--accent)" style={{ marginRight: 4 }} />
           ) : (
             selectedFeed?.icon && (
               <FeedFavicon icon={selectedFeed.icon} title={selectedFeed.title} size={16} />
@@ -711,6 +713,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
             style={{
               marginLeft:
                 selectedFeedId === 'starred' ||
+                isTrash ||
                 isUnreadArticles ||
                 isReadArticles ||
                 isAllArticles ||
