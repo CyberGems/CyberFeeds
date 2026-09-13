@@ -264,7 +264,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           onClick={() => selectFeed(null, { unreadOnly: false, readOnly: false })}
           onContextMenu={(e) => openSmartContextMenu(e, 'all')}
         >
-          <Library size={15} style={{ color: '#EF8021', flexShrink: 0 }} />
+          <Library size={15} className="smart-nav-icon" />
           <span className="item-label">{t.sidebar.allFeeds}</span>
           {totalAll > 0 && (
             <Tooltip label={formatCountBreakdown(totalUnread, totalAll, t)} placement="right">
@@ -280,7 +280,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           onClick={() => selectFeed(null, { unreadOnly: true, readOnly: false })}
           onContextMenu={(e) => openSmartContextMenu(e, 'unread')}
         >
-          <Mail size={15} style={{ color: 'var(--accent)', flexShrink: 0 }} />
+          <Mail size={15} className="smart-nav-icon" />
           <span className="item-label">{t.sidebar.unreadArticles}</span>
           {totalUnread > 0 && (
             <Tooltip label={formatCountBreakdown(totalUnread, totalAll, t)} placement="right">
@@ -296,7 +296,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           onClick={() => selectFeed(null, { unreadOnly: false, readOnly: true })}
           onContextMenu={(e) => openSmartContextMenu(e, 'read')}
         >
-          <MailOpen size={15} style={{ color: 'var(--text-secondary)', flexShrink: 0 }} />
+          <MailOpen size={15} className="smart-nav-icon" />
           <span className="item-label">{t.sidebar.readArticles}</span>
           {totalRead > 0 && (
             <Tooltip label={formatCountBreakdown(0, totalRead, t)} placement="right">
@@ -312,7 +312,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           onClick={() => selectFeed('starred')}
           onContextMenu={(e) => openSmartContextMenu(e, 'starred')}
         >
-          <Star size={15} style={{ color: 'var(--star)', fill: 'var(--star)', flexShrink: 0 }} />
+          <Star size={15} className="smart-nav-icon star-icon" />
           <span className="item-label">{t.sidebar.favorites}</span>
           {totalStarred > 0 && (
             <div className="cyber-badge" style={{ fontSize: 9, padding: '1px 4px' }}>
@@ -332,7 +332,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
             setCtx({ x: e.clientX, y: e.clientY, type: 'trash', id: 'trash' })
           }}
         >
-          <Trash2 size={15} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+          <Trash2 size={15} className="smart-nav-icon" />
           <span className="item-label">{t.sidebar.trash}</span>
           {trashCount > 0 && (
             <div className="cyber-badge trash-badge" style={{ fontSize: 9, padding: '1px 4px' }}>

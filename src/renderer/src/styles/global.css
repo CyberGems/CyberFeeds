@@ -419,6 +419,22 @@ body {
   border-radius: 3px;
   flex-shrink: 0;
 }
+.sidebar-item .smart-nav-icon {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: color 0.12s ease, fill 0.12s ease;
+}
+.sidebar-item:hover .smart-nav-icon,
+.sidebar-item.context-active .smart-nav-icon {
+  color: var(--text-primary);
+}
+.sidebar-item.active .smart-nav-icon {
+  color: var(--accent);
+}
+.sidebar-item.active .smart-nav-icon.star-icon {
+  color: var(--star);
+  fill: var(--star);
+}
 .feed-refresh-icon {
   color: #EF8021;
   flex-shrink: 0;
