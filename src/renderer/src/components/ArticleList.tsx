@@ -120,6 +120,9 @@ const FeedFavicon = memo(function FeedFavicon({
 
   const resolvedSrc = React.useMemo(() => {
     if (!icon) return undefined
+    // Data URLs (e.g. bundled suite icons) must be used as-is: appending a
+    // query string corrupts the base64 payload and breaks the image.
+    if (icon.startsWith('data:')) return icon
     // Ensure retries don't get stuck on a cached failure: add a busting query using retryToken and timestamp.
     const sep = icon.includes('?') ? '&' : '?'
     const ts = Date.now()
