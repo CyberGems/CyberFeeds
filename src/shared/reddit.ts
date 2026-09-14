@@ -168,20 +168,67 @@ export function formatHttpFeedError(
   lang: 'en' | 'es' = 'en',
   context = 'Feed'
 ): string {
+  const isReddit = context.toLowerCase().includes('reddit')
+  const isYouTube = context.toLowerCase().includes('youtube')
+
   if (status === 429) {
+    if (isReddit) {
+      return lang === 'es'
+        ? `${context}: Reddit limitó las peticiones (HTTP 429). Espera un momento e inténtalo de nuevo.`
+        : `${context}: Reddit rate-limited this request (HTTP 429). Wait a moment and try again.`
+    }
+    if (isYouTube) {
+      return lang === 'es'
+        ? `${context}: demasiadas peticiones (HTTP 429). Espera un momento e inténtalo de nuevo.`
+        : `${context}: too many requests (HTTP 429). Wait a moment and try again.`
+    }
     return lang === 'es'
-      ? `${context}: Reddit limitó las peticiones (HTTP 429). Espera un momento e inténtalo de nuevo.`
-      : `${context}: Reddit rate-limited this request (HTTP 429). Wait a moment and try again.`
+      ? `${context}: demasiadas peticiones (HTTP 429). Espera un momento e inténtalo de nuevo.`
+      : `${context}: rate-limited (HTTP 429). Wait a moment and try again.`
   }
+
   if (status === 403) {
+    if (isReddit) {
+      return lang === 'es'
+        ? `${context}: acceso denegado (HTTP 403). Reddit puede estar bloqueando la petición.`
+        : `${context}: access denied (HTTP 403). Reddit may be blocking the request.`
+    }
+    if (isYouTube) {
+      return lang === 'es'
+        ? `${context}: acceso denegado (HTTP 403). YouTube puede estar bloqueando la petición.`
+        : `${context}: access denied (HTTP 403). YouTube may be blocking the request.`
+    }
     return lang === 'es'
-      ? `${context}: acceso denegado (HTTP 403). Reddit puede estar bloqueando la petición.`
-      : `${context}: access denied (HTTP 403). Reddit may be blocking the request.`
+      ? `${context}: acceso denegado (HTTP 403). El servidor bloqueó la petición.`
+      : `${context}: access denied (HTTP 403). The server blocked the request.`
   }
+
   if (status === 404) {
+    if (isReddit) {
+      return lang === 'es'
+        ? `${context}: no encontrado (HTTP 404). Revisa el nombre del subreddit o usuario.`
+        : `${context}: not found (HTTP 404). Check the subreddit or user name.`
+    }
+    if (isYouTube) {
+      return lang === 'es'
+        ? `${context}: no se pudo obtener el feed del canal (HTTP 404). Los servidores RSS de YouTube pueden estar temporalmente inaccesibles o el canal no estar disponible.`
+        : `${context}: channel feed not found (HTTP 404). YouTube RSS servers may be temporarily unavailable or the channel does not exist.`
+    }
     return lang === 'es'
-      ? `${context}: no encontrado (HTTP 404). Revisa el nombre del subreddit o usuario.`
-      : `${context}: not found (HTTP 404). Check the subreddit or user name.`
+      ? `${context}: no encontrado (HTTP 404). Revisa la dirección del feed.`
+      : `${context}: not found (HTTP 404). Check the feed address.`
   }
+
+  if (status === 500 || status === 502 || status === 503) {
+    if (isYouTube) {
+      return lang === 'es'
+        ? `${context}: el servicio de feeds de YouTube no está disponible temporalmente (HTTP ${status}).`
+        : `${context}: YouTube feed service is temporarily unavailable (HTTP ${status}).`
+    }
+    return lang === 'es'
+      ? `${context}: servidor no disponible temporalmente (HTTP ${status}).`
+      : `${context}: server temporarily unavailable (HTTP ${status}).`
+  }
+
   return `${context}: HTTP ${status}`
 }

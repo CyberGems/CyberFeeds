@@ -200,7 +200,8 @@ export async function robustParse(url: string): Promise<any> {
 
     const resp = await fetchWithRetry(targetUrl, { headers })
     if (!resp.ok) {
-      throw new Error(formatHttpFeedError(resp.status, uiLang()))
+      const feedContext = isYouTubeUrl(targetUrl) || isYouTubeUrl(url) ? 'YouTube' : 'Feed'
+      throw new Error(formatHttpFeedError(resp.status, uiLang(), feedContext))
     }
     let text = await resp.text()
 
@@ -293,7 +294,12 @@ export async function robustParse(url: string): Promise<any> {
 
     if (items.length === 0) {
       if (text.trim().toLowerCase().startsWith('<!doctype html') || text.trim().toLowerCase().startsWith('<html')) {
-        throw new Error('The URL provided is a webpage, not an RSS feed. Please provide the exact RSS feed URL.')
+        const isEs = uiLang() === 'es'
+        throw new Error(
+          isEs
+            ? 'La URL proporcionada es una página web, no un feed RSS. Proporciona la dirección directa del feed.'
+            : 'The URL provided is a webpage, not an RSS feed. Please provide the direct feed URL.'
+        )
       }
       throw err
     }

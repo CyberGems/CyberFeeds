@@ -64,6 +64,37 @@ export async function resolveYouTubeFeedUrl(rawUrl: string): Promise<string | nu
     return `https://www.youtube.com/feeds/videos.xml?playlist_id=${playlistMatch[1]}`
   }
 
+  // Video URL: https://www.youtube.com/watch?v=xxx, youtu.be/xxx, /shorts/xxx
+  const videoId = extractYouTubeVideoId(url)
+  if (videoId) {
+    try {
+      const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
+      const resp = await fetchWithRetry(
+        oembedUrl,
+        {
+          headers: {
+            'User-Agent': FEED_USER_AGENT,
+            Accept: 'application/json'
+          }
+        },
+        { timeoutMs: 5000, retries: 2 }
+      )
+      if (resp.ok) {
+        const data = (await resp.json()) as { author_url?: string }
+        if (data?.author_url) {
+          const directChannel = data.author_url.match(/youtube\.com\/channel\/(UC[a-zA-Z0-9_-]+)/i)
+          if (directChannel) {
+            return `https://www.youtube.com/feeds/videos.xml?channel_id=${directChannel[1]}`
+          }
+          const resolvedChannel = await resolveYouTubeFeedUrl(data.author_url)
+          if (resolvedChannel) return resolvedChannel
+        }
+      }
+    } catch (err) {
+      console.warn(`[YouTube] Failed to resolve video to channel feed via oEmbed for ${url}:`, err)
+    }
+  }
+
   // Format full URL for handle or custom username
   let targetUrl = url
   if (targetUrl.startsWith('@')) {

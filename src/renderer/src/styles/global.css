@@ -2614,7 +2614,7 @@ body {
 }
 .notif-card.is-compact .notif-actions {
   margin-top: 3px;
-  gap: 6px;
+  gap: 8px;
 }
 .notif-card.is-compact .notif-time {
   font-size: 10px;
@@ -2716,10 +2716,10 @@ body {
   color: var(--accent);
 }
 .notif-btn-compact {
-  width: 28px;
+  width: 36px;
   height: 26px;
   justify-content: center;
-  padding: 5px 6px;
+  padding: 5px 8px;
 }
 .notif-btn-compact .notif-action-label {
   display: none;
