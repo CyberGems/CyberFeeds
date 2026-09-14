@@ -303,7 +303,6 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
             type="button"
             className={`selection-flyout-btn ${showTranslate ? 'is-active' : ''}`}
             onClick={triggerTranslation}
-            title={st.translate}
           >
             <Languages size={13} />
             <span>{st.translate}</span>

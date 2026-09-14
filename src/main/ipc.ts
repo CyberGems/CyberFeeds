@@ -972,9 +972,11 @@ export function registerIpc(): void {
       })
       if (resp.ok) {
         const data = await resp.json()
-        if (Array.isArray(data) && data[0] && Array.isArray(data[0][0])) {
-          const [translated, sourceLang] = data[0][0]
-          const src = String(sourceLang || 'auto').toLowerCase()
+        if (Array.isArray(data) && Array.isArray(data[0]) && typeof data[0][0] === 'string') {
+          const translated = data
+            .map((item) => (Array.isArray(item) && typeof item[0] === 'string' ? item[0] : ''))
+            .join('')
+          const src = String(data[0][1] || 'auto').toLowerCase()
           if (src === tl) {
             const alternateTl = tl === 'es' ? 'en' : 'es'
             const altUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${encodeURIComponent(alternateTl)}&q=${encodeURIComponent(trimmed)}`
@@ -985,9 +987,12 @@ export function registerIpc(): void {
             })
             if (altResp.ok) {
               const altData = await altResp.json()
-              if (Array.isArray(altData) && altData[0] && Array.isArray(altData[0][0])) {
+              if (Array.isArray(altData) && Array.isArray(altData[0]) && typeof altData[0][0] === 'string') {
+                const altTranslated = altData
+                  .map((item) => (Array.isArray(item) && typeof item[0] === 'string' ? item[0] : ''))
+                  .join('')
                 return {
-                  translation: String(altData[0][0][0]),
+                  translation: altTranslated,
                   sourceLang: src,
                   targetLang: alternateTl
                 }
@@ -995,7 +1000,7 @@ export function registerIpc(): void {
             }
           }
           return {
-            translation: String(translated),
+            translation: translated,
             sourceLang: src,
             targetLang: tl
           }
@@ -1007,14 +1012,16 @@ export function registerIpc(): void {
 
     // 2. Fallback to MyMemory translation API
     try {
-      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=auto|${encodeURIComponent(tl)}`
+      const fallbackSource = tl === 'es' ? 'en' : 'es'
+      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=${fallbackSource}|${encodeURIComponent(tl)}`
       const resp = await fetch(myMemoryUrl)
       if (resp.ok) {
         const data = await resp.json()
-        if (data?.responseData?.translatedText) {
+        const status = Number(data?.responseStatus)
+        if (status === 200 && data?.responseData?.translatedText) {
           return {
             translation: String(data.responseData.translatedText),
-            sourceLang: 'auto',
+            sourceLang: fallbackSource,
             targetLang: tl
           }
         }
