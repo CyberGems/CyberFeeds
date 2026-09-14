@@ -190,7 +190,15 @@ const api = {
   },
 
   // First paint ack — main waits for this before showing (avoids white flash)
-  uiReady: () => ipcRenderer.send('ui-ready')
+  uiReady: () => ipcRenderer.send('ui-ready'),
+
+  // Text translation
+  translateText: (text: string, targetLang?: string) =>
+    ipcRenderer.invoke('text:translate', text, targetLang) as Promise<{
+      translation: string
+      sourceLang: string
+      targetLang: string
+    } | null>
 }
 
 if (process.contextIsolated) {

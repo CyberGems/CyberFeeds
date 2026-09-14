@@ -952,4 +952,77 @@ export function registerIpc(): void {
     return { ok: true, shortcuts: RESET_SHORTCUTS }
   })
 
+  // ─── Text Translation ───────────────────────────────────────────────────────
+
+  ipcMain.handle('text:translate', async (_, text: string, targetLang = 'es') => {
+    if (!text || typeof text !== 'string') return null
+    const trimmed = text.trim()
+    if (!trimmed) return null
+
+    const tl = targetLang.toLowerCase().startsWith('en') ? 'en' : 'es'
+
+    // 1. Google Translate client endpoint (dict-chrome-ex)
+    try {
+      const googleUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${encodeURIComponent(tl)}&q=${encodeURIComponent(trimmed)}`
+      const resp = await fetch(googleUrl, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+        }
+      })
+      if (resp.ok) {
+        const data = await resp.json()
+        if (Array.isArray(data) && data[0] && Array.isArray(data[0][0])) {
+          const [translated, sourceLang] = data[0][0]
+          const src = String(sourceLang || 'auto').toLowerCase()
+          if (src === tl) {
+            const alternateTl = tl === 'es' ? 'en' : 'es'
+            const altUrl = `https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=${encodeURIComponent(alternateTl)}&q=${encodeURIComponent(trimmed)}`
+            const altResp = await fetch(altUrl, {
+              headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              }
+            })
+            if (altResp.ok) {
+              const altData = await altResp.json()
+              if (Array.isArray(altData) && altData[0] && Array.isArray(altData[0][0])) {
+                return {
+                  translation: String(altData[0][0][0]),
+                  sourceLang: src,
+                  targetLang: alternateTl
+                }
+              }
+            }
+          }
+          return {
+            translation: String(translated),
+            sourceLang: src,
+            targetLang: tl
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Translate] Google translate client failed:', err)
+    }
+
+    // 2. Fallback to MyMemory translation API
+    try {
+      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(trimmed)}&langpair=auto|${encodeURIComponent(tl)}`
+      const resp = await fetch(myMemoryUrl)
+      if (resp.ok) {
+        const data = await resp.json()
+        if (data?.responseData?.translatedText) {
+          return {
+            translation: String(data.responseData.translatedText),
+            sourceLang: 'auto',
+            targetLang: tl
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Translate] MyMemory fallback failed:', err)
+    }
+
+    return null
+  })
 }

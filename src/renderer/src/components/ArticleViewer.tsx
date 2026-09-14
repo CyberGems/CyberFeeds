@@ -6,6 +6,7 @@ import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
 import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
+import SelectionFlyout from './SelectionFlyout'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
@@ -915,6 +916,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           {hoveredLink}
         </div>
       )}
+
+      <SelectionFlyout containerRef={contentRef} />
     </div>
   )
 })

@@ -2947,3 +2947,224 @@ body {
     transform: translateY(0);
   }
 }
+
+/* ─── Text Selection Flyout Toolbar ─────────────────────────────────────── */
+.selection-flyout {
+  pointer-events: auto;
+  user-select: none;
+}
+.selection-flyout.is-top {
+  transform: translate(-50%, -100%);
+}
+.selection-flyout.is-bottom {
+  transform: translate(-50%, 0);
+}
+
+.selection-flyout-bar {
+  display: flex;
+  align-items: center;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  padding: 3px 5px;
+  gap: 2px;
+  animation: flyoutIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes flyoutIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.selection-flyout.is-top .selection-flyout-arrow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 9px;
+  height: 9px;
+  background: var(--bg-1);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.selection-flyout.is-bottom .selection-flyout-arrow {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 9px;
+  height: 9px;
+  background: var(--bg-1);
+  border-left: 1px solid var(--border);
+  border-top: 1px solid var(--border);
+}
+
+.selection-flyout-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.selection-flyout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+}
+
+.selection-flyout-btn:hover {
+  background: var(--bg-2);
+  color: var(--accent);
+}
+
+.selection-flyout-btn.is-copied {
+  color: var(--green);
+}
+
+.selection-flyout-btn.is-active {
+  background: var(--bg-2);
+  color: var(--accent);
+}
+
+.selection-flyout-translate-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.selection-translate-popover {
+  position: absolute;
+  width: 270px;
+  max-width: 90vw;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  padding: 9px 11px;
+  z-index: 10000;
+  animation: popoverIn 0.15s ease-out;
+}
+
+.selection-translate-popover.popover-above {
+  bottom: calc(100% + 8px);
+  right: 0;
+}
+
+.selection-translate-popover.popover-below {
+  top: calc(100% + 8px);
+  right: 0;
+}
+
+@keyframes popoverIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection-translate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.selection-translate-provider {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.selection-translate-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.selection-translate-copy-btn:hover {
+  color: var(--accent);
+  background: var(--bg-2);
+}
+
+.selection-translate-body {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  max-height: 160px;
+  overflow-y: auto;
+  word-break: break-word;
+}
+
+.selection-translate-loading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+.selection-translate-error {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.selection-translate-text {
+  padding: 7px 9px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.selection-translate-text:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-2));
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

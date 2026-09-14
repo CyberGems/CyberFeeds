@@ -186,7 +186,18 @@ export const translations = {
       views: 'views',
       playVideo: 'Play video',
       playVideoInApp: 'Play video in CyberFeeds',
-      closePlayer: 'Close video'
+      closePlayer: 'Close video',
+      selectionToolbar: {
+        search: 'Search',
+        copy: 'Copy',
+        copied: 'Copied',
+        translate: 'Translate',
+        translating: 'Translating...',
+        copyTranslation: 'Copy translation',
+        translationCopied: 'Translation copied',
+        translationError: 'Translation unavailable',
+        provider: 'Google Translate'
+      }
     },
     settings: {
       title: 'Settings',
@@ -777,7 +788,18 @@ export const translations = {
       views: 'vistas',
       playVideo: 'Reproducir video',
       playVideoInApp: 'Reproducir video en CyberFeeds',
-      closePlayer: 'Cerrar video'
+      closePlayer: 'Cerrar video',
+      selectionToolbar: {
+        search: 'Buscar',
+        copy: 'Copiar',
+        copied: 'Copiado',
+        translate: 'Traducir',
+        translating: 'Traduciendo...',
+        copyTranslation: 'Copiar traducción',
+        translationCopied: 'Traducción copiada',
+        translationError: 'No se pudo traducir',
+        provider: 'Google Translate'
+      }
     },
     settings: {
       title: 'Configuración',
