@@ -50,6 +50,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 📖 Article Management
 - **Full-Content Extraction** — Fetch complete article content via worker threads
+- **Text Selection Flyout** — Search selected text, copy it, or translate it without leaving the reader
 - **Star/Unstar** — Mark articles as favorites
 - **Read/Unread Tracking** — Know what you've read at a glance
 - **Soft Delete** — Move articles to trash with 30-day auto-purge
@@ -59,7 +60,9 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 🔔 Smart Notifications
 - **Custom Notification Window** — Built-in notifier with batching and action buttons
+- **Live Article Updates** — See newly fetched articles in a floating pill while keeping your place in the list
 - **Keyword Filtering** — Only get notified about topics that matter
+- **Notification History** — Configurable history limit, accurate unseen counts, and recent items in the tray
 - **Snooze** — Pause notifications for a configurable duration
 - **Multi-Monitor Support** — Choose which display shows notifications
 - **Sound Alerts** — Custom notification sounds
@@ -73,7 +76,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Custom Browser** — Open links in a user-selected browser
 
 ### 🎨 Customization
-- **7 Themes** — Dark, Light, Dracula, Nord, Hacker, Monokai, and Default
+- **6 Themes** — CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)
 - **Reading Preferences** — Font size, line height, max width, reading theme (Default, Sepia, Dark)
 - **Bilingual UI** — Full English and Spanish interface
 
@@ -114,14 +117,15 @@ src/
 ├── renderer/              React application
 │   ├── notifier/          Notification window React app
 │   └── src/
-│       ├── components/    UI components
+│       ├── components/    UI components, including the text-selection flyout
 │       ├── hooks/         Custom React hooks
 │       ├── store/         Zustand stores
 │       └── styles/        Global CSS and themes
 └── shared/                Isolated shared code
     ├── types.ts           Shared TypeScript interfaces
     ├── translations.ts    EN/ES UI strings
-    └── reddit.ts          Reddit URL handling
+    ├── reddit.ts          Reddit URL handling
+    └── youtube.ts         YouTube URL resolution and metadata
 ```
 
 ### Architecture Highlights
