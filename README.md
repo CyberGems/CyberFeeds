@@ -41,6 +41,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 📰 Feed Management
 - **Universal Feed Support** — RSS, Atom, and XML with automatic discovery
+- **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app playback and CDN thumbnails
 - **Reddit Integration** — Native subreddit and user feed support with fallback chain (RSS → JSON API)
 - **OPML Import/Export** — Migrate your feeds with folder structure preserved
 - **Feed Preview** — Preview feed content before subscribing
