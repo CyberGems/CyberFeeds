@@ -2597,6 +2597,29 @@ body {
 .notif-card:hover {
   border-color: var(--accent);
 }
+.notif-card.is-compact {
+  padding: 8px 11px;
+  gap: 4px;
+}
+.notif-card.is-compact .notif-header {
+  gap: 6px;
+  margin-bottom: 1px;
+}
+.notif-card.is-compact .notif-feed {
+  font-size: 11px;
+}
+.notif-card.is-compact .notif-title {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.notif-card.is-compact .notif-actions {
+  margin-top: 3px;
+  gap: 6px;
+}
+.notif-card.is-compact .notif-time {
+  font-size: 10px;
+  opacity: 0.85;
+}
 .notif-header {
   display: flex;
   align-items: center;

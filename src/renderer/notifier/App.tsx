@@ -42,6 +42,45 @@ function formatAbsoluteTime(ts: number, locale: string): string {
   })
 }
 
+function FeedIcon({ icon, feedName }: { icon?: string | null; feedName?: string }): JSX.Element {
+  const [imgError, setImgError] = useState(false)
+  if (icon && !imgError) {
+    return (
+      <img
+        src={icon}
+        alt=""
+        style={{
+          width: 15,
+          height: 15,
+          borderRadius: 3,
+          objectFit: 'contain',
+          flexShrink: 0
+        }}
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+  return (
+    <span
+      style={{
+        width: 15,
+        height: 15,
+        borderRadius: 3,
+        background: 'var(--accent)',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: 9,
+        fontWeight: 700,
+        color: '#0d1117',
+        flexShrink: 0
+      }}
+    >
+      {(feedName || 'F').charAt(0).toUpperCase()}
+    </span>
+  )
+}
+
 interface State {
   stack: NotificationHistoryItem[]
   settings: NotificationSettings | null
@@ -558,7 +597,7 @@ export default function NotifierApp(): JSX.Element {
           <div
             key={item.id}
             data-notif-item="true"
-            className={`notif-card ${dismissingIds.has(item.id) ? 'dismissing' : ''}`}
+            className={`notif-card ${isCompact ? 'is-compact' : ''} ${dismissingIds.has(item.id) ? 'dismissing' : ''}`}
             onClick={() => handleOpen(item)}
           >
             {!isCompact && item.thumbnail && state.settings?.showThumbnails && (
@@ -573,41 +612,8 @@ export default function NotifierApp(): JSX.Element {
                 />
               </div>
             )}
-            {!isCompact && <div className="notif-header">
-              {item.icon ? (
-                <img
-                  src={item.icon}
-                  alt=""
-                  style={{
-                    width: 15,
-                    height: 15,
-                    borderRadius: 3,
-                    objectFit: 'contain',
-                    flexShrink: 0
-                  }}
-                  onError={(e) => {
-                    ;(e.target as HTMLImageElement).style.display = 'none'
-                  }}
-                />
-              ) : (
-                <span
-                  style={{
-                    width: 15,
-                    height: 15,
-                    borderRadius: 3,
-                    background: 'var(--accent)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 9,
-                    fontWeight: 700,
-                    color: '#0d1117',
-                    flexShrink: 0
-                  }}
-                >
-                  {(item.feedName || 'F').charAt(0).toUpperCase()}
-                </span>
-              )}
+            <div className="notif-header">
+              <FeedIcon icon={item.icon} feedName={item.feedName} />
               <div style={{ flex: 1, minWidth: 0, display: 'inline-flex' }}>
                 <Tooltip label={item.feedName} placement="top">
                   <span className="notif-feed" style={{ flex: '0 1 auto' }}>
@@ -626,24 +632,11 @@ export default function NotifierApp(): JSX.Element {
                   <X size={12} />
                 </button>
               </Tooltip>
-            </div>}
+            </div>
             <Tooltip label={cardOpenTooltip} placement="bottom">
               <div className="notif-content-wrap">
-                <div className={`notif-title-row${isCompact ? ' is-compact' : ''}`}>
+                <div className="notif-title-row">
                   <div className="notif-title">{item.title}</div>
-                  {isCompact && (
-                    <Tooltip label={t.notifier.dismissTooltip} placement="bottom">
-                      <button
-                        className="notif-close"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleDismiss(item.id)
-                        }}
-                      >
-                        <X size={12} />
-                      </button>
-                    </Tooltip>
-                  )}
                 </div>
                 {!isCompact && item.body && (
                   <div className="notif-body">
@@ -729,17 +722,15 @@ export default function NotifierApp(): JSX.Element {
                   </button>
                 </Tooltip>
               )}
-              {!isCompact && (
-                <Tooltip
-                  label={t.notifier.receivedAt.replace(
-                    '{time}',
-                    formatAbsoluteTime(item.createdAt, lang)
-                  )}
-                  placement="bottom"
-                >
-                  <span className="notif-time">{formatReceivedAt(item.createdAt, t)}</span>
-                </Tooltip>
-              )}
+              <Tooltip
+                label={t.notifier.receivedAt.replace(
+                  '{time}',
+                  formatAbsoluteTime(item.createdAt, lang)
+                )}
+                placement="bottom"
+              >
+                <span className="notif-time">{formatReceivedAt(item.createdAt, t)}</span>
+              </Tooltip>
             </div>
           </div>
         ))}
