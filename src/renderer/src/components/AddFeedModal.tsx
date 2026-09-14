@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react'
-import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss } from 'lucide-react'
+import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss, Github } from 'lucide-react'
 import { useFeedsStore } from '../store/feeds.store'
 import { useUIStore } from '../store/ui.store'
 import { useTranslation } from '../hooks/useTranslation'
 import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
 import { FeedFavicon } from './ArticleList'
 
-type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss'
+type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss' | 'cybergems'
 
 const FEED_EXAMPLES: Array<{
   id: string
   category: FeedExampleCategory
-  labelKey: 'redditTechnology' | 'redditProgramming' | 'youtubeTed' | 'hackerNews' | 'githubBlog'
+  labelKey: 'redditTechnology' | 'redditProgramming' | 'youtubeTed' | 'hackerNews' | 'githubBlog' | 'cybergemsReleases'
   url: string
 }> = [
+  {
+    id: 'cybergems-releases',
+    category: 'cybergems',
+    labelKey: 'cybergemsReleases',
+    url: 'https://github.com/CyberGems/CyberFeeds/releases.atom'
+  },
   {
     id: 'reddit-technology',
     category: 'reddit',
@@ -47,6 +53,7 @@ const FEED_EXAMPLES: Array<{
 ]
 
 function FeedExampleIcon({ category }: { category: FeedExampleCategory }): JSX.Element {
+  if (category === 'cybergems') return <Github size={14} />
   if (category === 'reddit') return <MessageCircle size={14} />
   if (category === 'youtube') return <Youtube size={14} />
   if (category === 'news') return <Newspaper size={14} />
