@@ -1146,6 +1146,26 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   </p>
                 </div>
 
+                <div className="form-group">
+                  <label className="form-label">{t.settings.notifications.historyLimit}</label>
+                  <select
+                    className="form-select"
+                    value={local.notifications.historyLimit ?? 1000}
+                    onChange={e => updateNotif({ historyLimit: Number(e.target.value) })}
+                  >
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                    <option value={500}>500</option>
+                    <option value={1000}>1000 ({t.settings.notifications.defaultPreset})</option>
+                    <option value={2000}>2000</option>
+                    <option value={5000}>5000</option>
+                    <option value={0}>{t.settings.notifications.unlimited}</option>
+                  </select>
+                  <p className="settings-card-hint" style={{ margin: '8px 0 0' }}>
+                    {t.settings.notifications.historyLimitHint}
+                  </p>
+                </div>
+
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <label className="form-label">{t.settings.notifications.snoozeDuration}</label>
                   <select

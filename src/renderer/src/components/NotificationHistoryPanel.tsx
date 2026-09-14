@@ -70,6 +70,8 @@ export default function NotificationHistoryPanel(): JSX.Element {
   // Partition into new and seen notifications
   const newNotifications = history.filter((item) => item.createdAt > lastCheckedTime)
   const seenNotifications = history.filter((item) => item.createdAt <= lastCheckedTime)
+  const historyLimit = settings.notifications?.historyLimit ?? 1000
+  const isLimitReached = historyLimit > 0 && history.length >= historyLimit
 
   const renderItem = (item: NotificationHistoryItem, isNew: boolean): JSX.Element => (
     <div
@@ -223,6 +225,28 @@ export default function NotificationHistoryPanel(): JSX.Element {
               {newNotifications.length} {t.notificationHistory.newCount}
             </span>
           )}
+          {isLimitReached && (
+            <Tooltip
+              label={t.notificationHistory.limitNotice.replace('{limit}', String(historyLimit))}
+              placement="bottom"
+            >
+              <span
+                className="cyber-badge"
+                style={{
+                  fontSize: 10,
+                  padding: '2px 6px',
+                  color: '#f59e0b',
+                  borderColor: '#f59e0b',
+                  background: 'rgba(245, 158, 11, 0.1)',
+                  cursor: 'help'
+                }}
+              >
+                {t.notificationHistory.historyFullBadge
+                  .replace('{count}', String(history.length))
+                  .replace('{limit}', String(historyLimit))}
+              </span>
+            </Tooltip>
+          )}
         </h2>
         {newNotifications.length > 0 && (
           <Tooltip label={t.notificationHistory.markAllSeen} placement="bottom">
@@ -253,6 +277,28 @@ export default function NotificationHistoryPanel(): JSX.Element {
         </button>
       </div>
       <div className="panel-body">
+        {isLimitReached && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '8px 12px',
+              marginBottom: 12,
+              borderRadius: 'var(--radius, 6px)',
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              fontSize: 12,
+              color: '#f59e0b',
+              lineHeight: 1.4
+            }}
+          >
+            <span style={{ fontSize: 14 }}>⚠️</span>
+            <span style={{ flex: 1 }}>
+              {t.notificationHistory.limitNotice.replace('{limit}', String(historyLimit))}
+            </span>
+          </div>
+        )}
         {history.length === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
             {t.notificationHistory.empty}

@@ -40,6 +40,12 @@ const TopBar = memo(function TopBar(): JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const historyLimit = settings.notifications?.historyLimit ?? 1000
+  const isHistoryLimitReached = historyLimit > 0 && unseenNotificationsCount >= historyLimit
+  const notificationTooltip = isHistoryLimitReached
+    ? `${t.topBar.notificationHistory} (${t.topBar.limitReached})`
+    : t.topBar.notificationHistory
+
   useEffect(() => {
     window.api.isMaximized().then(setMaximized)
     const cleanup = window.api.onMaximizedChange(setMaximized)
@@ -98,34 +104,39 @@ const TopBar = memo(function TopBar(): JSX.Element {
       </Tooltip>
       <div className="topbar-drag" />
 
-      <Tooltip label={t.topBar.notificationHistory} placement="bottom">
+      <Tooltip label={notificationTooltip} placement="bottom">
         <button
           className="btn btn-ghost btn-icon no-drag"
           onClick={() => {
             openPanel('history')
           }}
           style={{ position: 'relative' }}
+          aria-label={notificationTooltip}
         >
-          <Bell size={15} />
+          <Bell size={15} style={{ color: isHistoryLimitReached ? '#f59e0b' : undefined }} />
           {unseenNotificationsCount > 0 && (
             <span
               style={{
                 position: 'absolute',
-                top: 2,
-                right: 2,
-                background: '#EF8021',
+                top: 1,
+                right: unseenNotificationsCount >= 100 ? -4 : 1,
+                background: isHistoryLimitReached ? '#f59e0b' : '#EF8021',
                 color: '#ffffff',
-                borderRadius: '50%',
-                width: 14,
-                height: 14,
-                fontSize: 9,
+                borderRadius: 8,
+                minWidth: 15,
+                height: 15,
+                padding: '0 3.5px',
+                fontSize: unseenNotificationsCount >= 1000 ? 8 : 9,
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: '1px solid var(--bg-0)',
-                boxShadow: '0 0 4px rgba(0,0,0,0.5)',
-                pointerEvents: 'none'
+                border: isHistoryLimitReached ? '1px solid #ffd166' : '1px solid var(--bg-0)',
+                boxShadow: isHistoryLimitReached
+                  ? '0 0 6px rgba(245, 158, 11, 0.7)'
+                  : '0 0 4px rgba(0,0,0,0.5)',
+                pointerEvents: 'none',
+                lineHeight: 1
               }}
             >
               {unseenNotificationsCount}

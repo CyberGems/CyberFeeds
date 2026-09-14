@@ -476,7 +476,8 @@ export function registerIpc(): void {
 
   // ─── Notification History ─────────────────────────────────────────────────
 
-  ipcMain.handle('notifications:getHistory', () => db.getNotificationHistory())
+  ipcMain.handle('notifications:getHistory', (_e, limit?: number) => db.getNotificationHistory(limit))
+  ipcMain.handle('notifications:getTotalCount', () => db.getNotificationHistoryTotalCount())
 
   ipcMain.handle('notifications:clearHistory', () => {
     db.clearNotificationHistory()

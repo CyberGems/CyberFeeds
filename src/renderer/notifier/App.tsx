@@ -383,6 +383,11 @@ export default function NotifierApp(): JSX.Element {
   const cardOpenTooltip =
     state.settings?.openBehavior === 'browser' ? t.notifier.openTooltip : t.notifier.viewTooltip
   const isCompact = state.displayMode === 'compact'
+  const historyLimit = Number(state.settings?.historyLimit) || 0
+  const isLimitReached = historyLimit > 0 && state.unseenCount >= historyLimit
+  const historyTooltip = isLimitReached
+    ? `${t.notifier.historyTooltip} (${t.topBar.limitReached})`
+    : t.notifier.historyTooltip
 
   return (
     <div
@@ -409,7 +414,7 @@ export default function NotifierApp(): JSX.Element {
             flexShrink: 0
           }}
         >
-          <Tooltip label={t.notifier.historyTooltip} placement="bottom">
+          <Tooltip label={historyTooltip} placement="bottom">
             <button
               className="clear-all-btn"
               style={{
@@ -417,7 +422,11 @@ export default function NotifierApp(): JSX.Element {
                 alignItems: 'center',
                 gap: 5,
                 backgroundColor: historyHovered ? 'var(--accent, #58a6ff)' : 'var(--bg-1, #161b22)',
-                borderColor: historyHovered ? 'var(--accent, #58a6ff)' : 'var(--border, #30363d)',
+                borderColor: isLimitReached
+                  ? '#f59e0b'
+                  : historyHovered
+                    ? 'var(--accent, #58a6ff)'
+                    : 'var(--border, #30363d)',
                 color: historyHovered ? '#0d1117' : 'var(--text-primary, #e6edf3)'
               }}
               onMouseEnter={() => setHistoryHovered(true)}
@@ -427,16 +436,26 @@ export default function NotifierApp(): JSX.Element {
                 window.api.openHistoryInApp()
               }}
             >
-              <Bell size={12} style={{ flexShrink: 0 }} />
+              <Bell
+                size={12}
+                style={{
+                  flexShrink: 0,
+                  color: isLimitReached && !historyHovered ? '#f59e0b' : undefined
+                }}
+              />
               {t.notifier.history}
               {state.unseenCount > 0 && (
                 <span
                   style={{
                     fontWeight: 700,
-                    color: historyHovered ? '#0d1117' : 'var(--accent, #58a6ff)'
+                    color: historyHovered
+                      ? '#0d1117'
+                      : isLimitReached
+                        ? '#f59e0b'
+                        : 'var(--accent, #58a6ff)'
                   }}
                 >
-                  {state.unseenCount > 99 ? '99+' : state.unseenCount}
+                  {state.unseenCount}
                 </span>
               )}
             </button>

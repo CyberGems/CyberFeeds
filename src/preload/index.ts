@@ -61,7 +61,8 @@ const api = {
   resetShortcuts: () => ipcRenderer.invoke('shortcuts:reset'),
 
   // Notifications
-  getNotificationHistory: () => ipcRenderer.invoke('notifications:getHistory'),
+  getNotificationHistory: (limit?: number) => ipcRenderer.invoke('notifications:getHistory', limit),
+  getNotificationHistoryCount: () => ipcRenderer.invoke('notifications:getTotalCount') as Promise<number>,
   clearNotificationHistory: () => ipcRenderer.invoke('notifications:clearHistory'),
   markNotificationsChecked: (ts?: number) => ipcRenderer.invoke('notifications:markChecked', ts),
   previewNotification: (notifSettings?: object, playSound?: boolean) =>

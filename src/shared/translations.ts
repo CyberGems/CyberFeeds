@@ -9,6 +9,7 @@ export const translations = {
     topBar: {
       inboxToday: 'Inbox Today',
       notificationHistory: 'Notification History',
+      limitReached: 'Limit reached',
       toggleLayout: 'Toggle Layout',
       refreshAll: 'Refresh all feeds',
       settings: 'Settings',
@@ -285,6 +286,10 @@ export const translations = {
         duration: 'Duration (seconds)',
         maxStack: 'Max notifications in stack',
         maxStackHint: 'The height limit may show fewer cards at once; the rest remain available by scrolling.',
+        historyLimit: 'Notification history limit',
+        historyLimitHint: 'Maximum notifications to store in history. Older seen notifications are pruned first. Set to Unlimited to keep all.',
+        unlimited: 'Unlimited',
+        defaultPreset: 'Default',
         maxHeight: 'Maximum popup height (% of screen)',
         maxHeightHint: 'Keeps the popup and its top controls inside the selected display.',
         snoozeDuration: 'Snooze duration',
@@ -540,7 +545,10 @@ export const translations = {
       clearAll: 'Clear all',
       markAllSeen: 'Mark all as seen',
       empty: 'No notifications',
-      alreadySeen: 'Already Seen'
+      alreadySeen: 'Already Seen',
+      limitReached: 'Limit reached',
+      limitNotice: 'History has reached the configured limit ({limit}). Older seen notifications will be pruned to make room for new ones.',
+      historyFullBadge: '{count} / {limit} MAX'
     },
     mainProcess: {
       tray: {
@@ -589,6 +597,7 @@ export const translations = {
     topBar: {
       inboxToday: 'Bandeja de entrada de hoy',
       notificationHistory: 'Historial de notificaciones',
+      limitReached: 'Límite alcanzado',
       toggleLayout: 'Cambiar diseño',
       refreshAll: 'Actualizar todos los feeds',
       settings: 'Configuración',
@@ -868,6 +877,10 @@ export const translations = {
         duration: 'Duración (segundos)',
         maxStack: 'Máximo de notificaciones en la pila',
         maxStackHint: 'El límite de altura puede mostrar menos tarjetas a la vez; las demás quedan disponibles al desplazarte.',
+        historyLimit: 'Límite del historial de notificaciones',
+        historyLimitHint: 'Cantidad máxima de notificaciones para conservar en el historial. Las más antiguas ya vistas se descartan primero. Selecciona Sin límite para conservar todas.',
+        unlimited: 'Sin límite',
+        defaultPreset: 'Predeterminado',
         maxHeight: 'Altura máxima de la ventana (% de pantalla)',
         maxHeightHint: 'Mantiene la ventana y sus controles superiores dentro de la pantalla seleccionada.',
         snoozeDuration: 'Duración de posponer',
@@ -1126,7 +1139,10 @@ export const translations = {
       clearAll: 'Limpiar todo',
       markAllSeen: 'Marcar todas como vistas',
       empty: 'Sin notificaciones',
-      alreadySeen: 'Ya vistas'
+      alreadySeen: 'Ya vistas',
+      limitReached: 'Límite alcanzado',
+      limitNotice: 'El historial ha alcanzado el límite configurado ({limit}). Las notificaciones más antiguas ya vistas se irán descartando para admitir nuevas.',
+      historyFullBadge: '{count} / {limit} MÁX'
     },
     mainProcess: {
       tray: {

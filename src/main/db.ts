@@ -531,8 +531,18 @@ export function getTodayArticles(): Article[] {
 
 // ─── Notification History ──────────────────────────────────────────────────
 
-export function getNotificationHistory(limit = 200): NotificationHistoryItem[] {
-  return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC LIMIT ?').all(limit) as NotificationHistoryItem[]
+export function getNotificationHistory(limit?: number): NotificationHistoryItem[] {
+  const effectiveLimit =
+    typeof limit === 'number' ? limit : (getSettings().notifications?.historyLimit ?? 1000)
+  if (effectiveLimit === 0) {
+    return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC').all() as NotificationHistoryItem[]
+  }
+  return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC LIMIT ?').all(effectiveLimit) as NotificationHistoryItem[]
+}
+
+export function getNotificationHistoryTotalCount(): number {
+  const row = db.prepare('SELECT COUNT(*) as c FROM notification_history').get() as { c: number }
+  return row ? row.c : 0
 }
 
 export function getRecentNotifications(limit = 15): (NotificationHistoryItem & { feedId?: string })[] {
@@ -546,17 +556,45 @@ export function getRecentNotifications(limit = 15): (NotificationHistoryItem & {
   `).all(limit) as (NotificationHistoryItem & { feedId?: string })[]
 }
 
+export function pruneNotificationHistory(limit: number): void {
+  if (limit <= 0) return
+  const totalRow = db.prepare('SELECT COUNT(*) as c FROM notification_history').get() as { c: number }
+  const total = totalRow ? totalRow.c : 0
+  if (total > limit) {
+    const excess = total - limit
+    const lastChecked = getNotificationsLastChecked()
+    // First try deleting oldest seen notifications so unseen ones stay intact
+    const deletedSeen = db.prepare(`
+      DELETE FROM notification_history
+      WHERE id IN (
+        SELECT id FROM notification_history
+        WHERE createdAt <= ?
+        ORDER BY createdAt ASC
+        LIMIT ?
+      )
+    `).run(lastChecked, excess).changes
+
+    const remainingExcess = excess - deletedSeen
+    if (remainingExcess > 0) {
+      // If there were not enough seen notifications, prune oldest overall to respect the hard limit
+      db.prepare(`
+        DELETE FROM notification_history WHERE id NOT IN (
+          SELECT id FROM notification_history ORDER BY createdAt DESC LIMIT ?
+        )
+      `).run(limit)
+    }
+  }
+}
+
 export function addNotificationHistory(item: NotificationHistoryItem): void {
   db.prepare(`
     INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(item.id, item.title, item.body, item.link, item.feedName, item.icon ?? null, item.thumbnail ?? null, item.articleId ?? null, item.createdAt)
-  // Keep only last 200
-  db.prepare(`
-    DELETE FROM notification_history WHERE id NOT IN (
-      SELECT id FROM notification_history ORDER BY createdAt DESC LIMIT 200
-    )
-  `).run()
+  const limit = getSettings().notifications?.historyLimit ?? 1000
+  if (limit > 0) {
+    pruneNotificationHistory(limit)
+  }
 }
 
 export function clearNotificationHistory(): void {
@@ -573,11 +611,11 @@ export function setNotificationsLastChecked(ts: number): void {
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('notificationsLastChecked', String(ts))
 }
 
-/** Count of notifications newer than the last "checked" time — same number as the top-bar badge. */
+/** Count of notifications newer than the last "checked" time, same number as the top-bar badge. */
 export function getUnseenNotificationCount(): number {
   const lastChecked = getNotificationsLastChecked()
   const row = db.prepare('SELECT COUNT(*) as c FROM notification_history WHERE createdAt > ?').get(lastChecked) as { c: number }
-  return row.c
+  return row ? row.c : 0
 }
 
 // ─── Settings ──────────────────────────────────────────────────────────────
@@ -600,6 +638,9 @@ export function getSettings(): AppSettings {
 
 export function saveSettings(settings: AppSettings): void {
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('app', JSON.stringify(settings))
+  if (typeof settings.notifications?.historyLimit === 'number' && settings.notifications.historyLimit > 0) {
+    pruneNotificationHistory(settings.notifications.historyLimit)
+  }
 }
 
 // ─── Window State ──────────────────────────────────────────────────────────

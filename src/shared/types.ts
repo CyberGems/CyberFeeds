@@ -112,6 +112,8 @@ export interface NotificationSettings {
   preloadImages: boolean
   disableOnFullscreen: boolean
   closeOnViewInApp: boolean
+  /** Maximum number of notifications kept in history. 0 means unlimited. */
+  historyLimit: number
 }
 
 export interface WindowState {
@@ -188,7 +190,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     showThumbnails: true,
     preloadImages: true,
     disableOnFullscreen: true,
-    closeOnViewInApp: false
+    closeOnViewInApp: false,
+    historyLimit: 1000
   },
   pollingEnabled: true,
   fetchOnStartup: true,
