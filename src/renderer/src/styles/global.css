@@ -1572,14 +1572,48 @@ body {
   color: var(--text-primary);
   background: var(--bg-2);
 }
-.settings-nav-btn.active {
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-}
 .settings-nav-btn svg {
   flex-shrink: 0;
   opacity: 0.85;
+}
+/* CyberClock-inspired icon tiles: each nav entry owns --nav-accent/--nav-soft */
+.settings-nav-ico {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--nav-accent, var(--accent));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--nav-accent, var(--accent)) 22%, transparent), transparent 70%),
+    color-mix(in srgb, var(--nav-accent, var(--accent)) 10%, var(--bg-1));
+  border: 1px solid color-mix(in srgb, var(--nav-accent, var(--accent)) 38%, transparent);
+  box-shadow: 0 0 10px -4px var(--nav-accent, var(--accent));
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
+}
+.settings-nav-ico svg {
+  opacity: 1;
+}
+.settings-nav-btn:hover .settings-nav-ico {
+  transform: translateY(-1px);
+  box-shadow: 0 0 14px -4px var(--nav-accent, var(--accent));
+}
+.settings-nav-btn.active {
+  color: var(--nav-accent, var(--accent));
+  background: var(--nav-soft, var(--accent-subtle));
+  border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 45%, transparent);
+}
+.settings-nav-btn.active .settings-nav-ico {
+  background:
+    linear-gradient(135deg, var(--nav-accent, var(--accent)), color-mix(in srgb, var(--nav-accent, var(--accent)) 55%, #000));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 14px -2px var(--nav-accent, var(--accent));
 }
 .settings-nav-footer {
   display: flex;
@@ -1644,13 +1678,35 @@ body {
 .settings-card:last-child {
   margin-bottom: 0;
 }
-.settings-card > h3 {
+.settings-card > h3,
+.settings-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted);
   margin: 0 0 10px;
+}
+.settings-card-ico {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--card-accent, var(--accent));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--card-accent, var(--accent)) 24%, transparent), transparent 70%),
+    color-mix(in srgb, var(--card-accent, var(--accent)) 10%, var(--bg-1));
+  border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 38%, transparent);
+  box-shadow: 0 0 10px -5px var(--card-accent, var(--accent));
+}
+.settings-card-danger {
+  border-color: color-mix(in srgb, var(--red) 35%, var(--border-muted));
 }
 .settings-card-hint {
   font-size: 11px;

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react'
 import {
-  Settings, Monitor, Bell, Zap, Sliders, Palette, Database,
-  Stethoscope, Keyboard, X, Upload, Download, FileJson, FolderOpen, RotateCcw, Trash2
+  Settings, Bell, Sliders, Palette, Database, Zap,
+  Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
+  Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
+  Clock, Volume2, BellOff, Save, Wrench, Monitor
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -24,6 +26,42 @@ interface DisplayInfo {
 
 type ActiveTab = 'general' | 'appearance' | 'notifications' | 'keyboard' | 'backupMaintenance'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+/* CyberClock-inspired icon tiles: each settings tab owns an accent color
+   used by the nav tile and the section titles inside its cards. */
+const TAB_META: Record<ActiveTab, { accent: string; soft: string }> = {
+  general: { accent: '#58a6ff', soft: 'rgba(88,166,255,0.14)' },
+  appearance: { accent: '#a371f7', soft: 'rgba(163,113,247,0.14)' },
+  notifications: { accent: '#3fb950', soft: 'rgba(63,185,80,0.14)' },
+  keyboard: { accent: '#39c5cf', soft: 'rgba(57,197,207,0.14)' },
+  backupMaintenance: { accent: '#d29922', soft: 'rgba(210,153,34,0.14)' }
+}
+
+function CardTitle({
+  icon: Icon,
+  accent,
+  children,
+  danger
+}: {
+  icon: typeof Bell
+  accent: string
+  children: React.ReactNode
+  danger?: boolean
+}): JSX.Element {
+  const color = danger ? 'var(--red)' : accent
+  return (
+    <h3 className="settings-card-title">
+      <span
+        className="settings-card-ico"
+        aria-hidden="true"
+        style={{ ['--card-accent' as string]: color }}
+      >
+        <Icon size={13} strokeWidth={2.2} />
+      </span>
+      <span>{children}</span>
+    </h3>
+  )
+}
 
 function normalizeKey(key: string, code: string): string {
   if (key.length === 1 && key >= 'a' && key <= 'z') return key.toUpperCase()
@@ -535,12 +573,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     { id: 'bottom-right', dot: 'br' }
   ]
 
-  const navItems: Array<{ id: ActiveTab; label: string; icon: JSX.Element }> = [
-    { id: 'general', label: t.settings.tabs.general, icon: <Sliders size={13} /> },
-    { id: 'appearance', label: t.settings.tabs.appearance, icon: <Palette size={13} /> },
-    { id: 'notifications', label: t.settings.tabs.notifications, icon: <Bell size={13} /> },
-    { id: 'keyboard', label: t.settings.tabs.keyboard, icon: <Keyboard size={13} /> },
-    { id: 'backupMaintenance', label: t.settings.tabs.backupMaintenance, icon: <Database size={13} /> }
+  const navItems: Array<{ id: ActiveTab; label: string; Icon: typeof Bell }> = [
+    { id: 'general', label: t.settings.tabs.general, Icon: Sliders },
+    { id: 'appearance', label: t.settings.tabs.appearance, Icon: Palette },
+    { id: 'notifications', label: t.settings.tabs.notifications, Icon: Bell },
+    { id: 'keyboard', label: t.settings.tabs.keyboard, Icon: Keyboard },
+    { id: 'backupMaintenance', label: t.settings.tabs.backupMaintenance, Icon: Database }
   ]
 
   const themes: Array<{ id: AppSettings['theme']; label: string }> = [
@@ -576,8 +614,11 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 type="button"
                 className={`settings-nav-btn${activeTab === item.id ? ' active' : ''}`}
                 onClick={() => setActiveTab(item.id)}
+                style={{ ['--nav-accent' as string]: TAB_META[item.id].accent, ['--nav-soft' as string]: TAB_META[item.id].soft }}
               >
-                {item.icon}
+                <span className="settings-nav-ico" aria-hidden="true">
+                  <item.Icon size={14} strokeWidth={2.1} />
+                </span>
                 {item.label}
               </button>
             ))}
@@ -597,7 +638,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           {activeTab === 'general' && (
             <>
               <div className="settings-card">
-                <h3>{t.settings.general.language}</h3>
+                <CardTitle icon={Languages} accent={TAB_META.general.accent}>{t.settings.general.language}</CardTitle>
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <select
                     className="form-select"
@@ -611,7 +652,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.general.pollingTitle}</h3>
+                <CardTitle icon={RefreshCw} accent={TAB_META.general.accent}>{t.settings.general.pollingTitle}</CardTitle>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14 }}>
                   <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
                     {t.settings.general.pollingInterval}
@@ -686,7 +727,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.general.searchTitle}</h3>
+                <CardTitle icon={Search} accent={TAB_META.general.accent}>{t.settings.general.searchTitle}</CardTitle>
                 <label
                   className="toggle"
                   style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
@@ -705,7 +746,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.general.linksOpenIn}</h3>
+                <CardTitle icon={ExternalLink} accent={TAB_META.general.accent}>{t.settings.general.linksOpenIn}</CardTitle>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
                     className="form-select"
@@ -753,7 +794,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.tabs.general}</h3>
+                <CardTitle icon={Power} accent={TAB_META.general.accent}>{t.settings.tabs.general}</CardTitle>
                 <label className="toggle">
                   <div
                     className={`toggle-track ${local.autoStart ? 'on' : ''}`}
@@ -795,7 +836,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           {activeTab === 'appearance' && (
             <>
               <div className="settings-card">
-                <h3>{t.settings.general.theme}</h3>
+                <CardTitle icon={Palette} accent={TAB_META.appearance.accent}>{t.settings.general.theme}</CardTitle>
                 <div className="theme-picker" role="radiogroup" aria-label={t.settings.general.theme}>
                   {themes.map(theme => (
                     <button
@@ -820,7 +861,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.general.layout}</h3>
+                <CardTitle icon={LayoutDashboard} accent={TAB_META.appearance.accent}>{t.settings.general.layout}</CardTitle>
                 <select
                   className="form-select"
                   value={local.layout}
@@ -843,7 +884,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3>{t.settings.fontSizes.title}</h3>
+                <CardTitle icon={Type} accent={TAB_META.appearance.accent}>{t.settings.fontSizes.title}</CardTitle>
                 <p className="settings-card-hint">{t.settings.fontSizes.explanation}</p>
                 <div className="form-group">
                   <label className="form-label">
@@ -921,7 +962,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             <>
               {/* Card 1: General Notifications */}
               <div className="settings-card">
-                <h3>{t.settings.notifications.title}</h3>
+                <CardTitle icon={Bell} accent={TAB_META.notifications.accent}>{t.settings.notifications.title}</CardTitle>
                 <label className="toggle" style={{ marginBottom: 14 }}>
                   <div
                     className={`toggle-track ${local.notifications.enabled ? 'on' : ''}`}
@@ -1009,7 +1050,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Card 2: Display & Position */}
               <div className="settings-card">
-                <h3>{t.settings.notifications.displayAndPositionTitle}</h3>
+                <CardTitle icon={Monitor} accent={TAB_META.notifications.accent}>{t.settings.notifications.displayAndPositionTitle}</CardTitle>
                 <div className="form-group">
                   <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Monitor size={12} />
@@ -1087,7 +1128,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Card 3: Timing & Stacking */}
               <div className="settings-card">
-                <h3>{t.settings.notifications.timingTitle}</h3>
+                <CardTitle icon={Clock} accent={TAB_META.notifications.accent}>{t.settings.notifications.timingTitle}</CardTitle>
                 <div className="form-group">
                   <label className="form-label">{t.settings.notifications.duration}</label>
                   <input
@@ -1186,7 +1227,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Card 4: Sound */}
               <div className="settings-card">
-                <h3>{t.settings.notifications.soundTitle}</h3>
+                <CardTitle icon={Volume2} accent={TAB_META.notifications.accent}>{t.settings.notifications.soundTitle}</CardTitle>
                 <label className="toggle" style={{ marginBottom: 14 }}>
                   <div
                     className={`toggle-track ${local.notifications.soundEnabled ? 'on' : ''}`}
@@ -1236,7 +1277,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Card 5: Ignored/Muted Feeds */}
               <div className="settings-card">
-                <h3>{t.settings.notifications.ignoredFeeds}</h3>
+                <CardTitle icon={BellOff} accent={TAB_META.notifications.accent}>{t.settings.notifications.ignoredFeeds}</CardTitle>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
                   {t.settings.notifications.ignoredFeedsHint}
                   {mutedCount > 0 && (
@@ -1281,7 +1322,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
           {activeTab === 'keyboard' && (
             <div className="settings-card">
-              <h3>{t.settings.keyboard.title}</h3>
+              <CardTitle icon={Keyboard} accent={TAB_META.keyboard.accent}>{t.settings.keyboard.title}</CardTitle>
               <p className="settings-card-hint">{t.settings.keyboard.explanation}</p>
 
               {Object.entries(local.shortcuts).map(([key, shortcut]) => (
@@ -1388,18 +1429,16 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           {activeTab === 'backupMaintenance' && (
             <>
               <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <Database size={14} />
+                <CardTitle icon={Database} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.tabs.backupMaintenance}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.settings.backupData.explanation}</p>
               </div>
 
               <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <FileJson size={14} />
+                <CardTitle icon={Save} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.backupData.backupsSection}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.settings.backup.explanation}</p>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className="btn btn-secondary" onClick={handleExportBackup}>
@@ -1414,10 +1453,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <FolderOpen size={14} />
+                <CardTitle icon={FolderOpen} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.backupData.feedListsSection}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.settings.backupData.opmlExplanation}</p>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn-secondary" onClick={handleImportOpml} disabled={opmlImporting}>
@@ -1432,9 +1470,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <CardTitle icon={Wrench} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.maintenance.title}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.settings.maintenance.explanation}</p>
                 <p className="settings-card-hint">{t.settings.maintenance.trashRetention}</p>
                 <div className="form-group">
@@ -1467,10 +1505,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <FolderOpen size={14} />
+                <CardTitle icon={FolderOpen} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.backupData.storageSection}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.settings.backupData.storageExplanation}</p>
                 <button
                   type="button"
@@ -1481,10 +1518,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   <FolderOpen size={14} />
                   {t.settings.backupData.openDataFolder}
                 </button>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7, marginTop: 8 }}>
-                  <Stethoscope size={14} />
+                <CardTitle icon={Stethoscope} accent={TAB_META.backupMaintenance.accent}>
                   {t.sidebar.feedsDoctor}
-                </h3>
+                </CardTitle>
                 <p className="settings-card-hint">{t.doctor.explanation}</p>
                 <button
                   type="button"
@@ -1497,11 +1533,10 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </button>
               </div>
 
-              <div className="settings-card">
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 7, color: 'var(--red)' }}>
-                  <Trash2 size={14} />
+              <div className="settings-card settings-card-danger">
+                <CardTitle icon={Trash2} accent={TAB_META.backupMaintenance.accent} danger>
                   {t.settings.backupData.dangerSection}
-                </h3>
+                </CardTitle>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
                     <div style={{ minWidth: 0, flex: 1 }}>
