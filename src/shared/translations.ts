@@ -475,7 +475,8 @@ export const translations = {
         reddit: 'Reddit',
         youtube: 'YouTube',
         news: 'News',
-        rss: 'Blogs & RSS'
+        rss: 'Blogs & RSS',
+        cybergems: 'CyberGems'
       },
       examples: {
         redditTechnology: 'r/technology',
@@ -1060,7 +1061,8 @@ export const translations = {
         reddit: 'Reddit',
         youtube: 'YouTube',
         news: 'Noticias',
-        rss: 'Blogs y RSS'
+        rss: 'Blogs y RSS',
+        cybergems: 'CyberGems'
       },
       examples: {
         redditTechnology: 'r/technology',
