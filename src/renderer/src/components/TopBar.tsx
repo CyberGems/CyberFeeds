@@ -162,7 +162,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
 
       {/* More Options Menu Dropdown */}
       <div className="topbar-menu-wrapper" ref={menuRef}>
-        <Tooltip label={t.topBar.more} placement="bottom">
+        <Tooltip label={menuOpen ? '' : t.topBar.more} placement="bottom">
           <button
             className={`btn btn-ghost btn-icon no-drag ${menuOpen ? 'active' : ''}`}
             onClick={() => setMenuOpen(!menuOpen)}

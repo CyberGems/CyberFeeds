@@ -285,6 +285,12 @@ body {
   align-items: center;
 }
 
+.topbar-menu-wrapper .btn.active,
+.topbar-menu-wrapper .btn.active:hover {
+  background: var(--bg-2);
+  color: var(--text-primary);
+}
+
 .topbar-dropdown-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -1280,7 +1286,8 @@ body {
   background: transparent;
   color: var(--text-secondary);
 }
-.btn-ghost:hover {
+.btn-ghost:hover,
+.btn-ghost.active {
   background: var(--bg-2);
   color: var(--text-primary);
 }
