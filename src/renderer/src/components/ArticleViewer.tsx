@@ -320,7 +320,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     for (const video of videos) {
       const hide = (): void => {
         if (readerBody.contains(video)) {
-          video.remove()
+          video.style.display = 'none'
         }
       }
       video.addEventListener('error', hide)
@@ -340,7 +340,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }, [article?.id, fullHtml, article?.content])
 
   // Hide broken <img> tags inside article content that fail to load or error (CORS / 404 / dead URLs).
-  // CRITICAL: Strictly check that target is inside .reader-body so React-managed nodes (like FeedFavicon) are never removed.
+  // Uses non-destructive display:none so React's DOM tree is never mutated.
   useEffect(() => {
     const root = contentRef.current
     if (!root) return
@@ -349,10 +349,10 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       if (target && target.tagName === 'IMG') {
         const readerBody = root.querySelector('.reader-body')
         if (readerBody && readerBody.contains(target)) {
+          target.style.display = 'none'
           const figure = target.closest('figure')
-          target.remove()
-          if (figure && figure.querySelectorAll('img').length === 0 && !figure.textContent?.trim()) {
-            figure.remove()
+          if (figure && figure.querySelectorAll('img:not([style*="display: none"])').length === 0 && !figure.textContent?.trim()) {
+            figure.style.display = 'none'
           }
         }
       }
@@ -396,30 +396,21 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     }
   }, [article])
 
-  if (!article) {
-    return (
-      <div className="article-viewer">
-        <div className="reader-empty">
-          <Rss size={48} />
-          <p>{t.articleViewer.selectToRead}</p>
-        </div>
-      </div>
-    )
-  }
-
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
   const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
   const isReddit = Boolean(article && (article.link?.includes('reddit.com') || (article as any).feedUrl?.includes('reddit.com')))
-  const ytThumbnail = ytVideoId ? (article.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
-  const rawHtml = fullHtml || article.content || `<p>${article.snippet}</p>`
+  const ytThumbnail = ytVideoId ? (article?.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
+  const rawHtml = article ? (fullHtml || article.content || `<p>${article.snippet}</p>`) : ''
   const cleanedHtml = ytVideoId
     ? rawHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
     : rawHtml
-  const effectiveThumb = ytThumbnail || article.thumbnail
-  const bodyHtml = effectiveThumb
+  const effectiveThumb = article ? (ytThumbnail || article.thumbnail) : null
+  const bodyHtml = effectiveThumb && article
     ? removeDuplicateFeaturedImage(cleanedHtml, effectiveThumb, article.link)
     : cleanedHtml
+
   const safeHtml = useMemo(() => {
+    if (!bodyHtml) return ''
     return stripUnplayableMedia(DOMPurify.sanitize(bodyHtml, {
       ALLOWED_TAGS: [
         'p',
@@ -480,6 +471,17 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       FORCE_BODY: true
     }))
   }, [bodyHtml])
+
+  if (!article) {
+    return (
+      <div className="article-viewer">
+        <div className="reader-empty">
+          <Rss size={48} />
+          <p>{t.articleViewer.selectToRead}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="article-viewer">
