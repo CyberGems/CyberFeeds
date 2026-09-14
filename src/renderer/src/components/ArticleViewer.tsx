@@ -284,12 +284,16 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   useEffect(() => {
     const root = contentRef.current
     if (!root) return
-    const videos = Array.from(root.querySelectorAll('video'))
+    const readerBody = root.querySelector('.reader-body')
+    if (!readerBody) return
+    const videos = Array.from(readerBody.querySelectorAll('video'))
     const timers: number[] = []
 
     for (const video of videos) {
       const hide = (): void => {
-        video.remove()
+        if (readerBody.contains(video)) {
+          video.remove()
+        }
       }
       video.addEventListener('error', hide)
       for (const source of Array.from(video.querySelectorAll('source'))) {
@@ -307,17 +311,21 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     }
   }, [article?.id, fullHtml, article?.content])
 
-  // Hide broken <img> tags that fail to load or error (CORS / 404 / dead URLs).
+  // Hide broken <img> tags inside article content that fail to load or error (CORS / 404 / dead URLs).
+  // CRITICAL: Strictly check that target is inside .reader-body so React-managed nodes (like FeedFavicon) are never removed.
   useEffect(() => {
     const root = contentRef.current
     if (!root) return
     const handleImgError = (e: Event): void => {
       const target = e.target as HTMLElement
       if (target && target.tagName === 'IMG') {
-        const figure = target.closest('figure')
-        target.remove()
-        if (figure && figure.querySelectorAll('img').length === 0 && !figure.textContent?.trim()) {
-          figure.remove()
+        const readerBody = root.querySelector('.reader-body')
+        if (readerBody && readerBody.contains(target)) {
+          const figure = target.closest('figure')
+          target.remove()
+          if (figure && figure.querySelectorAll('img').length === 0 && !figure.textContent?.trim()) {
+            figure.remove()
+          }
         }
       }
     }

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Copy, Check, Languages, Loader2 } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
+import Tooltip from './Tooltip'
 
 interface SelectionFlyoutProps {
   containerRef: React.RefObject<HTMLElement | null>
@@ -268,28 +269,30 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       {/* Main Buttons Bar */}
       <div className="selection-flyout-bar">
         {/* Search */}
-        <button
-          type="button"
-          className="selection-flyout-btn"
-          onClick={handleSearch}
-          title={st.search}
-        >
-          <Search size={13} />
-          <span>{st.search}</span>
-        </button>
+        <Tooltip label={st.search} placement={coords.placement === 'top' ? 'top' : 'bottom'}>
+          <button
+            type="button"
+            className="selection-flyout-btn"
+            onClick={handleSearch}
+          >
+            <Search size={13} />
+            <span>{st.search}</span>
+          </button>
+        </Tooltip>
 
         <div className="selection-flyout-divider" />
 
         {/* Copy */}
-        <button
-          type="button"
-          className={`selection-flyout-btn ${copied ? 'is-copied' : ''}`}
-          onClick={handleCopy}
-          title={copied ? st.copied : st.copy}
-        >
-          {copied ? <Check size={13} color="var(--green)" /> : <Copy size={13} />}
-          <span>{copied ? st.copied : st.copy}</span>
-        </button>
+        <Tooltip label={copied ? st.copied : st.copy} placement={coords.placement === 'top' ? 'top' : 'bottom'}>
+          <button
+            type="button"
+            className={`selection-flyout-btn ${copied ? 'is-copied' : ''}`}
+            onClick={handleCopy}
+          >
+            {copied ? <Check size={13} color="var(--green)" /> : <Copy size={13} />}
+            <span>{copied ? st.copied : st.copy}</span>
+          </button>
+        </Tooltip>
 
         <div className="selection-flyout-divider" />
 
@@ -321,24 +324,25 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
                   {st.provider} {translationResult?.sourceLang ? `· ${translationResult.sourceLang}` : ''}
                 </span>
                 {translationResult?.translation && (
-                  <button
-                    type="button"
-                    className="selection-translate-copy-btn"
-                    onClick={handleCopyTranslation}
-                    title={transCopied ? st.translationCopied : st.copyTranslation}
-                  >
-                    {transCopied ? (
-                      <>
-                        <Check size={11} color="var(--green)" />
-                        <span>{st.translationCopied}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={11} />
-                        <span>{st.copy}</span>
-                      </>
-                    )}
-                  </button>
+                  <Tooltip label={transCopied ? st.translationCopied : st.copyTranslation} placement="top">
+                    <button
+                      type="button"
+                      className="selection-translate-copy-btn"
+                      onClick={handleCopyTranslation}
+                    >
+                      {transCopied ? (
+                        <>
+                          <Check size={11} color="var(--green)" />
+                          <span>{st.translationCopied}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={11} />
+                          <span>{st.copy}</span>
+                        </>
+                      )}
+                    </button>
+                  </Tooltip>
                 )}
               </div>
 
@@ -353,13 +357,14 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
                     <span>{st.translationError}</span>
                   </div>
                 ) : (
-                  <div
-                    className="selection-translate-text"
-                    onClick={handleCopyTranslation}
-                    title={st.copyTranslation}
-                  >
-                    {translationResult?.translation}
-                  </div>
+                  <Tooltip label={st.copyTranslation} placement="bottom">
+                    <div
+                      className="selection-translate-text"
+                      onClick={handleCopyTranslation}
+                    >
+                      {translationResult?.translation}
+                    </div>
+                  </Tooltip>
                 )}
               </div>
             </div>
