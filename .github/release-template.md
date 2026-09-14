@@ -1,4 +1,4 @@
-## 📰 CyberFeeds {{VERSION}} — Release Notes
+## 📰 CyberFeeds {{VERSION}} - Release Notes
 
 Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high-performance, distraction-free desktop RSS/Atom and media aggregator tailored for desktop workflows on Windows.
 
@@ -6,31 +6,35 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ### ✨ Key Features & Highlights
 
-- 🎬 **First-Class YouTube Integration**:
-  - Direct support for `@handles`, channel pages, playlists, and video URLs with automatic fast XML feed resolution.
-  - Canonical video GUID normalization (`yt:video:ID`) and high-res thumbnail extraction.
-  - Automatic SQLite deduplication to eliminate repeated articles and double notifications.
+- 🎬 **Enriched YouTube Feeds & In-App Playback**:
+  - Improved channel resolution, metadata, thumbnail handling, and error reporting.
+  - Featured images now include an interactive play overlay with embedded in-app video playback.
+  - YouTube articles avoid unnecessary full-page extraction while preserving canonical video identity.
 
-- 🤖 **Modern Reddit & Fast Feed Fetching**:
-  - Direct standard Desktop User-Agent with fast 5.5-second timeout and smart retries.
-  - Sanitized modern `www.reddit.com` URLs across all browser actions and feed parsing.
+- 📝 **Article Text Selection Flyout**:
+  - Select article text to search Google, copy, or translate without leaving the viewer.
+  - Selection is preserved while content refreshes, and the viewer now forwards wheel scrolling correctly.
+  - More resilient media-error handling prevents viewer crashes and preserves the surrounding content.
 
-- 💫 **4-Frame Animated Tray Icon**:
-  - Ultra-smooth, high-DPI animated fetching indicator right in the Windows system tray.
-  - Dynamic multi-resolution `.ico` updates across Windows taskbar and notifications.
+- 💫 **Live Article Updates & More Stable Reading**:
+  - Twitter/X-style floating pill announces newly available articles during background polling.
+  - Active selection and reading state are preserved when fresh content arrives.
+  - Article list controls, smart-view icons, and viewer interactions received a broad accessibility and polish pass.
 
-- 🗂️ **Titlebar More Options (`...`) Dropdown**:
-  - Compact titlebar with quick access to Donate (💖), feed controls, diagnostic Feeds Doctor, documentation, FAQ, changelog, and website.
-  - Clickable titlebar brand logo and text to open the About dialog.
+- 🔔 **Notification History & Tray Improvements**:
+  - Configurable notification history limits with accurate counts across badges.
+  - Recent notifications are available from the tray with feed icons and manual badge clearance.
+  - Compact notification cards now use more reliable sizing, wider actions, relative times, and multi-line descriptions.
 
-- 🎨 **New "Gris" (Grayscale) Theme & Theming Overhaul**:
-  - Default theme officially named **CyberFeeds**.
-  - New sober monochrome **Gris** / **Gray** theme with charcoal backgrounds and silver accents without saturated color noise.
-  - All themes clearly labeled by their signature color (CyberFeeds, Gris, Blanco, Morado, Azul, Amarillo).
+- 📥 **Feed Management & Onboarding**:
+  - Faster OPML imports and bulk feed controls.
+  - Better YouTube feed suggestions and a direct CyberFeeds release feed example using the official app icon.
+  - First-run onboarding and feed setup flows are clearer and more consistent.
 
-- 📋 **Tray Context Menu Enhancements**:
-  - Interactive branding header opening the About modal.
-  - Dedicated Help submenu with direct links to Documentation, FAQ, Changelog, Website, and Donate.
+- 🎨 **Cohesive Interface Polish**:
+  - CyberClock-inspired icon tiles improve settings navigation and section headings.
+  - Titlebar menus, sidebar navigation, tooltips, feed favicons, and article context actions were refined.
+  - Translation parsing and fallback validation are more robust, including Spanish UI coverage.
 
 ---
 
