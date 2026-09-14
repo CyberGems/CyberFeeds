@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useCallback, useRef } from 'react'
+import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DOMPurify from 'dompurify'
 import { ExternalLink, Star, FileText, Rss, Share2, Check, ArrowUp, BookOpen, Play, X } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
@@ -172,6 +172,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollRaf = useRef<number | undefined>(undefined)
+  const pendingFullHtmlRef = useRef<string | null>(null)
 
   useEffect(() => {
     return () => {
@@ -195,6 +196,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     if (found) {
       setArticle(found)
       setFullHtml(null)
+      pendingFullHtmlRef.current = null
       setShowSummary(false)
       setSummary('')
     } else {
@@ -253,6 +255,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     let active = true
     setLoading(true)
     setFullHtml(null)
+    pendingFullHtmlRef.current = null
 
     window.api
       .fetchArticleContent(article.id)
@@ -263,7 +266,15 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           const textOnly = result.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
           const minLength = Math.max(120, (article.snippet || '').length)
           if (textOnly.length >= minLength) {
-            setFullHtml(result.html)
+            const sel = window.getSelection()
+            const hasActiveSelection = Boolean(
+              sel && !sel.isCollapsed && contentRef.current && contentRef.current.contains(sel.anchorNode)
+            )
+            if (hasActiveSelection) {
+              pendingFullHtmlRef.current = result.html
+            } else {
+              setFullHtml(result.html)
+            }
           } else {
             console.log('Extracted content is too short, falling back to original')
           }
@@ -279,6 +290,23 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       active = false
     }
   }, [article?.id, settings.autoFetchFullContent])
+
+  // Apply deferred full content when user finishes / clears their active selection
+  useEffect(() => {
+    const handleSelectionChange = (): void => {
+      if (!pendingFullHtmlRef.current) return
+      const sel = window.getSelection()
+      if (!sel || sel.isCollapsed) {
+        const nextHtml = pendingFullHtmlRef.current
+        pendingFullHtmlRef.current = null
+        setFullHtml(nextHtml)
+      }
+    }
+    document.addEventListener('selectionchange', handleSelectionChange)
+    return () => {
+      document.removeEventListener('selectionchange', handleSelectionChange)
+    }
+  }, [])
 
   // Hide <video> tags that error or never produce data (CORS / DRM / dead URLs).
   useEffect(() => {
@@ -391,65 +419,67 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const bodyHtml = effectiveThumb
     ? removeDuplicateFeaturedImage(cleanedHtml, effectiveThumb, article.link)
     : cleanedHtml
-  const safeHtml = stripUnplayableMedia(DOMPurify.sanitize(bodyHtml, {
-    ALLOWED_TAGS: [
-      'p',
-      'h1',
-      'h2',
-      'h3',
-      'h4',
-      'h5',
-      'h6',
-      'a',
-      'strong',
-      'em',
-      'ul',
-      'ol',
-      'li',
-      'blockquote',
-      'pre',
-      'code',
-      'img',
-      'figure',
-      'figcaption',
-      'video',
-      'source',
-      'picture',
-      'iframe',
-      'br',
-      'hr',
-      'table',
-      'thead',
-      'tbody',
-      'tr',
-      'th',
-      'td',
-      'span',
-      'div',
-      'section',
-      'article'
-    ],
-    ALLOWED_ATTR: [
-      'href',
-      'src',
-      'srcset',
-      'alt',
-      'title',
-      'class',
-      'id',
-      'width',
-      'height',
-      'controls',
-      'type',
-      'media',
-      'allow',
-      'allowfullscreen',
-      'frameborder',
-      'sandbox',
-      'referrerpolicy'
-    ],
-    FORCE_BODY: true
-  }))
+  const safeHtml = useMemo(() => {
+    return stripUnplayableMedia(DOMPurify.sanitize(bodyHtml, {
+      ALLOWED_TAGS: [
+        'p',
+        'h1',
+        'h2',
+        'h3',
+        'h4',
+        'h5',
+        'h6',
+        'a',
+        'strong',
+        'em',
+        'ul',
+        'ol',
+        'li',
+        'blockquote',
+        'pre',
+        'code',
+        'img',
+        'figure',
+        'figcaption',
+        'video',
+        'source',
+        'picture',
+        'iframe',
+        'br',
+        'hr',
+        'table',
+        'thead',
+        'tbody',
+        'tr',
+        'th',
+        'td',
+        'span',
+        'div',
+        'section',
+        'article'
+      ],
+      ALLOWED_ATTR: [
+        'href',
+        'src',
+        'srcset',
+        'alt',
+        'title',
+        'class',
+        'id',
+        'width',
+        'height',
+        'controls',
+        'type',
+        'media',
+        'allow',
+        'allowfullscreen',
+        'frameborder',
+        'sandbox',
+        'referrerpolicy'
+      ],
+      FORCE_BODY: true
+    }))
+  }, [bodyHtml])
 
   return (
     <div className="article-viewer">
@@ -925,7 +955,9 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         </div>
       )}
 
-      <SelectionFlyout containerRef={contentRef} />
+      {settings.selectionToolbarEnabled !== false && (
+        <SelectionFlyout containerRef={contentRef} />
+      )}
     </div>
   )
 })

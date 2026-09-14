@@ -262,7 +262,10 @@ export const translations = {
         pickTooltip: 'Browse for browser executable',
         searchTitle: 'Article Search',
         instantSearch: 'Instant search while typing',
-        instantSearchHint: 'When disabled, press Enter in the search bar to execute the search (recommended for large libraries with thousands of articles).'
+        instantSearchHint: 'When disabled, press Enter in the search bar to execute the search (recommended for large libraries with thousands of articles).',
+        readingTitle: 'Article Reader',
+        selectionToolbar: 'Floating text selection toolbar',
+        selectionToolbarHint: 'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.'
       },
       notifications: {
         title: 'Notifications',
@@ -864,7 +867,10 @@ export const translations = {
         pickTooltip: 'Buscar ejecutable del navegador',
         searchTitle: 'Búsqueda de artículos',
         instantSearch: 'Búsqueda instantánea al teclear',
-        instantSearchHint: 'Cuando está desactivada, presiona Enter en la barra para buscar (recomendado para librerías con miles de artículos).'
+        instantSearchHint: 'Cuando está desactivada, presiona Enter en la barra para buscar (recomendado para librerías con miles de artículos).',
+        readingTitle: 'Lector de artículos',
+        selectionToolbar: 'Barra flotante al seleccionar texto',
+        selectionToolbarHint: 'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.'
       },
       notifications: {
         title: 'Notificaciones',

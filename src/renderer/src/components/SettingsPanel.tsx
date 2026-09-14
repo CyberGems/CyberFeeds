@@ -3,7 +3,7 @@ import {
   Settings, Bell, Sliders, Palette, Database, Zap,
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
-  Clock, Volume2, BellOff, Save, Wrench, Monitor
+  Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -742,6 +742,25 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </label>
                 <p className="settings-card-hint" style={{ margin: '6px 0 0 46px' }}>
                   {t.settings.general.instantSearchHint}
+                </p>
+              </div>
+
+              <div className="settings-card">
+                <CardTitle icon={BookOpen} accent={TAB_META.general.accent}>{t.settings.general.readingTitle}</CardTitle>
+                <label
+                  className="toggle"
+                  style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+                  onClick={() => update({ selectionToolbarEnabled: local.selectionToolbarEnabled === false })}
+                >
+                  <div className={`toggle-track ${local.selectionToolbarEnabled !== false ? 'on' : ''}`}>
+                    <div className="toggle-thumb" />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                    {t.settings.general.selectionToolbar}
+                  </span>
+                </label>
+                <p className="settings-card-hint" style={{ margin: '6px 0 0 46px' }}>
+                  {t.settings.general.selectionToolbarHint}
                 </p>
               </div>
 

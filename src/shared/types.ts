@@ -80,6 +80,7 @@ export interface AppSettings {
   shortcuts: KeyboardShortcuts
   autoFetchFullContent: boolean
   instantSearch: boolean
+  selectionToolbarEnabled: boolean
 }
 
 export type NotificationDisplayMode = 'automatic' | 'detailed' | 'compact'
@@ -208,5 +209,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
     fetch: { enabled: false, accelerator: '', global: false }
   },
   autoFetchFullContent: true,
-  instantSearch: false
+  instantSearch: false,
+  selectionToolbarEnabled: true
 }

@@ -247,6 +247,18 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     }
   }
 
+  const handleWheel = (e: React.WheelEvent): void => {
+    const target = e.target as HTMLElement
+    const scrollableBody = target.closest('.selection-translate-body')
+    if (scrollableBody && scrollableBody.scrollHeight > scrollableBody.clientHeight) {
+      return
+    }
+    if (containerRef.current) {
+      containerRef.current.scrollTop += e.deltaY
+      containerRef.current.scrollLeft += e.deltaX
+    }
+  }
+
   if (!coords || !selectedText) return null
 
   const st = t.articleViewer.selectionToolbar
@@ -262,6 +274,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
         zIndex: 9999
       }}
       onMouseDown={(e) => e.stopPropagation()}
+      onWheel={handleWheel}
     >
       {/* Little arrow pointing toward the selected text */}
       <div className="selection-flyout-arrow" />
