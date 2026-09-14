@@ -483,7 +483,7 @@ export const translations = {
         youtubeTed: 'TED',
         hackerNews: 'Hacker News',
         githubBlog: 'GitHub Blog',
-        cybergemsReleases: 'CyberFeeds releases (CyberGems)'
+        cybergemsReleases: 'CyberFeeds releases'
       }
     },
     addFolder: {
@@ -1068,7 +1068,7 @@ export const translations = {
         youtubeTed: 'TED',
         hackerNews: 'Hacker News',
         githubBlog: 'Blog de GitHub',
-        cybergemsReleases: 'Lanzamientos de CyberFeeds (CyberGems)'
+        cybergemsReleases: 'Lanzamientos de CyberFeeds'
       }
     },
     addFolder: {
