@@ -19,6 +19,65 @@ import { robustParse } from './feed-parse'
 import type { Feed, Folder } from './types'
 
 /**
+ * Official icons for CyberGems suite release feeds.
+ *
+ * When a user adds a suite release feed (e.g. CyberFeeds releases.atom),
+ * the generic Google S2 favicon for github.com would be misleading, so we
+ * serve the app official icon instead as an inline data URL (no network,
+ * works offline, identical in dev and in the packaged installer).
+ *
+ * To cover more suite apps later, extend SUITE_RELEASE_ICON_FILES with
+ * lowercase "owner/repo" keys pointing at each app icon file.
+ */
+
+const SUITE_RELEASE_ICON_FILES: Record<string, string> = {
+  'cybergems/cyberfeeds': 'icon.png'
+}
+
+let cachedSuiteIcons: Record<string, string> | null = null
+
+function loadSuiteReleaseIcons(): Record<string, string> {
+  if (cachedSuiteIcons) return cachedSuiteIcons
+  const loaded: Record<string, string> = {}
+  // resources dir sits next to the project root both in dev (out/main/..)
+  // and in the packaged app (app.asar.unpacked/resources or Resources).
+  const candidates = [
+    path.join(app.getAppPath(), 'resources'),
+    path.join(process.resourcesPath, 'resources'),
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'resources')
+  ]
+  for (const [key, file] of Object.entries(SUITE_RELEASE_ICON_FILES)) {
+    for (const dir of candidates) {
+      try {
+        const buf = fs.readFileSync(path.join(dir, file))
+        loaded[key] = `data:image/png;base64,${buf.toString('base64')}`
+        break
+      } catch { /* try next candidate */ }
+    }
+  }
+  cachedSuiteIcons = loaded
+  return loaded
+}
+
+/**
+ * Returns the official suite icon for a release feed URL, if it belongs
+ * to a known CyberGems repo (github.com/owner/repo/releases.atom).
+ */
+function getSuiteReleaseIcon(feedUrl: string): string | undefined {
+  let parsed: URL
+  try {
+    const trimmed = feedUrl.trim()
+    parsed = new URL(trimmed.toLowerCase().startsWith('http') ? trimmed : `https://${trimmed}`)
+  } catch {
+    return undefined
+  }
+  if (!/^(www\.)?github\.com$/i.test(parsed.hostname)) return undefined
+  const m = parsed.pathname.match(/^\/([^/]+)\/([^/]+)\/releases\.atom\/?$/i)
+  if (!m) return undefined
+  return loadSuiteReleaseIcons()[`${m[1].toLowerCase()}/${m[2].toLowerCase()}`]
+}
+
+/**
  * Sync the Windows login item with the current settings. When the app is set
  * to both start with Windows and start minimized, the login item is registered
  * with a `--hidden` arg so the startup launch can be told apart from a manual
@@ -102,7 +161,10 @@ export function registerIpc(): void {
 
       // Favicon from Google API
       let icon: string | undefined
-      try {
+      const suiteIcon = getSuiteReleaseIcon(feedUrl)
+      if (suiteIcon) {
+        icon = suiteIcon
+      } else try {
         const feedLink = parsed.link || channelPageUrl || feedUrl
         const domain = new URL(feedLink).hostname
         icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
@@ -141,7 +203,10 @@ export function registerIpc(): void {
       }
       const parsed = await robustParse(previewUrl)
       let icon: string | undefined
-      try {
+      const suitePreviewIcon = getSuiteReleaseIcon(previewUrl)
+      if (suitePreviewIcon) {
+        icon = suitePreviewIcon
+      } else try {
         const feedLink = parsed.link || channelPageUrl || previewUrl
         const domain = new URL(feedLink).hostname
         icon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`

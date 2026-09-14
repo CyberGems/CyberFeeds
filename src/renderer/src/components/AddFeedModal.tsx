@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss } from 'lucide-react'
+import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss, Github } from 'lucide-react'
 import { useFeedsStore } from '../store/feeds.store'
 import { useUIStore } from '../store/ui.store'
 import { useTranslation } from '../hooks/useTranslation'
 import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
 import { FeedFavicon } from './ArticleList'
-import logoPng from '../../../../resources/icon.png'
 
 type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss' | 'cybergems'
 
@@ -54,7 +53,7 @@ const FEED_EXAMPLES: Array<{
 ]
 
 function FeedExampleIcon({ category }: { category: FeedExampleCategory }): JSX.Element {
-  if (category === 'cybergems') return <img src={logoPng} width={14} height={14} style={{ borderRadius: 3 }} alt="" />
+  if (category === 'cybergems') return <Github size={14} />
   if (category === 'reddit') return <MessageCircle size={14} />
   if (category === 'youtube') return <Youtube size={14} />
   if (category === 'news') return <Newspaper size={14} />
