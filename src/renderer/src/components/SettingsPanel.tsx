@@ -762,6 +762,22 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <p className="settings-card-hint" style={{ margin: '6px 0 0 46px' }}>
                   {t.settings.general.selectionToolbarHint}
                 </p>
+
+                <label
+                  className="toggle"
+                  style={{ margin: '14px 0 0', display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+                  onClick={() => update({ autoPlayYouTube: !local.autoPlayYouTube })}
+                >
+                  <div className={`toggle-track ${local.autoPlayYouTube ? 'on' : ''}`}>
+                    <div className="toggle-thumb" />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                    {t.settings.general.autoPlayYouTube}
+                  </span>
+                </label>
+                <p className="settings-card-hint" style={{ margin: '6px 0 0 46px' }}>
+                  {t.settings.general.autoPlayYouTubeHint}
+                </p>
               </div>
 
               <div className="settings-card">

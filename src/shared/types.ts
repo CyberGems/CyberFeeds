@@ -81,6 +81,7 @@ export interface AppSettings {
   autoFetchFullContent: boolean
   instantSearch: boolean
   selectionToolbarEnabled: boolean
+  autoPlayYouTube: boolean
 }
 
 export type NotificationDisplayMode = 'automatic' | 'detailed' | 'compact'
@@ -210,5 +211,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   autoFetchFullContent: true,
   instantSearch: false,
-  selectionToolbarEnabled: true
+  selectionToolbarEnabled: true,
+  autoPlayYouTube: false
 }

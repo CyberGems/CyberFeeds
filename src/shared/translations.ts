@@ -187,6 +187,8 @@ export const translations = {
       playVideo: 'Play video',
       playVideoInApp: 'Play video in CyberFeeds',
       closePlayer: 'Close video',
+      autoPlayYouTube: 'Auto-play in CyberFeeds',
+      autoPlayYouTubeTooltip: 'Automatically open YouTube videos in the CyberFeeds player',
       selectionToolbar: {
         search: 'Search',
         copy: 'Copy',
@@ -265,7 +267,9 @@ export const translations = {
         instantSearchHint: 'When disabled, press Enter in the search bar to execute the search (recommended for large libraries with thousands of articles).',
         readingTitle: 'Article Reader',
         selectionToolbar: 'Floating text selection toolbar',
-        selectionToolbarHint: 'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.'
+        selectionToolbarHint: 'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.',
+        autoPlayYouTube: 'Auto-play YouTube videos in CyberFeeds',
+        autoPlayYouTubeHint: 'Automatically embed and play YouTube videos when viewing articles.'
       },
       notifications: {
         title: 'Notifications',
@@ -792,6 +796,8 @@ export const translations = {
       playVideo: 'Reproducir video',
       playVideoInApp: 'Reproducir video en CyberFeeds',
       closePlayer: 'Cerrar video',
+      autoPlayYouTube: 'Reproducir en CyberFeeds',
+      autoPlayYouTubeTooltip: 'Abrir videos de YouTube automáticamente en el reproductor de CyberFeeds',
       selectionToolbar: {
         search: 'Buscar',
         copy: 'Copiar',
@@ -870,7 +876,9 @@ export const translations = {
         instantSearchHint: 'Cuando está desactivada, presiona Enter en la barra para buscar (recomendado para librerías con miles de artículos).',
         readingTitle: 'Lector de artículos',
         selectionToolbar: 'Barra flotante al seleccionar texto',
-        selectionToolbarHint: 'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.'
+        selectionToolbarHint: 'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.',
+        autoPlayYouTube: 'Reproducir videos de YouTube en CyberFeeds',
+        autoPlayYouTubeHint: 'Incrusta y reproduce videos de YouTube automáticamente al ver artículos.'
       },
       notifications: {
         title: 'Notificaciones',

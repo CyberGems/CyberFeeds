@@ -173,6 +173,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollRaf = useRef<number | undefined>(undefined)
   const pendingFullHtmlRef = useRef<string | null>(null)
+  const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
+  const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
 
   useEffect(() => {
     return () => {
@@ -199,12 +201,25 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       pendingFullHtmlRef.current = null
       setShowSummary(false)
       setSummary('')
+      const isYtFound = isYouTubeUrl(found.link)
+      setIsPlayingVideo(Boolean(isYtFound && settings.autoPlayYouTube))
     } else {
       window.api.getArticleById(selectedArticleId).then((a) => {
-        if (a) setArticle(a)
+        if (a) {
+          setArticle(a)
+          const isYtFound = isYouTubeUrl(a.link)
+          setIsPlayingVideo(Boolean(isYtFound && settings.autoPlayYouTube))
+        }
       })
     }
-  }, [selectedArticleId])
+  }, [selectedArticleId, settings.autoPlayYouTube])
+
+  // If user turns on autoPlayYouTube while viewing a YouTube video, activate player
+  useEffect(() => {
+    if (ytVideoId && settings.autoPlayYouTube) {
+      setIsPlayingVideo(true)
+    }
+  }, [settings.autoPlayYouTube, ytVideoId])
 
   // Sync specific properties (like starred) if they change in the global store
   useEffect(() => {
@@ -396,8 +411,6 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     }
   }, [article])
 
-  const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
-  const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
   const isReddit = Boolean(article && (article.link?.includes('reddit.com') || (article as any).feedUrl?.includes('reddit.com')))
   const ytThumbnail = ytVideoId ? (article?.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
   const rawHtml = article ? (fullHtml || article.content || `<p>${article.snippet}</p>`) : ''
@@ -508,6 +521,25 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             >
               <BookOpen size={13} />
               <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
+            </button>
+          </Tooltip>
+        )}
+        {isYt && (
+          <Tooltip label={t.articleViewer.autoPlayYouTubeTooltip} placement="bottom">
+            <button
+              className={`btn btn-ghost has-label ${settings.autoPlayYouTube ? 'is-active' : ''}`}
+              style={{
+                fontSize: 12,
+                color: settings.autoPlayYouTube ? 'var(--accent)' : 'inherit'
+              }}
+              onClick={() => {
+                const next = !settings.autoPlayYouTube
+                update({ autoPlayYouTube: next })
+                setIsPlayingVideo(next)
+              }}
+            >
+              <Play size={13} fill={settings.autoPlayYouTube ? 'currentColor' : 'none'} />
+              <span className="viewer-toolbar-label">{t.articleViewer.autoPlayYouTube}</span>
             </button>
           </Tooltip>
         )}
@@ -688,7 +720,10 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                 >
                   <button
                     className="btn btn-ghost"
-                    onClick={() => setIsPlayingVideo(false)}
+                    onClick={() => {
+                      setIsPlayingVideo(false)
+                      update({ autoPlayYouTube: false })
+                    }}
                     style={{
                       fontSize: '12px',
                       padding: '4px 10px',
@@ -747,7 +782,10 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   cursor: 'pointer',
                   backgroundColor: '#000'
                 }}
-                onClick={() => setIsPlayingVideo(true)}
+                onClick={() => {
+                  setIsPlayingVideo(true)
+                  update({ autoPlayYouTube: true })
+                }}
                 title={t.articleViewer.playVideoInApp}
                 role="button"
                 tabIndex={0}
@@ -755,6 +793,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault()
                     setIsPlayingVideo(true)
+                    update({ autoPlayYouTube: true })
                   }
                 }}
               >
@@ -801,13 +840,27 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                 </div>
               </div>
             ) : (
-              <div style={{ margin: '16px 0' }}>
+              <div style={{ margin: '20px 0' }}>
                 <button
                   className="btn btn-primary"
-                  onClick={() => setIsPlayingVideo(true)}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                  onClick={() => {
+                    setIsPlayingVideo(true)
+                    update({ autoPlayYouTube: true })
+                  }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '9px 18px',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    borderRadius: 'var(--radius)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.18)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
                 >
-                  <Play size={14} fill="currentColor" />
+                  <Play size={16} fill="currentColor" />
                   <span>{t.articleViewer.playVideoInApp}</span>
                 </button>
               </div>
