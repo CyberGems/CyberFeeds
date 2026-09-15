@@ -753,7 +753,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   }}
                 >
                   <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=1&rel=0`}
+                    src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=0&rel=0`}
                     title={article.title}
                     style={{
                       position: 'absolute',
