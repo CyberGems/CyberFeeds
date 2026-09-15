@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, screen, ipcMain } from 'electron'
+import { app, BrowserWindow, shell, screen, ipcMain, session } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { is } from '@electron-toolkit/utils'
@@ -346,6 +346,26 @@ app.whenReady().then(() => {
   initDb()
   backfillFavicons() // Assign Google S2 favicon URLs to any feeds missing icons
   const settings = getSettings()
+
+  // Ensure YouTube iframe embeds receive proper Referer and clean User-Agent headers.
+  // In Electron (served via file:// or localhost), Chromium omits or strips the Referer header,
+  // causing YouTube embeds to fail with Error 153 (Video Player Configuration Error).
+  session.defaultSession.webRequest.onBeforeSendHeaders(
+    {
+      urls: [
+        '*://*.youtube.com/*',
+        '*://*.youtube-nocookie.com/*',
+        '*://*.googlevideo.com/*'
+      ]
+    },
+    (details, callback) => {
+      details.requestHeaders['Referer'] = 'https://cyberfeeds.app/'
+      if (details.requestHeaders['User-Agent']) {
+        details.requestHeaders['User-Agent'] = details.requestHeaders['User-Agent'].replace(/Electron\/[0-9.]+\s*/i, '')
+      }
+      callback({ cancel: false, requestHeaders: details.requestHeaders })
+    }
+  )
 
   registerIpc()
   registerNotifierIpc()
