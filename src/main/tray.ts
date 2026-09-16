@@ -160,6 +160,11 @@ function updateTrayTooltip(busy: boolean): void {
   }
 }
 
+const OUTWARD_PULSE = [1, 2, 3, 4]
+const INWARD_PULSE = [3, 2, 1, 4]
+let activePulse = OUTWARD_PULSE
+let pulseStep = 0
+
 export function setTrayActivity(source: 'polling' | 'batch', active: boolean): void {
   if (active) {
     activeActivities.add(source)
@@ -171,7 +176,9 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
 
   if (isBusy) {
     if (!animTimer) {
-      currentFrame = 1
+      activePulse = OUTWARD_PULSE
+      pulseStep = 0
+      currentFrame = activePulse[0]
       if (tray && !tray.isDestroyed()) {
         try {
           tray.setImage(loadTrayFrame(currentFrame))
@@ -188,7 +195,13 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
           }
           return
         }
-        currentFrame = (currentFrame % 4) + 1
+        pulseStep++
+        if (pulseStep >= activePulse.length) {
+          pulseStep = 0
+          // Feeds predominantly receive incoming data (~65% inward), with occasional outgoing queries (~35% outward)
+          activePulse = Math.random() < 0.65 ? INWARD_PULSE : OUTWARD_PULSE
+        }
+        currentFrame = activePulse[pulseStep]
         try {
           tray.setImage(loadTrayFrame(currentFrame))
         } catch {
@@ -197,13 +210,15 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
             animTimer = null
           }
         }
-      }, 180)
+      }, 175)
     }
   } else {
     if (animTimer) {
       clearInterval(animTimer)
       animTimer = null
     }
+    activePulse = OUTWARD_PULSE
+    pulseStep = 0
     currentFrame = 1
     if (tray && !tray.isDestroyed()) {
       try {
