@@ -131,7 +131,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
           style={{ position: 'relative' }}
           aria-label={notificationTooltip}
         >
-          <Bell size={15} style={{ color: isHistoryLimitReached ? 'var(--red, #f85149)' : undefined }} />
+          <Bell size={15} />
           {unseenNotificationsCount > 0 && (
             <span
               style={{
@@ -150,10 +150,8 @@ const TopBar = memo(function TopBar(): JSX.Element {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: isHistoryLimitReached ? '1px solid rgba(255, 255, 255, 0.35)' : '1px solid var(--bg-0)',
-                boxShadow: isHistoryLimitReached
-                  ? '0 0 6px rgba(248, 81, 73, 0.7)'
-                  : '0 0 4px rgba(0,0,0,0.4)',
+                border: '1px solid var(--bg-0)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)',
                 pointerEvents: 'none',
                 lineHeight: 1
               }}
