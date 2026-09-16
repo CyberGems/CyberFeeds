@@ -86,6 +86,13 @@ export default function App(): JSX.Element {
       useUIStore.setState({ unseenNotificationsCount: unseen })
     })
 
+    // Detect system username for welcoming greetings
+    window.api.getUserInfo?.().then((info) => {
+      if (info?.username) {
+        useUIStore.getState().setDetectedUserName(info.username)
+      }
+    }).catch(() => {})
+
     const offUpdates = window.api.onUpdateStatus((raw) => {
       const s = raw as UpdateStatus
       if (s.state === 'available') {

@@ -1,12 +1,13 @@
 import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DOMPurify from 'dompurify'
-import { ExternalLink, Star, FileText, Rss, Share2, Check, ArrowUp, BookOpen, Play, X } from 'lucide-react'
+import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
 import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
 import SelectionFlyout from './SelectionFlyout'
+import WelcomeLounge from './WelcomeLounge'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
@@ -488,10 +489,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   if (!article) {
     return (
       <div className="article-viewer">
-        <div className="reader-empty">
-          <Rss size={48} />
-          <p>{t.articleViewer.selectToRead}</p>
-        </div>
+        <WelcomeLounge />
       </div>
     )
   }

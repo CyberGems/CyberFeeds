@@ -17,6 +17,7 @@ interface UIState {
   isFetching: boolean
   pendingFeedId: string | null
   aboutAutoCheck: boolean
+  detectedUserName: string
 
   selectFeed: (id: string | null, options?: { unreadOnly?: boolean; readOnly?: boolean }) => void
   selectArticle: (id: string | null) => void
@@ -29,6 +30,7 @@ interface UIState {
   setFetching: (v: boolean) => void
   setPendingFeedId: (id: string | null) => void
   setAboutAutoCheck: (v: boolean) => void
+  setDetectedUserName: (v: string) => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -46,6 +48,9 @@ export const useUIStore = create<UIState>((set) => ({
   isFetching: false,
   pendingFeedId: null,
   aboutAutoCheck: false,
+  detectedUserName: '',
+
+  setDetectedUserName: (name) => set({ detectedUserName: name }),
 
   selectFeed: (id, options) =>
     set((state) => ({

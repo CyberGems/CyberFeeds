@@ -203,7 +203,10 @@ const api = {
       translation: string
       sourceLang: string
       targetLang: string
-    } | null>
+    } | null>,
+
+  // System
+  getUserInfo: () => ipcRenderer.invoke('system:getUserInfo') as Promise<{ username: string }>
 }
 
 if (process.contextIsolated) {

@@ -1050,4 +1050,15 @@ export function registerIpc(): void {
 
     return null
   })
+
+  // ─── System / User Info ───────────────────────────────────────────────────
+  ipcMain.handle('system:getUserInfo', () => {
+    try {
+      const username = os.userInfo().username || process.env.USERNAME || process.env.USER || ''
+      return { username }
+    } catch {
+      return { username: process.env.USERNAME || process.env.USER || '' }
+    }
+  })
 }
+

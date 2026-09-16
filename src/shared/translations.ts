@@ -269,7 +269,13 @@ export const translations = {
         selectionToolbar: 'Floating text selection toolbar',
         selectionToolbarHint: 'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.',
         autoPlayYouTube: 'Auto-play YouTube videos in CyberFeeds',
-        autoPlayYouTubeHint: 'Automatically embed and play YouTube videos when viewing articles.'
+        autoPlayYouTubeHint: 'Automatically embed and play YouTube videos when viewing articles.',
+        personalizationTitle: 'Personalization & Welcome',
+        userName: 'Your name',
+        userNamePlaceholder: 'e.g. Carlos',
+        userNameHint: 'Displayed in welcoming greetings across the app. Leave blank to use detected system name.',
+        showWelcomeGreeting: 'Show welcoming greetings',
+        showWelcomeGreetingHint: 'Displays a friendly greeting in the titlebar and when opening the reader.'
       },
       notifications: {
         title: 'Notifications',
@@ -614,6 +620,21 @@ export const translations = {
         paste: 'Paste',
         delete: 'Delete'
       }
+    },
+    welcome: {
+      goodMorning: 'Good morning',
+      goodAfternoon: 'Good afternoon',
+      goodEvening: 'Good evening',
+      welcomeBack: 'Welcome back',
+      emptyTitle: 'Welcome to your feed sanctuary',
+      emptySubtitle: 'Select any article from the list to start reading, or use keyboard shortcuts to browse.',
+      allCaughtUp: 'All caught up!',
+      allCaughtUpDesc: 'No unread articles pending in your feeds.',
+      unreadArticlesCount: '{count} unread articles waiting for you',
+      oneUnreadArticle: '1 unread article waiting for you',
+      activeFeeds: '{count} active feeds',
+      keyboardHint: 'Tip: Press J / K to navigate articles, Enter to read, or M to mark as read.',
+      quickActions: 'Quick Navigation'
     }
   },
   es: {
@@ -889,7 +910,13 @@ export const translations = {
         selectionToolbar: 'Barra flotante al seleccionar texto',
         selectionToolbarHint: 'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.',
         autoPlayYouTube: 'Reproducir videos de YouTube en CyberFeeds',
-        autoPlayYouTubeHint: 'Incrusta y reproduce videos de YouTube automáticamente al ver artículos.'
+        autoPlayYouTubeHint: 'Incrusta y reproduce videos de YouTube automáticamente al ver artículos.',
+        personalizationTitle: 'Personalización y bienvenida',
+        userName: 'Tu nombre',
+        userNamePlaceholder: 'ej. Carlos',
+        userNameHint: 'Se muestra en los saludos de bienvenida en la app. Déjalo en blanco para usar el nombre detectado del sistema.',
+        showWelcomeGreeting: 'Mostrar saludos de bienvenida',
+        showWelcomeGreetingHint: 'Muestra un saludo amigable en la barra superior y al abrir el lector.'
       },
       notifications: {
         title: 'Notificaciones',
@@ -1237,6 +1264,22 @@ export const translations = {
         paste: 'Pegar',
         delete: 'Eliminar'
       }
+    },
+    welcome: {
+      goodMorning: 'Buenos días',
+      goodAfternoon: 'Buenas tardes',
+      goodEvening: 'Buenas noches',
+      welcomeBack: 'Te damos la bienvenida',
+      emptyTitle: 'Te damos la bienvenida a tu espacio de lectura',
+      emptySubtitle: 'Selecciona cualquier artículo de la lista para comenzar a leer, o usa los atajos de teclado para navegar.',
+      allCaughtUp: '¡Todo al día!',
+      allCaughtUpDesc: 'No hay artículos pendientes en tus feeds.',
+      unreadArticlesCount: '{count} artículos sin leer esperando por ti',
+      oneUnreadArticle: '1 artículo sin leer esperando por ti',
+      activeFeeds: '{count} feeds activos',
+      keyboardHint: 'Consejo: Pulsa J / K para navegar entre artículos, Enter para leer, o M para marcar como leído.',
+      quickActions: 'Navegación rápida'
     }
   }
 }
+

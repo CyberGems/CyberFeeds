@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef } from 'react'
+import { memo, useState, useEffect, useRef, useMemo } from 'react'
 import logoPng from '../../../../resources/icon.png'
 import {
   Inbox,
@@ -25,6 +25,7 @@ import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
+import { getTimeOfDay, getEffectiveUserName, getGreetingText } from '@shared/welcome'
 
 const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
 const WIKI_URL = 'https://github.com/CyberGems/CyberFeeds/wiki'
@@ -33,12 +34,22 @@ const CHANGELOG_URL = 'https://github.com/CyberGems/CyberFeeds/releases'
 const HOMEPAGE_URL = 'https://cybergems.org'
 
 const TopBar = memo(function TopBar(): JSX.Element {
-  const { openPanel, setLayout, layout, unseenNotificationsCount } = useUIStore()
+  const { openPanel, setLayout, layout, unseenNotificationsCount, detectedUserName } = useUIStore()
   const { settings, update } = useSettingsStore()
   const { t } = useTranslation()
   const [maximized, setMaximized] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const timeOfDay = useMemo(() => getTimeOfDay(), [])
+  const effectiveName = useMemo(
+    () => getEffectiveUserName(settings.userName, detectedUserName),
+    [settings.userName, detectedUserName]
+  )
+  const greeting = useMemo(
+    () => getGreetingText(timeOfDay, effectiveName, t.welcome),
+    [timeOfDay, effectiveName, t.welcome]
+  )
 
   const historyLimit = settings.notifications?.historyLimit ?? 1000
   const isHistoryLimitReached = historyLimit > 0 && unseenNotificationsCount >= historyLimit
@@ -102,7 +113,14 @@ const TopBar = memo(function TopBar(): JSX.Element {
           <span>Cyber<span className="brand-feeds">Feeds</span></span>
         </button>
       </Tooltip>
-      <div className="topbar-drag" />
+      <div className="topbar-drag">
+        {settings.showWelcomeGreeting !== false && (
+          <div className="topbar-welcome" aria-label={greeting}>
+            <span className="topbar-welcome-dot" aria-hidden="true" />
+            <span className="topbar-welcome-text">{greeting}</span>
+          </div>
+        )}
+      </div>
 
       <Tooltip label={notificationTooltip} placement="bottom">
         <button

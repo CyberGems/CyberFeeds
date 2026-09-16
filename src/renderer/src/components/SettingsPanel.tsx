@@ -3,8 +3,9 @@ import {
   Settings, Bell, Sliders, Palette, Database, Zap,
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
-  Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen
+  Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles
 } from 'lucide-react'
+import { formatDisplayName } from '@shared/welcome'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useConfirm } from '../hooks/useConfirm'
@@ -231,7 +232,7 @@ interface SettingsPanelProps {
 }
 
 export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
-  const { closePanel: storeClosePanel, openPanel } = useUIStore()
+  const { closePanel: storeClosePanel, openPanel, detectedUserName } = useUIStore()
   const closePanel = onClose || storeClosePanel
   const { settings, save } = useSettingsStore()
   const { feeds, folders, loadAll, deleteAllFeeds } = useFeedsStore()
@@ -651,6 +652,57 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     <option value="en">English</option>
                     <option value="es">Español</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="settings-card">
+                <CardTitle icon={Sparkles} accent={TAB_META.general.accent}>{t.settings.general.personalizationTitle}</CardTitle>
+                <div className="form-group" style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <label className="form-label" style={{ margin: 0 }}>
+                      {t.settings.general.userName}
+                    </label>
+                    {detectedUserName && !local.userName && (
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                        {formatDisplayName(detectedUserName)}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    className="form-input"
+                    type="text"
+                    maxLength={40}
+                    placeholder={
+                      detectedUserName
+                        ? `${t.settings.general.userNamePlaceholder} (${formatDisplayName(detectedUserName)})`
+                        : t.settings.general.userNamePlaceholder
+                    }
+                    value={local.userName ?? ''}
+                    onChange={(e) => update({ userName: e.target.value }, 300)}
+                  />
+                  <div className="form-hint" style={{ marginTop: 4 }}>
+                    {t.settings.general.userNameHint}
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--border-muted)', paddingTop: 12 }}>
+                  <label
+                    className="toggle"
+                    style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => update({ showWelcomeGreeting: local.showWelcomeGreeting === false })}
+                  >
+                    <div className={`toggle-track ${local.showWelcomeGreeting !== false ? 'on' : ''}`}>
+                      <div className="toggle-thumb" />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)', display: 'block' }}>
+                        {t.settings.general.showWelcomeGreeting}
+                      </span>
+                      <span className="form-hint" style={{ marginTop: 2, display: 'block' }}>
+                        {t.settings.general.showWelcomeGreetingHint}
+                      </span>
+                    </div>
+                  </label>
                 </div>
               </div>
 
