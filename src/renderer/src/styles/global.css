@@ -1283,13 +1283,18 @@ body {
 }
 
 /* ─── Reader Video & Fallback Card ───────────────────────────────────────── */
-.reader-body video {
+.reader-body video,
+.reader-embed-player,
+.reader-rumble-player {
   max-width: 100%;
+  width: 100%;
   height: auto;
+  aspect-ratio: 16 / 9;
   border-radius: 8px;
   background: #000;
   margin: 16px 0;
   display: block;
+  border: 1px solid var(--border-subtle);
 }
 
 .reader-video-fallback-card {

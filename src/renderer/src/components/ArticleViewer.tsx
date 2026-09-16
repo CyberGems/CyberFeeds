@@ -99,6 +99,31 @@ function removeDuplicateFeaturedImage(html: string, thumbnail: string, baseUrl: 
   return document.body.innerHTML
 }
 
+/** Converts dynamic video embeds (e.g. Rumble script loaders) into standard iframes before DOMPurify sanitizes away scripts. */
+function transformDynamicEmbeds(html: string): string {
+  if (!html) return html
+  let result = html
+
+  // 1. Rumble script embed loaders:
+  // Extracts Rumble("play", { video: "xyz", div: "rumble_xyz" })
+  const rumbleVideoMap = new Map<string, string>()
+  const scriptRegex = /Rumble\s*\(\s*["']play["']\s*,\s*\{[^}]*["']video["']\s*:\s*["']([a-zA-Z0-9]+)["'][^}]*["']div["']\s*:\s*["']([^"']+)["']/gi
+  let match: RegExpExecArray | null
+  while ((match = scriptRegex.exec(result)) !== null) {
+    const videoId = match[1]
+    const divId = match[2]
+    rumbleVideoMap.set(divId, videoId)
+  }
+
+  // Replace <div id="rumble_xyz"> with responsive Rumble embed iframe
+  result = result.replace(/<div\s+id=["'](rumble_[a-zA-Z0-9]+)["'][^>]*>\s*<\/div>/gi, (_, divId) => {
+    const videoId = rumbleVideoMap.get(divId) || divId.replace(/^rumble_/, '')
+    return `<iframe class="reader-embed-player reader-rumble-player" src="https://rumble.com/embed/${videoId}/?pub=4" frameborder="0" allowfullscreen loading="lazy"></iframe>`
+  })
+
+  return result
+}
+
 const VIDEO_PLACEHOLDER_TEXT =
   /^(play video content|play video|loading video|video loading|click to play|tap to play video)$/i
 
@@ -461,9 +486,10 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const isReddit = Boolean(article && (article.link?.includes('reddit.com') || (article as any).feedUrl?.includes('reddit.com')))
   const ytThumbnail = ytVideoId ? (article?.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
   const rawHtml = article ? (fullHtml || article.content || `<p>${article.snippet}</p>`) : ''
+  const transformedHtml = transformDynamicEmbeds(rawHtml)
   const cleanedHtml = ytVideoId
-    ? rawHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
-    : rawHtml
+    ? transformedHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
+    : transformedHtml
   const effectiveThumb = article ? (ytThumbnail || article.thumbnail) : null
   const bodyHtml = effectiveThumb && article
     ? removeDuplicateFeaturedImage(cleanedHtml, effectiveThumb, article.link)
@@ -526,7 +552,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         'allowfullscreen',
         'frameborder',
         'sandbox',
-        'referrerpolicy'
+        'referrerpolicy',
+        'loading'
       ],
       FORCE_BODY: true
     }))

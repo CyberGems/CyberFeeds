@@ -352,8 +352,8 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
   }
 
   if (hasVideo) {
-    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ?)"
-    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%')
+    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ?)"
+    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%', '%rumble.com%', '%rumble_%', '%Rumble(%', '%vimeo.com%')
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {
@@ -425,8 +425,8 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
   }
 
   if (hasVideo) {
-    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ?)"
-    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%')
+    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ?)"
+    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%', '%rumble.com%', '%rumble_%', '%Rumble(%', '%vimeo.com%')
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {
