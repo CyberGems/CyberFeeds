@@ -3,7 +3,7 @@ import { useFeedsStore } from './store/feeds.store'
 import { useArticlesStore } from './store/articles.store'
 import { useUIStore } from './store/ui.store'
 import { useSettingsStore } from './store/settings.store'
-import { DEFAULT_SETTINGS } from './types'
+import { DEFAULT_SETTINGS, type ArticleQuery } from './types'
 import { useColumnResize } from './hooks/useColumnResize'
 import { useRowResize } from './hooks/useRowResize'
 import { useOverlayDismiss } from './hooks/useOverlayDismiss'
@@ -44,7 +44,8 @@ export default function App(): JSX.Element {
     readOnly,
     search,
     pendingFeedId,
-    closePanel
+    closePanel,
+    quickFilter
   } = useUIStore()
   const { load: loadSettings, settings } = useSettingsStore()
   const { t } = useTranslation()
@@ -151,7 +152,7 @@ export default function App(): JSX.Element {
 
   // React to feed/filter changes
   useEffect(() => {
-    const query: Record<string, unknown> = { limit: 60, offset: 0 }
+    const query: ArticleQuery = { limit: 60, offset: 0 }
     if (selectedFeedId === 'trash') {
       query.trashOnly = true
     } else if (selectedFeedId === 'starred') {
@@ -159,11 +160,35 @@ export default function App(): JSX.Element {
     } else if (selectedFeedId) {
       query.feedId = selectedFeedId
     }
-    if (unreadOnly && selectedFeedId !== 'trash') query.unreadOnly = true
-    if (readOnly && selectedFeedId !== 'trash') query.readOnly = true
+
+    if (selectedFeedId !== 'trash') {
+      if (quickFilter === 'unread' || unreadOnly) {
+        query.unreadOnly = true
+      } else if (readOnly) {
+        query.readOnly = true
+      }
+
+      if (quickFilter === 'today') {
+        query.timeRange = 'today'
+      } else if (quickFilter === 'video') {
+        query.hasVideo = true
+      } else if (quickFilter === 'priority') {
+        const pKw = settings.filters?.priorityKeywords ?? []
+        if (pKw.length > 0) {
+          query.priorityKeywords = pKw
+        } else {
+          query.starredOnly = true
+        }
+      }
+
+      if (settings.filters?.muteAction === 'hide' && (settings.filters?.muteKeywords ?? []).length > 0) {
+        query.muteKeywords = settings.filters.muteKeywords
+      }
+    }
+
     if (search) query.search = search
     load(query)
-  }, [selectedFeedId, unreadOnly, readOnly, search])
+  }, [selectedFeedId, unreadOnly, readOnly, search, quickFilter, settings.filters])
 
   // Listen for new articles from main process
   useEffect(() => {

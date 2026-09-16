@@ -296,12 +296,29 @@ export interface ArticleQuery {
   starredOnly?: boolean
   trashOnly?: boolean
   search?: string
+  timeRange?: string
+  hasVideo?: boolean
+  priorityKeywords?: string[]
+  muteKeywords?: string[]
   limit?: number
   offset?: number
 }
 
 export function getArticles(query: ArticleQuery = {}): Article[] {
-  const { feedId, unreadOnly, readOnly, starredOnly, trashOnly, search, limit = 100, offset = 0 } = query
+  const {
+    feedId,
+    unreadOnly,
+    readOnly,
+    starredOnly,
+    trashOnly,
+    search,
+    timeRange,
+    hasVideo,
+    priorityKeywords,
+    muteKeywords,
+    limit = 100,
+    offset = 0
+  } = query
   let sql = `
     SELECT a.*, f.title as feedTitle, f.icon as feedIcon
     FROM articles a
@@ -321,6 +338,47 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
     params.push(term, term, term)
   }
 
+  if (timeRange === 'today') {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    sql += ' AND a.pubDate >= ?'
+    params.push(startOfToday.getTime())
+  } else if (timeRange === '24h') {
+    sql += ' AND a.pubDate >= ?'
+    params.push(Date.now() - 86400000)
+  } else if (timeRange === 'week') {
+    sql += ' AND a.pubDate >= ?'
+    params.push(Date.now() - 7 * 86400000)
+  }
+
+  if (hasVideo) {
+    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ?)"
+    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%')
+  }
+
+  if (priorityKeywords && priorityKeywords.length > 0) {
+    const validPriority = priorityKeywords.map((k) => k.trim()).filter(Boolean)
+    if (validPriority.length > 0) {
+      const orClauses = validPriority.map(() => '(a.title LIKE ? OR a.snippet LIKE ?)').join(' OR ')
+      sql += ` AND (${orClauses})`
+      for (const kw of validPriority) {
+        const term = `%${kw}%`
+        params.push(term, term)
+      }
+    }
+  }
+
+  if (muteKeywords && muteKeywords.length > 0) {
+    const validMute = muteKeywords.map((k) => k.trim()).filter(Boolean)
+    if (validMute.length > 0) {
+      for (const kw of validMute) {
+        sql += ' AND NOT (a.title LIKE ? OR a.snippet LIKE ?)'
+        const term = `%${kw}%`
+        params.push(term, term)
+      }
+    }
+  }
+
   sql += ' ORDER BY a.pubDate DESC LIMIT ? OFFSET ?'
   params.push(limit, offset)
 
@@ -328,7 +386,18 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
 }
 
 export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = {}): number {
-  const { feedId, unreadOnly, readOnly, starredOnly, trashOnly, search } = query
+  const {
+    feedId,
+    unreadOnly,
+    readOnly,
+    starredOnly,
+    trashOnly,
+    search,
+    timeRange,
+    hasVideo,
+    priorityKeywords,
+    muteKeywords
+  } = query
   let sql = 'SELECT COUNT(*) as c FROM articles a WHERE 1=1'
   const params: (string | number)[] = []
   sql += trashOnly ? ' AND a.deletedAt IS NOT NULL' : ' AND a.deletedAt IS NULL'
@@ -341,6 +410,48 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
     const term = `%${search}%`
     params.push(term, term, term)
   }
+
+  if (timeRange === 'today') {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    sql += ' AND a.pubDate >= ?'
+    params.push(startOfToday.getTime())
+  } else if (timeRange === '24h') {
+    sql += ' AND a.pubDate >= ?'
+    params.push(Date.now() - 86400000)
+  } else if (timeRange === 'week') {
+    sql += ' AND a.pubDate >= ?'
+    params.push(Date.now() - 7 * 86400000)
+  }
+
+  if (hasVideo) {
+    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ?)"
+    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%')
+  }
+
+  if (priorityKeywords && priorityKeywords.length > 0) {
+    const validPriority = priorityKeywords.map((k) => k.trim()).filter(Boolean)
+    if (validPriority.length > 0) {
+      const orClauses = validPriority.map(() => '(a.title LIKE ? OR a.snippet LIKE ?)').join(' OR ')
+      sql += ` AND (${orClauses})`
+      for (const kw of validPriority) {
+        const term = `%${kw}%`
+        params.push(term, term)
+      }
+    }
+  }
+
+  if (muteKeywords && muteKeywords.length > 0) {
+    const validMute = muteKeywords.map((k) => k.trim()).filter(Boolean)
+    if (validMute.length > 0) {
+      for (const kw of validMute) {
+        sql += ' AND NOT (a.title LIKE ? OR a.snippet LIKE ?)'
+        const term = `%${kw}%`
+        params.push(term, term)
+      }
+    }
+  }
+
   return ((db.prepare(sql).get(...params) as { c: number }).c)
 }
 
@@ -380,15 +491,41 @@ export function getUnreadCountByFeed(): FeedArticleCounts {
 }
 
 export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>[]): Omit<Article, 'feedTitle' | 'feedIcon'>[] {
+  const currentSettings = getSettings()
+  const muteKeywords = (currentSettings.filters?.muteKeywords ?? [])
+    .map((k) => k.toLowerCase().trim())
+    .filter(Boolean)
+  const isAutoReadMute = currentSettings.filters?.muteAction === 'autoRead' && muteKeywords.length > 0
+
   const stmt = db.prepare(`
     INSERT OR IGNORE INTO articles (id, feedId, title, link, pubDate, content, snippet, author, thumbnail, read, starred, guid)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
   `)
   const inserted: Omit<Article, 'feedTitle' | 'feedIcon'>[] = []
   db.transaction(() => {
     for (const a of articles) {
       try {
-        const result = stmt.run(a.id, a.feedId, a.title, a.link, a.pubDate, a.content, a.snippet, a.author ?? null, a.thumbnail ?? null, a.guid)
+        const shouldAutoRead =
+          isAutoReadMute &&
+          muteKeywords.some(
+            (kw) =>
+              (a.title && a.title.toLowerCase().includes(kw)) ||
+              (a.snippet && a.snippet.toLowerCase().includes(kw))
+          )
+        const initialRead = shouldAutoRead ? 1 : 0
+        const result = stmt.run(
+          a.id,
+          a.feedId,
+          a.title,
+          a.link,
+          a.pubDate,
+          a.content,
+          a.snippet,
+          a.author ?? null,
+          a.thumbnail ?? null,
+          initialRead,
+          a.guid
+        )
         if (result.changes > 0) inserted.push(a)
       } catch (err: any) {
         if (err.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {

@@ -79,6 +79,14 @@ export const translations = {
       readCountMany: 'read'
     },
     articleList: {
+      quickFilters: {
+        all: 'All',
+        unread: 'Unread',
+        today: 'Today',
+        priority: 'Priority',
+        videos: 'Videos'
+      },
+      relevantBadge: 'Relevant',
       newArticlesPill: '{count} new articles',
       newArticlePill: '1 new article',
       favorites: 'Favorites',
@@ -212,6 +220,7 @@ export const translations = {
       tabs: {
         general: 'General',
         appearance: 'Appearance',
+        filters: 'Filters & Rules',
         notifications: 'Notifications',
         keyboard: 'Keyboard',
         backupMaintenance: 'Maintenance'
@@ -276,6 +285,21 @@ export const translations = {
         userNameHint: 'Displayed in welcoming greetings across the app. Leave blank to use detected system name.',
         showWelcomeGreeting: 'Show welcoming greetings',
         showWelcomeGreetingHint: 'Displays a friendly greeting in the titlebar and when opening the reader.'
+      },
+      filters: {
+        title: 'Filters & Rules',
+        priorityTitle: 'Priority Topics (Highlights)',
+        priorityDesc: 'Articles matching any of these keywords are highlighted with a star badge and can be filtered with 1 click in the article list.',
+        priorityPlaceholder: 'Add keyword (e.g. release, AI, security) and press Enter...',
+        muteTitle: 'Noise & Mute Rules',
+        muteDesc: 'Suppress articles matching unwanted keywords to keep your reading clean and focused.',
+        mutePlaceholder: 'Add keyword (e.g. sponsored, deal, crypto) and press Enter...',
+        muteAction: 'Action on match:',
+        muteActionHide: 'Hide article from list',
+        muteActionAutoRead: 'Mark as read automatically',
+        addKeyword: 'Add',
+        noKeywords: 'No keywords added yet.',
+        keywordCount: '{count} keywords configured'
       },
       notifications: {
         title: 'Notifications',
@@ -718,6 +742,14 @@ export const translations = {
       readCountMany: 'leídos'
     },
     articleList: {
+      quickFilters: {
+        all: 'Todo',
+        unread: 'No leídos',
+        today: 'Hoy',
+        priority: 'Relevantes',
+        videos: 'Videos'
+      },
+      relevantBadge: 'Relevante',
       newArticlesPill: '{count} artículos nuevos',
       newArticlePill: '1 artículo nuevo',
       favorites: 'Favoritos',
@@ -853,6 +885,7 @@ export const translations = {
       tabs: {
         general: 'General',
         appearance: 'Apariencia',
+        filters: 'Filtros y reglas',
         notifications: 'Notificaciones',
         keyboard: 'Teclado',
         backupMaintenance: 'Mantenimiento'
@@ -917,6 +950,21 @@ export const translations = {
         userNameHint: 'Se muestra en los saludos de bienvenida en la app. Déjalo en blanco para usar el nombre detectado del sistema.',
         showWelcomeGreeting: 'Mostrar saludos de bienvenida',
         showWelcomeGreetingHint: 'Muestra un saludo amigable en la barra superior y al abrir el lector.'
+      },
+      filters: {
+        title: 'Filtros y reglas',
+        priorityTitle: 'Temas prioritarios (destacados)',
+        priorityDesc: 'Los artículos que coincidan con estas palabras se destacarán con una estrella y se podrán filtrar con 1 clic en la lista.',
+        priorityPlaceholder: 'Añade una palabra (ej. release, IA, seguridad) y presiona Enter...',
+        muteTitle: 'Reglas de ruido y silenciado',
+        muteDesc: 'Suprime artículos que coincidan con palabras no deseadas para mantener tus lecturas limpias y enfocadas.',
+        mutePlaceholder: 'Añade una palabra (ej. patrocinado, sorteo, cripto) y presiona Enter...',
+        muteAction: 'Acción al coincidir:',
+        muteActionHide: 'Ocultar artículo de la lista',
+        muteActionAutoRead: 'Marcar como leído automáticamente',
+        addKeyword: 'Añadir',
+        noKeywords: 'No se han añadido palabras clave aún.',
+        keywordCount: '{count} palabras configuradas'
       },
       notifications: {
         title: 'Notificaciones',

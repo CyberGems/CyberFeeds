@@ -20,7 +20,8 @@ import {
   Play,
   X,
   Plus,
-  Download
+  Download,
+  Clock
 } from 'lucide-react'
 import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
@@ -214,7 +215,9 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     setReadOnly,
     setSearch,
     isFetching,
-    pendingFeedId
+    pendingFeedId,
+    quickFilter,
+    setQuickFilter
   } = useUIStore()
   const [ctx, setCtx] = React.useState<{ x: number; y: number; id: string } | null>(null)
   const [windowFocused, setWindowFocused] = useState(() =>
@@ -960,6 +963,77 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         </Tooltip>
       </div>
 
+      {/* Quick Filter Chips Bar */}
+      {!isTrash && (
+        <div className="article-filter-chips-bar">
+          <div className="article-filter-chips-track">
+            <button
+              type="button"
+              className={`article-filter-chip ${quickFilter === 'all' && !unreadOnly && !readOnly ? 'active' : ''}`}
+              onClick={() => {
+                setUnreadOnly(false)
+                setReadOnly(false)
+                setQuickFilter('all')
+              }}
+            >
+              {t.articleList.quickFilters.all}
+            </button>
+            <button
+              type="button"
+              className={`article-filter-chip ${quickFilter === 'unread' || unreadOnly ? 'active' : ''}`}
+              onClick={() => {
+                setReadOnly(false)
+                if (quickFilter === 'unread' || unreadOnly) {
+                  setUnreadOnly(false)
+                  setQuickFilter('all')
+                } else {
+                  setUnreadOnly(true)
+                  setQuickFilter('unread')
+                }
+              }}
+            >
+              {t.articleList.quickFilters.unread}
+            </button>
+            <button
+              type="button"
+              className={`article-filter-chip ${quickFilter === 'today' ? 'active' : ''}`}
+              onClick={() => {
+                setUnreadOnly(false)
+                setReadOnly(false)
+                setQuickFilter(quickFilter === 'today' ? 'all' : 'today')
+              }}
+            >
+              <Clock size={11} />
+              <span>{t.articleList.quickFilters.today}</span>
+            </button>
+            <button
+              type="button"
+              className={`article-filter-chip ${quickFilter === 'priority' ? 'active' : ''}`}
+              onClick={() => {
+                setUnreadOnly(false)
+                setReadOnly(false)
+                setQuickFilter(quickFilter === 'priority' ? 'all' : 'priority')
+              }}
+            >
+              <Star size={11} />
+              <span>{t.articleList.quickFilters.priority}</span>
+            </button>
+            <button
+              type="button"
+              className={`article-filter-chip ${quickFilter === 'video' ? 'active' : ''}`}
+              onClick={() => {
+                setUnreadOnly(false)
+                setReadOnly(false)
+                setQuickFilter(quickFilter === 'video' ? 'all' : 'video')
+              }}
+            >
+              <Play size={11} />
+              <span>{t.articleList.quickFilters.videos}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Scrollable list container with floating top pill */}
       <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {incomingCount > 0 && (
@@ -1337,6 +1411,17 @@ const ArticleItem = memo(
     )
     const dateTooltipLabel = t.notifier.receivedAt.replace('{time}', absoluteTime)
 
+    const priorityKeywords = settings.filters?.priorityKeywords ?? []
+    const isPriority = React.useMemo(() => {
+      if (priorityKeywords.length === 0) return false
+      const titleLower = (article.title || '').toLowerCase()
+      const snippetLower = (article.snippet || '').toLowerCase()
+      return priorityKeywords.some((kw) => {
+        const k = kw.trim().toLowerCase()
+        return k && (titleLower.includes(k) || snippetLower.includes(k))
+      })
+    }, [priorityKeywords, article.title, article.snippet])
+
     return (
       <div
         ref={measureRef}
@@ -1373,6 +1458,12 @@ const ArticleItem = memo(
           <span className="article-title" style={{ flex: 1 }}>
             {article.title}
           </span>
+          {isPriority && (
+            <span className="article-priority-badge" title={t.articleList.relevantBadge}>
+              <Star size={10} fill="var(--star)" color="var(--star)" />
+              <span>{t.articleList.relevantBadge}</span>
+            </span>
+          )}
           {!isTrash && !article.deletedAt && (
             <Tooltip
               label={article.starred ? t.articleViewer.unstar : t.articleViewer.star}

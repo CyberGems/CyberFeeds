@@ -3,7 +3,8 @@ import {
   Settings, Bell, Sliders, Palette, Database, Zap,
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
-  Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles
+  Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles,
+  Filter, Ban, Star, Plus
 } from 'lucide-react'
 import { formatDisplayName } from '@shared/welcome'
 import { useUIStore } from '../store/ui.store'
@@ -25,7 +26,7 @@ interface DisplayInfo {
   isPrimary?: boolean
 }
 
-type ActiveTab = 'general' | 'appearance' | 'notifications' | 'keyboard' | 'backupMaintenance'
+type ActiveTab = 'general' | 'appearance' | 'filters' | 'notifications' | 'keyboard' | 'backupMaintenance'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 /* CyberClock-inspired icon tiles: each settings tab owns an accent color
@@ -33,6 +34,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 const TAB_META: Record<ActiveTab, { accent: string; soft: string }> = {
   general: { accent: '#58a6ff', soft: 'rgba(88,166,255,0.14)' },
   appearance: { accent: '#a371f7', soft: 'rgba(163,113,247,0.14)' },
+  filters: { accent: '#f778ba', soft: 'rgba(247,120,186,0.14)' },
   notifications: { accent: '#3fb950', soft: 'rgba(63,185,80,0.14)' },
   keyboard: { accent: '#39c5cf', soft: 'rgba(57,197,207,0.14)' },
   backupMaintenance: { accent: '#d29922', soft: 'rgba(210,153,34,0.14)' }
@@ -246,6 +248,8 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const initialTab = useUIStore((s) => s.settingsInitialTab) as ActiveTab | null
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab || 'general')
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [newPriorityInput, setNewPriorityInput] = useState('')
+  const [newMuteInput, setNewMuteInput] = useState('')
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -385,6 +389,50 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
   const previewNow = (playSound = true): void => {
     void window.api.previewNotification(localRef.current.notifications, playSound)
+  }
+
+  const handleAddPriorityKeyword = (e?: React.FormEvent): void => {
+    if (e) e.preventDefault()
+    const val = newPriorityInput.trim()
+    if (!val) return
+    const current = local.filters?.priorityKeywords ?? []
+    if (current.some((k) => k.toLowerCase() === val.toLowerCase())) {
+      setNewPriorityInput('')
+      return
+    }
+    const next = [...current, val]
+    update({ filters: { ...(local.filters || DEFAULT_SETTINGS.filters), priorityKeywords: next } })
+    setNewPriorityInput('')
+  }
+
+  const handleRemovePriorityKeyword = (keyword: string): void => {
+    const current = local.filters?.priorityKeywords ?? []
+    const next = current.filter((k) => k !== keyword)
+    update({ filters: { ...(local.filters || DEFAULT_SETTINGS.filters), priorityKeywords: next } })
+  }
+
+  const handleAddMuteKeyword = (e?: React.FormEvent): void => {
+    if (e) e.preventDefault()
+    const val = newMuteInput.trim()
+    if (!val) return
+    const current = local.filters?.muteKeywords ?? []
+    if (current.some((k) => k.toLowerCase() === val.toLowerCase())) {
+      setNewMuteInput('')
+      return
+    }
+    const next = [...current, val]
+    update({ filters: { ...(local.filters || DEFAULT_SETTINGS.filters), muteKeywords: next } })
+    setNewMuteInput('')
+  }
+
+  const handleRemoveMuteKeyword = (keyword: string): void => {
+    const current = local.filters?.muteKeywords ?? []
+    const next = current.filter((k) => k !== keyword)
+    update({ filters: { ...(local.filters || DEFAULT_SETTINGS.filters), muteKeywords: next } })
+  }
+
+  const handleMuteActionChange = (action: 'hide' | 'autoRead'): void => {
+    update({ filters: { ...(local.filters || DEFAULT_SETTINGS.filters), muteAction: action } })
   }
 
   const toggleIgnoredFeed = (feedId: string): void => {
@@ -580,6 +628,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const navItems: Array<{ id: ActiveTab; label: string; Icon: typeof Bell }> = [
     { id: 'general', label: t.settings.tabs.general, Icon: Sliders },
     { id: 'appearance', label: t.settings.tabs.appearance, Icon: Palette },
+    { id: 'filters', label: t.settings.tabs.filters, Icon: Filter },
     { id: 'notifications', label: t.settings.tabs.notifications, Icon: Bell },
     { id: 'keyboard', label: t.settings.tabs.keyboard, Icon: Keyboard },
     { id: 'backupMaintenance', label: t.settings.tabs.backupMaintenance, Icon: Database }
@@ -1043,6 +1092,130 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     }}
                     style={{ width: '100%' }}
                   />
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'filters' && (
+            <>
+              {/* Priority Topics Card */}
+              <div className="settings-card">
+                <CardTitle icon={Star} accent={TAB_META.filters.accent}>
+                  {t.settings.filters.priorityTitle}
+                </CardTitle>
+                <p className="form-hint" style={{ marginTop: 0, marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
+                  {t.settings.filters.priorityDesc}
+                </p>
+
+                <form onSubmit={handleAddPriorityKeyword} style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    placeholder={t.settings.filters.priorityPlaceholder}
+                    value={newPriorityInput}
+                    onChange={(e) => setNewPriorityInput(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={!newPriorityInput.trim()}
+                    style={{ padding: '0 14px' }}
+                  >
+                    <Plus size={14} />
+                    <span>{t.settings.filters.addKeyword}</span>
+                  </button>
+                </form>
+
+                <div className="settings-keyword-chips-container">
+                  {(local.filters?.priorityKeywords ?? []).length === 0 ? (
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      {t.settings.filters.noKeywords}
+                    </span>
+                  ) : (
+                    (local.filters?.priorityKeywords ?? []).map((kw) => (
+                      <span key={kw} className="settings-keyword-chip priority">
+                        <Star size={11} fill="var(--star)" color="var(--star)" />
+                        <span>{kw}</span>
+                        <button
+                          type="button"
+                          className="settings-keyword-delete"
+                          onClick={() => handleRemovePriorityKeyword(kw)}
+                          aria-label={`Remove ${kw}`}
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Noise & Mute Rules Card */}
+              <div className="settings-card">
+                <CardTitle icon={Ban} accent="#f85149">
+                  {t.settings.filters.muteTitle}
+                </CardTitle>
+                <p className="form-hint" style={{ marginTop: 0, marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
+                  {t.settings.filters.muteDesc}
+                </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--border-muted)' }}>
+                  <label className="form-label" style={{ margin: 0, fontSize: 13 }}>
+                    {t.settings.filters.muteAction}
+                  </label>
+                  <select
+                    className="form-select"
+                    style={{ width: 'auto', minWidth: 200 }}
+                    value={local.filters?.muteAction ?? 'hide'}
+                    onChange={(e) => handleMuteActionChange(e.target.value as 'hide' | 'autoRead')}
+                  >
+                    <option value="hide">{t.settings.filters.muteActionHide}</option>
+                    <option value="autoRead">{t.settings.filters.muteActionAutoRead}</option>
+                  </select>
+                </div>
+
+                <form onSubmit={handleAddMuteKeyword} style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                    placeholder={t.settings.filters.mutePlaceholder}
+                    value={newMuteInput}
+                    onChange={(e) => setNewMuteInput(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-secondary"
+                    disabled={!newMuteInput.trim()}
+                    style={{ padding: '0 14px' }}
+                  >
+                    <Plus size={14} />
+                    <span>{t.settings.filters.addKeyword}</span>
+                  </button>
+                </form>
+
+                <div className="settings-keyword-chips-container">
+                  {(local.filters?.muteKeywords ?? []).length === 0 ? (
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                      {t.settings.filters.noKeywords}
+                    </span>
+                  ) : (
+                    (local.filters?.muteKeywords ?? []).map((kw) => (
+                      <span key={kw} className="settings-keyword-chip mute">
+                        <span>{kw}</span>
+                        <button
+                          type="button"
+                          className="settings-keyword-delete"
+                          onClick={() => handleRemoveMuteKeyword(kw)}
+                          aria-label={`Remove ${kw}`}
+                        >
+                          <X size={12} />
+                        </button>
+                      </span>
+                    ))
+                  )}
                 </div>
               </div>
             </>

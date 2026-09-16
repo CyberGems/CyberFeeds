@@ -84,6 +84,28 @@ export interface AppSettings {
   autoPlayYouTube: boolean
   userName: string
   showWelcomeGreeting: boolean
+  filters: FilterSettings
+}
+
+export interface FilterSettings {
+  priorityKeywords: string[]
+  muteKeywords: string[]
+  muteAction: 'hide' | 'autoRead'
+}
+
+export interface ArticleQuery {
+  feedId?: string
+  unreadOnly?: boolean
+  readOnly?: boolean
+  starredOnly?: boolean
+  trashOnly?: boolean
+  search?: string
+  timeRange?: 'today' | '24h' | 'week'
+  hasVideo?: boolean
+  priorityKeywords?: string[]
+  muteKeywords?: string[]
+  limit?: number
+  offset?: number
 }
 
 export type NotificationDisplayMode = 'automatic' | 'detailed' | 'compact'
@@ -216,5 +238,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   selectionToolbarEnabled: true,
   autoPlayYouTube: false,
   userName: '',
-  showWelcomeGreeting: true
+  showWelcomeGreeting: true,
+  filters: {
+    priorityKeywords: [],
+    muteKeywords: [],
+    muteAction: 'hide'
+  }
 }

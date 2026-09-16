@@ -1,17 +1,6 @@
 import { create } from 'zustand'
-import type { Article } from '../types'
+import type { Article, ArticleQuery } from '../types'
 import { useFeedsStore } from './feeds.store'
-
-interface ArticleQuery {
-  feedId?: string
-  unreadOnly?: boolean
-  readOnly?: boolean
-  starredOnly?: boolean
-  trashOnly?: boolean
-  search?: string
-  limit?: number
-  offset?: number
-}
 
 interface ArticlesState {
   articles: Article[]

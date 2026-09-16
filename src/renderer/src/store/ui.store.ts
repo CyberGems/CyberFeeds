@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 
 export type Panel = 'settings' | 'inbox' | 'history' | 'addFeed' | 'editFeed' | 'addFolder' | 'editFolder' | 'about' | 'doctor' | null
+export type QuickFilter = 'all' | 'unread' | 'today' | 'priority' | 'video'
 
 interface UIState {
   selectedFeedId: string | null    // null = All Feeds
@@ -12,6 +13,7 @@ interface UIState {
   unseenNotificationsCount: number
   unreadOnly: boolean
   readOnly: boolean
+  quickFilter: QuickFilter
   search: string
   layout: 'three-panel' | 'two-panel' | 'one-panel' | 'horizontal-split'
   isFetching: boolean
@@ -25,6 +27,7 @@ interface UIState {
   closePanel: () => void
   setUnreadOnly: (v: boolean) => void
   setReadOnly: (v: boolean) => void
+  setQuickFilter: (v: QuickFilter) => void
   setSearch: (v: string) => void
   setLayout: (v: 'three-panel' | 'two-panel' | 'one-panel' | 'horizontal-split') => void
   setFetching: (v: boolean) => void
@@ -43,6 +46,7 @@ export const useUIStore = create<UIState>((set) => ({
   unseenNotificationsCount: 0,
   unreadOnly: false,
   readOnly: false,
+  quickFilter: 'all',
   search: '',
   layout: 'three-panel',
   isFetching: false,
@@ -51,12 +55,14 @@ export const useUIStore = create<UIState>((set) => ({
   detectedUserName: '',
 
   setDetectedUserName: (name) => set({ detectedUserName: name }),
+  setQuickFilter: (filter) => set({ quickFilter: filter }),
 
   selectFeed: (id, options) =>
     set((state) => ({
       selectedFeedId: id,
       selectedArticleId: null,
       search: '',
+      quickFilter: 'all',
       pendingFeedId: null,
       unreadOnly:
         id === 'trash' || id === 'starred'
