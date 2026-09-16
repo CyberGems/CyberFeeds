@@ -197,6 +197,9 @@ export const translations = {
       closePlayer: 'Close video',
       autoPlayYouTube: 'Auto-play in CyberFeeds',
       autoPlayYouTubeTooltip: 'Automatically open YouTube videos in the CyberFeeds player',
+      videoFallbackTitle: 'External video',
+      videoFallbackDesc: 'This media source requires opening directly in your browser due to host restrictions.',
+      videoFallbackBtn: 'Watch video in browser',
       selectionToolbar: {
         search: 'Search',
         copy: 'Copy',
@@ -864,6 +867,9 @@ export const translations = {
       closePlayer: 'Cerrar video',
       autoPlayYouTube: 'Reproducir en CyberFeeds',
       autoPlayYouTubeTooltip: 'Abrir videos de YouTube automáticamente en el reproductor de CyberFeeds',
+      videoFallbackTitle: 'Video externo',
+      videoFallbackDesc: 'Este medio requiere reproducirse en el navegador debido a restricciones del servidor.',
+      videoFallbackBtn: 'Ver video en el navegador',
       selectionToolbar: {
         search: 'Buscar',
         copy: 'Copiar',

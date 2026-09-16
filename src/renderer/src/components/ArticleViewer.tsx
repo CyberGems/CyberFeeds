@@ -324,7 +324,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     }
   }, [])
 
-  // Hide <video> tags that error or never produce data (CORS / DRM / dead URLs).
+  // Handle <video> tags in reader body: provide interactive fallback card if error / CORS / unplayable
   useEffect(() => {
     const root = contentRef.current
     if (!root) return
@@ -333,27 +333,73 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     const videos = Array.from(readerBody.querySelectorAll('video'))
     const timers: number[] = []
 
-    for (const video of videos) {
-      const hide = (): void => {
-        if (readerBody.contains(video)) {
-          video.style.display = 'none'
-        }
+    const showFallback = (video: HTMLVideoElement): void => {
+      if (!readerBody.contains(video)) return
+      if (video.dataset.fallbackApplied) return
+      video.dataset.fallbackApplied = 'true'
+      video.style.display = 'none'
+
+      const sourceEl = video.querySelector('source')
+      const rawSrc = video.currentSrc || video.getAttribute('src') || sourceEl?.getAttribute('src') || ''
+      const targetUrl = rawSrc || article?.link || ''
+
+      const card = document.createElement('div')
+      card.className = 'reader-video-fallback-card'
+      card.innerHTML = `
+        <div class="reader-video-fallback-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+          </svg>
+        </div>
+        <div class="reader-video-fallback-content">
+          <div class="reader-video-fallback-title">${t.articleViewer.videoFallbackTitle}</div>
+          <div class="reader-video-fallback-desc">${t.articleViewer.videoFallbackDesc}</div>
+        </div>
+        <button type="button" class="btn btn-secondary reader-video-fallback-btn">
+          <span>${t.articleViewer.videoFallbackBtn}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+          </svg>
+        </button>
+      `
+      const btn = card.querySelector('button')
+      if (btn && targetUrl) {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          window.api.openExternal(targetUrl)
+        })
       }
-      video.addEventListener('error', hide)
+
+      video.parentNode?.insertBefore(card, video.nextSibling)
+    }
+
+    for (const video of videos) {
+      if (video.error) {
+        showFallback(video)
+        continue
+      }
+      video.addEventListener('error', () => showFallback(video))
       for (const source of Array.from(video.querySelectorAll('source'))) {
-        source.addEventListener('error', hide)
+        source.addEventListener('error', () => showFallback(video))
       }
       timers.push(
         window.setTimeout(() => {
-          if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) hide()
-        }, 5000)
+          if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+            showFallback(video)
+          }
+        }, 4000)
       )
     }
 
     return () => {
       for (const timer of timers) window.clearTimeout(timer)
+      const cards = Array.from(readerBody.querySelectorAll('.reader-video-fallback-card'))
+      for (const c of cards) c.remove()
     }
-  }, [article?.id, fullHtml, article?.content])
+  }, [article?.id, fullHtml, article?.content, article?.link, t])
 
   // Hide broken <img> tags inside article content that fail to load or error (CORS / 404 / dead URLs).
   // Uses non-destructive display:none so React's DOM tree is never mutated.
