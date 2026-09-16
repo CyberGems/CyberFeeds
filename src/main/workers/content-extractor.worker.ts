@@ -110,13 +110,26 @@ function extractArticle(html: string, baseUrl: string): string {
   // Filter iframes: preserve legitimate video and audio embeds, remove ad/tracking iframes
   try {
     document.querySelectorAll('iframe').forEach((iframe: Element) => {
-      const rawSrc = (iframe.getAttribute('src') || iframe.getAttribute('data-src') || '').trim()
+      let rawSrc = (iframe.getAttribute('src') || iframe.getAttribute('data-src') || '').trim()
+      if (rawSrc.startsWith('//')) {
+        rawSrc = `https:${rawSrc}`
+        iframe.setAttribute('src', rawSrc)
+      }
       const isAllowed = ALLOWED_IFRAME_DOMAINS.some(domain => rawSrc.toLowerCase().includes(domain))
       if (!isAllowed) {
         iframe.remove()
       } else {
         if (!iframe.getAttribute('src') && iframe.getAttribute('data-src')) {
-          iframe.setAttribute('src', iframe.getAttribute('data-src')!)
+          iframe.setAttribute('src', rawSrc)
+        }
+        if (rawSrc.includes('youtube.com') || rawSrc.includes('youtube-nocookie.com')) {
+          if (!iframe.getAttribute('allow')) {
+            iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share')
+          }
+          if (!iframe.getAttribute('referrerpolicy')) {
+            iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
+          }
+          iframe.setAttribute('allowfullscreen', '')
         }
       }
     })

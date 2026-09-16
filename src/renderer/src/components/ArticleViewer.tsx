@@ -99,12 +99,48 @@ function removeDuplicateFeaturedImage(html: string, thumbnail: string, baseUrl: 
   return document.body.innerHTML
 }
 
-/** Converts dynamic video embeds (e.g. Rumble script loaders) into standard iframes before DOMPurify sanitizes away scripts. */
+/**
+ * Checks if the existing article content from the RSS feed is already rich and complete.
+ * If the content already has embedded media players (iframes, videos) or substantial
+ * formatted paragraphs, running automatic background scraping is unnecessary, wastes
+ * bandwidth, and destroys/restarts active video playback.
+ */
+function isContentAlreadyFull(content: string | undefined | null, snippet: string | undefined | null): boolean {
+  if (!content) return false
+  const trimmed = content.trim()
+  if (trimmed.length < 300) return false
+
+  // If content contains an embedded media player (iframe or video), it is already rich
+  if (/<(?:iframe|video)\b/i.test(trimmed)) {
+    return true
+  }
+
+  // If content has 3+ paragraphs and exceeds 1200 chars, it's a full article
+  const pCount = (trimmed.match(/<p\b/gi) || []).length
+  if (pCount >= 3 && trimmed.length > 1200) {
+    return true
+  }
+
+  // If content length is substantially longer than snippet and exceeds 2000 chars
+  if (trimmed.length > 2000 && trimmed.length > (snippet?.length || 0) * 3) {
+    return true
+  }
+
+  return false
+}
+
+/** Converts dynamic video embeds, fixes protocol-relative URLs on media, and ensures valid player attributes. */
 function transformDynamicEmbeds(html: string): string {
   if (!html) return html
   let result = html
 
-  // 1. Rumble script embed loaders:
+  // 1. Normalize protocol-relative URLs on media (e.g. src="//www.youtube.com/embed/..." -> src="https://www.youtube.com/embed/...")
+  result = result.replace(
+    /(<(?:iframe|video|embed|source)\b[^>]*\bsrc=["'])\/\/([^"']+)(["'][^>]*>)/gi,
+    '$1https://$2$3'
+  )
+
+  // 2. Rumble script embed loaders:
   // Extracts Rumble("play", { video: "xyz", div: "rumble_xyz" })
   const rumbleVideoMap = new Map<string, string>()
   const scriptRegex = /Rumble\s*\(\s*["']play["']\s*,\s*\{[^}]*["']video["']\s*:\s*["']([a-zA-Z0-9]+)["'][^}]*["']div["']\s*:\s*["']([^"']+)["']/gi
@@ -120,6 +156,24 @@ function transformDynamicEmbeds(html: string): string {
     const videoId = rumbleVideoMap.get(divId) || divId.replace(/^rumble_/, '')
     return `<iframe class="reader-embed-player reader-rumble-player" src="https://rumble.com/embed/${videoId}/?pub=4" frameborder="0" allowfullscreen loading="lazy"></iframe>`
   })
+
+  // 3. Ensure YouTube and video iframes have proper permissions and referrerpolicy
+  result = result.replace(
+    /<iframe\b([^>]*\bsrc=["']https:\/\/(?:[a-zA-Z0-9-]+\.)?(?:youtube\.com|youtube-nocookie\.com)\/embed\/[^"']+["'][^>]*)>/gi,
+    (m) => {
+      let tag = m
+      if (!tag.includes('allow=')) {
+        tag = tag.replace('<iframe', '<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"')
+      }
+      if (!tag.includes('allowfullscreen')) {
+        tag = tag.replace('<iframe', '<iframe allowfullscreen')
+      }
+      if (!tag.includes('referrerpolicy=')) {
+        tag = tag.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"')
+      }
+      return tag
+    }
+  )
 
   return result
 }
@@ -286,7 +340,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       })
   }, [article])
 
-  // Automatically fetch full article content when article changes
+  // Automatically fetch full article content when article changes (only if content is not already complete)
   useEffect(() => {
     if (!article) {
       setFullHtml(null)
@@ -294,6 +348,13 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     }
 
     if (!settings.autoFetchFullContent) {
+      setFullHtml(null)
+      return
+    }
+
+    // If the article already contains complete content or embedded media players,
+    // do not automatically scrape the web in the background (prevents tearing down DOM/restarting videos)
+    if (isContentAlreadyFull(article.content, article.snippet)) {
       setFullHtml(null)
       return
     }
@@ -310,19 +371,21 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         setLoading(false)
         if (result?.html) {
           const textOnly = result.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-          const minLength = Math.max(120, (article.snippet || '').length)
+          const currentContentText = (article.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+          const minLength = Math.max(120, (article.snippet || '').length, currentContentText.length)
           if (textOnly.length >= minLength) {
+            const hasMedia = Boolean(contentRef.current?.querySelector('iframe, video'))
             const sel = window.getSelection()
             const hasActiveSelection = Boolean(
               sel && !sel.isCollapsed && contentRef.current && contentRef.current.contains(sel.anchorNode)
             )
-            if (hasActiveSelection) {
+            if (hasActiveSelection || hasMedia) {
               pendingFullHtmlRef.current = result.html
             } else {
               setFullHtml(result.html)
             }
           } else {
-            console.log('Extracted content is too short, falling back to original')
+            console.log('Extracted content is too short or not better, keeping original')
           }
         }
       })
