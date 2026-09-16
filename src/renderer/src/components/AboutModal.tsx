@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback, type MouseEvent } from 'react'
 import {
-  X, Github, Folder, RefreshCw, Download,
-  CircleDot, Tag, ClipboardCopy, Check,
-  ExternalLink, Book
+  X, Folder, RefreshCw, Download,
+  Tag, ClipboardCopy, Check,
+  Globe, BookOpen, Bug
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -14,6 +14,23 @@ import logoPng from '../../../../resources/icon.png'
 
 const REPO_URL = 'https://github.com/CyberGems/CyberFeeds'
 const HOMEPAGE_URL = 'https://cybergems.org'
+const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
+
+function GithubIcon({ size = 15 }: { size?: number }): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+    </svg>
+  )
+}
+
+function HeartIcon({ size = 15, color = '#F43F5E' }: { size?: number; color?: string }): JSX.Element {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+    </svg>
+  )
+}
 
 type AppVersions = {
   app: string
@@ -264,63 +281,75 @@ export default function AboutModal(): JSX.Element {
         </div>
 
         <div className="about-modal-footer">
-          <div style={{ fontWeight: 600, letterSpacing: '0.04em' }}>
-            © CyberGems • 2026
-          </div>
+          <Tooltip label={t.about.websiteTooltip} placement="top">
+            <button
+              type="button"
+              className="about-footer-copyright"
+              onClick={() => window.api.openExternal(HOMEPAGE_URL)}
+              aria-label={t.about.websiteTooltip}
+            >
+              © CyberGems • 2026
+            </button>
+          </Tooltip>
           <div className="about-footer-links">
             <Tooltip label={t.about.websiteTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
-                style={{ width: 28, height: 28, color: 'inherit' }}
                 onClick={() => window.api.openExternal(HOMEPAGE_URL)}
                 aria-label={t.about.websiteTooltip}
               >
-                <ExternalLink size={14} />
-              </button>
-            </Tooltip>
-            <Tooltip label={t.about.githubTooltip} placement="top">
-              <button
-                type="button"
-                className="btn btn-ghost btn-icon"
-                style={{ width: 28, height: 28, color: 'inherit' }}
-                onClick={() => window.api.openExternal(REPO_URL)}
-                aria-label={t.about.githubTooltip}
-              >
-                <Github size={14} />
-              </button>
-            </Tooltip>
-            <Tooltip label={t.about.issuesTooltip} placement="top">
-              <button
-                type="button"
-                className="btn btn-ghost btn-icon"
-                style={{ width: 28, height: 28, color: 'inherit' }}
-                onClick={() => window.api.openExternal(`${REPO_URL}/issues`)}
-                aria-label={t.about.issuesTooltip}
-              >
-                <CircleDot size={14} />
-              </button>
-            </Tooltip>
-            <Tooltip label={t.about.releasesTooltip} placement="top">
-              <button
-                type="button"
-                className="btn btn-ghost btn-icon"
-                style={{ width: 28, height: 28, color: 'inherit' }}
-                onClick={() => window.api.openExternal(`${REPO_URL}/releases`)}
-                aria-label={t.about.releasesTooltip}
-              >
-                <Tag size={14} />
+                <Globe size={15} strokeWidth={1.7} />
               </button>
             </Tooltip>
             <Tooltip label={t.about.wikiTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
-                style={{ width: 28, height: 28, color: 'inherit' }}
                 onClick={() => window.api.openExternal(`${REPO_URL}/wiki`)}
                 aria-label={t.about.wikiTooltip}
               >
-                <Book size={14} />
+                <BookOpen size={15} strokeWidth={1.7} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t.about.githubTooltip} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                onClick={() => window.api.openExternal(REPO_URL)}
+                aria-label={t.about.githubTooltip}
+              >
+                <GithubIcon size={15} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t.about.issuesTooltip} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                onClick={() => window.api.openExternal(`${REPO_URL}/issues`)}
+                aria-label={t.about.issuesTooltip}
+              >
+                <Bug size={15} strokeWidth={1.7} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t.about.releasesTooltip} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                onClick={() => window.api.openExternal(`${REPO_URL}/releases`)}
+                aria-label={t.about.releasesTooltip}
+              >
+                <Tag size={15} strokeWidth={1.7} />
+              </button>
+            </Tooltip>
+            <Tooltip label={t.about.donateTooltip} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon donate-btn"
+                onClick={() => window.api.openExternal(DONATE_URL)}
+                aria-label={t.about.donateTooltip}
+              >
+                <HeartIcon size={15} color="#F43F5E" />
               </button>
             </Tooltip>
           </div>
