@@ -4,35 +4,23 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ---
 
-### ✨ Key Features & Highlights
+### ⚡ Performance & Stability Highlights
 
-- 🎬 **Enhanced YouTube Playback & In-App Player Stability**:
-  - Resolved YouTube embed error 153 by injecting canonical Referer headers and sanitizing request headers for video embeds.
-  - Added a dedicated setting in Reading Preferences to toggle between in-app YouTube video playback and opening directly in your default browser.
-  - Embedded YouTube players now initialize cleanly in a paused state when opening articles.
-  - Enlarged and refined the interactive play button overlay on video thumbnails.
+- ⚡ **Incremental Notification & Inbox Rendering (Prevent UI Freezes)**:
+  - Fixed a critical performance issue where loading large notification histories (1,000+ items) rendered thousands of active tooltips and DOM elements simultaneously, causing severe UI freezing and high CPU/memory consumption.
+  - Implemented progressive batch rendering via `IntersectionObserver` (50 to 80 items per slice) for smooth, stutter-free scrolling across both Notification History and Inbox panels.
+  - Extracted and memoized notification card components (`NotifCard`) to eliminate cascading re-renders across the list.
+  - Added 500ms batched event throttling for real-time incoming feed notifications to maintain high framerates during intensive background feed polling.
+  - Memoized date partitioning and grouping computations using `useMemo` for instant panel transitions.
 
-- 💎 **Modern Squircle Branding & Bidirectional Tray Animation**:
-  - Refreshed application icons with a sleek squircle design across all resolutions and taskbar shortcuts.
-  - Added a smooth bidirectional tray icon animation (frames ping-ponging smoothly) to indicate active background feed polling.
-  - Synchronized tray context menu with real-time recent articles, displaying titles and timestamps for one-click access.
+- 🖥️ **Multi-Monitor Display Restoration & Window Memory**:
+  - Fixed window state persistence on minimize-to-tray so the active monitor and display bounds are properly preserved across sessions.
+  - `restoreMainWindow` now accurately nudges and restores the window onto the designated saved monitor before maximizing, preventing accidental jumps back to the primary display.
+  - Delegated second-instance window activation to the unified window restore handler for consistent multi-display behavior.
 
-- 🚀 **Interactive Update Dialog with Changelog Preview**:
-  - Redesigned update notification modal with an instant release notes peek, letting you review highlights before updating.
-  - Added flexible update controls: update immediately, view full notes, or skip the current release version.
-
-- 📖 **Reader & Text Selection Polish**:
-  - Fixed article title selection to allow highlighting from the very first character without drag boundary clipping.
-  - Seamless integration with the floating selection toolbar for rapid copying, Google searches, or translation.
-
-- 🔔 **Smarter Notifications & Dynamic Badges**:
-  - Notification badges now adaptively adopt your active theme accent color and switch to an alert indicator when reaching the configured history limit.
-  - Enhanced compact notification cards with clearer relative timestamps, improved spacing, and stable card dimensions.
-  - Moved muted feeds indicator to a clean header badge in Settings to eliminate layout shifts.
-
-- 🎨 **About Modal & Suite Alignment**:
-  - Harmonized About modal footer with CyberGems ecosystem standards, featuring updated icon layouts and an animated support badge.
-  - Full bilingual coverage across English and Spanish for all new preferences and dialogues.
+- 📖 **Documentation & Community Polish**:
+  - Harmonized donation and support guidance across documentation to align with the CyberGems application suite.
+  - Reorganized repository share badges for quicker access to Reddit and direct channels.
 
 ---
 
