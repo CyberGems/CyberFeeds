@@ -76,20 +76,51 @@ function scoreCandidate(el: Element): number {
   const pCount = el.querySelectorAll('p').length
   score += Math.min(pCount * 3, 30)
   score += Math.min((el.textContent?.length || 0) / 100, 20)
+  const mediaCount = el.querySelectorAll('video, iframe, img').length
+  score += Math.min(mediaCount * 4, 16)
 
   return score
 }
 
+const ALLOWED_IFRAME_DOMAINS = [
+  'youtube.com',
+  'youtu.be',
+  'youtube-nocookie.com',
+  'rumble.com',
+  'vimeo.com',
+  'dailymotion.com',
+  'player.twitch.tv',
+  'bitchute.com',
+  'odysee.com',
+  'soundcloud.com',
+  'spotify.com'
+]
+
 function extractArticle(html: string, baseUrl: string): string {
   const { document } = parseHTML(html)
 
-  // Remove noise
-  const noise = ['script', 'style', 'noscript', 'iframe', 'nav', 'header', 'footer', 'aside', '[role="navigation"]', '[role="banner"]', '[role="complementary"]']
+  // Remove noise (keep iframes for separate filtering below)
+  const noise = ['script', 'style', 'noscript', 'nav', 'header', 'footer', 'aside', '[role="navigation"]', '[role="banner"]', '[role="complementary"]']
   noise.forEach(sel => {
     try {
       document.querySelectorAll(sel).forEach((el: Element) => el.remove())
     } catch { /* ignore */ }
   })
+
+  // Filter iframes: preserve legitimate video and audio embeds, remove ad/tracking iframes
+  try {
+    document.querySelectorAll('iframe').forEach((iframe: Element) => {
+      const rawSrc = (iframe.getAttribute('src') || iframe.getAttribute('data-src') || '').trim()
+      const isAllowed = ALLOWED_IFRAME_DOMAINS.some(domain => rawSrc.toLowerCase().includes(domain))
+      if (!isAllowed) {
+        iframe.remove()
+      } else {
+        if (!iframe.getAttribute('src') && iframe.getAttribute('data-src')) {
+          iframe.setAttribute('src', iframe.getAttribute('data-src')!)
+        }
+      }
+    })
+  } catch { /* ignore */ }
 
   // Find best candidate
   const candidates = [...document.querySelectorAll('article, main, [role="main"], .post, .article, .content, .entry, section, div')]

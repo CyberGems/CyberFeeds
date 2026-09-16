@@ -213,6 +213,11 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   useEffect(() => {
     if (!selectedArticleId) {
       setArticle(null)
+      setFullHtml(null)
+      pendingFullHtmlRef.current = null
+      setShowSummary(false)
+      setSummary('')
+      setIsPlayingVideo(false)
       return
     }
     if (copiedTimer.current) clearTimeout(copiedTimer.current)
@@ -699,6 +704,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       <div
         className="viewer-content"
         ref={contentRef}
+        tabIndex={-1}
         onScroll={handleContentScroll}
         onMouseDown={(e) => {
           if (e.button === 2) {

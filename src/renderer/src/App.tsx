@@ -38,6 +38,7 @@ export default function App(): JSX.Element {
   const {
     selectedFeedId,
     selectedArticleId,
+    selectArticle,
     activePanel,
     layout,
     unreadOnly,
@@ -358,15 +359,21 @@ export default function App(): JSX.Element {
   // Keyboard shortcuts
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && activePanel) {
-        if (activePanel === 'settings') {
-          handleCloseSettings()
-        } else {
-          closePanel()
+      if (e.key === 'Escape') {
+        if (activePanel) {
+          if (activePanel === 'settings') {
+            handleCloseSettings()
+          } else {
+            closePanel()
+          }
+          return
+        }
+        if (selectedArticleId) {
+          selectArticle(null)
         }
       }
     },
-    [activePanel, handleCloseSettings, closePanel]
+    [activePanel, handleCloseSettings, closePanel, selectedArticleId, selectArticle]
   )
 
   useEffect(() => {

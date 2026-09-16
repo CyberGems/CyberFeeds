@@ -659,7 +659,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       const inArticleSearch =
         e.target instanceof HTMLElement && Boolean(e.target.closest('[data-article-search="true"]'))
       if (isEditableTarget(e.target) && !inArticleSearch) return
-      if (inArticleSearch && e.key !== 'ArrowDown') return
+      if (inArticleSearch && e.key !== 'ArrowDown' && e.key !== 'Enter') return
 
       if (e.key === 'Delete') {
         if (e.repeat) return
@@ -671,38 +671,91 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         return
       }
 
-      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
-      const list = useArticlesStore.getState().articles
-      if (list.length === 0) return
+      const keyLower = e.key.toLowerCase()
 
-      e.preventDefault()
-      e.stopPropagation()
+      // Toggle read / unread with M
+      if (keyLower === 'm') {
+        if (e.repeat) return
+        const selected = useUIStore.getState().selectedArticleId
+        const list = useArticlesStore.getState().articles
+        if (list.length === 0) return
+        const targetId = selected || list[0]?.id
+        if (!targetId) return
+        const article = list.find((a) => a.id === targetId)
+        if (!article) return
 
-      if (inArticleSearch) {
-        ;(e.target as HTMLElement).blur()
-        selectByIndex(0)
+        e.preventDefault()
+        e.stopPropagation()
+        void markRead(targetId, !article.read)
         return
       }
 
-      // Home → first article, End → last preloaded article
-      if (e.key === 'Home') {
-        selectByIndex(0)
-        return
-      }
-      if (e.key === 'End') {
-        selectByIndex(list.length - 1)
+      // Open / focus reading with Enter
+      if (e.key === 'Enter') {
+        if (e.repeat) return
+        const list = useArticlesStore.getState().articles
+        if (list.length === 0) return
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (inArticleSearch) {
+          ;(e.target as HTMLElement).blur()
+          selectByIndex(0)
+          return
+        }
+
+        const selected = useUIStore.getState().selectedArticleId
+        if (!selected) {
+          selectByIndex(0)
+          return
+        }
+
+        const article = list.find((a) => a.id === selected)
+        if (article && !article.read && !isTrash) {
+          void markRead(selected, true)
+        }
+        const reader = document.querySelector<HTMLElement>('.viewer-content, .reader-pane, .article-viewer')
+        reader?.focus?.()
         return
       }
 
-      const selected = useUIStore.getState().selectedArticleId
-      const idx = selected ? list.findIndex((a) => a.id === selected) : -1
-      if (idx < 0) {
-        selectByIndex(0)
-        return
+      const isNext = e.key === 'ArrowDown' || keyLower === 'j'
+      const isPrev = e.key === 'ArrowUp' || keyLower === 'k'
+
+      if (isNext || isPrev || e.key === 'Home' || e.key === 'End') {
+        const list = useArticlesStore.getState().articles
+        if (list.length === 0) return
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if (inArticleSearch) {
+          ;(e.target as HTMLElement).blur()
+          selectByIndex(0)
+          return
+        }
+
+        // Home → first article, End → last preloaded article
+        if (e.key === 'Home') {
+          selectByIndex(0)
+          return
+        }
+        if (e.key === 'End') {
+          selectByIndex(list.length - 1)
+          return
+        }
+
+        const selected = useUIStore.getState().selectedArticleId
+        const idx = selected ? list.findIndex((a) => a.id === selected) : -1
+        if (idx < 0) {
+          selectByIndex(0)
+          return
+        }
+        const nextIdx = isNext ? idx + 1 : idx - 1
+        if (nextIdx < 0 || nextIdx >= list.length) return
+        selectByIndex(nextIdx)
       }
-      const nextIdx = e.key === 'ArrowDown' ? idx + 1 : idx - 1
-      if (nextIdx < 0 || nextIdx >= list.length) return
-      selectByIndex(nextIdx)
     }
 
     window.addEventListener('keydown', onKeyDown, true)
@@ -1368,7 +1421,7 @@ interface ArticleItemProps {
   isTrash?: boolean
   selected: boolean
   contextActive?: boolean
-  onSelect: (id: string) => void
+  onSelect: (id: string | null) => void
   onContextMenu: (e: React.MouseEvent, id: string) => void
   style?: React.CSSProperties
   measureRef?: (el: HTMLElement | null) => void
@@ -1393,9 +1446,13 @@ const ArticleItem = memo(
     const { t, language } = useTranslation()
 
     const handleClick = useCallback(() => {
+      if (selected) {
+        onSelect(null)
+        return
+      }
       onSelect(article.id)
       if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
-    }, [article.id, article.read, isTrash, markRead, onSelect])
+    }, [article.id, article.read, isTrash, markRead, onSelect, selected])
 
     const handleStar = useCallback(
       (e: React.MouseEvent) => {
