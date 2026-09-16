@@ -36,8 +36,7 @@ if (!gotTheLock) {
 app.on('second-instance', () => {
   // Someone tried to run a second instance, focus the existing window
   if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.focus()
+    restoreMainWindow()
   }
 })
 
@@ -111,10 +110,40 @@ function persistMainWindowState(win: BrowserWindow): void {
   }
 }
 
-/** Restore the main window preserving maximized state. */
+/** Restore the main window on the last-used monitor. */
 export function restoreMainWindow(): void {
   const win = mainWindow
   if (!win || win.isDestroyed()) return
+
+  // Move to saved display before showing/maximizing so Electron maximizes on
+  // the correct monitor instead of whichever one it happens to be on now.
+  try {
+    const saved = getWindowState()
+    const startup = resolveStartupBounds(saved)
+    const displays = screen.getAllDisplays()
+    const targetDisplay = displays.find((d) => d.id === startup.displayId)
+      || screen.getPrimaryDisplay()
+    const wa = targetDisplay.workArea || targetDisplay.bounds
+
+    // If the window is currently on a different display, nudge it
+    const cur = win.getBounds()
+    const curDisplay =
+      (typeof screen.getDisplayMatching === 'function' && screen.getDisplayMatching(cur)) ||
+      screen.getDisplayNearestPoint({
+        x: Math.round(cur.x + cur.width / 2),
+        y: Math.round(cur.y + cur.height / 2)
+      })
+    if (curDisplay && targetDisplay && curDisplay.id !== targetDisplay.id) {
+      win.setBounds({
+        x: wa.x + 48,
+        y: wa.y + 48,
+        width: Math.min(startup.width, Math.max(MIN_WINDOW_WIDTH, wa.width - 96)),
+        height: Math.min(startup.height, Math.max(MIN_WINDOW_HEIGHT, wa.height - 96))
+      })
+    }
+  } catch {
+    /* ignore — fall through to show on current monitor */
+  }
 
   if (!win.isVisible()) win.show()
   if (win.isMinimized()) win.restore()
@@ -278,12 +307,13 @@ function createMainWindow(): BrowserWindow {
 
   // Minimize to tray on close (respect setting)
   win.on('close', (e) => {
+    // Always persist state so the last monitor is remembered
+    persistMainWindowState(win)
     if (!(app as any).isQuitting && getSettings().minimizeToTray) {
       e.preventDefault()
       win.hide()
       return
     }
-    persistMainWindowState(win)
   })
 
   win.on('move', schedulePersist)
