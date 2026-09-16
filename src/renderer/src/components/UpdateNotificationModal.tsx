@@ -15,7 +15,22 @@ interface UpdateNotificationModalProps {
   onInstall: () => void
 }
 
-export function parseChangelogPeek(markdown?: string): { items: string[]; totalCount: number } {
+const STARTS_WITH_EMOJI_REGEX = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u{1F300}-\u{1FAFF}]|[\u2600-\u27BF])/u
+
+function cleanItemText(raw: string): string {
+  return raw
+    .replace(/^[-*]\s+/, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url) -> text
+    .replace(/<[^>]+>/g, '') // strip html tags
+    .replace(/\*\*([^*]+)\*\*/g, '$1') // strip bold
+    .replace(/\*([^*]+)\*/g, '$1') // strip italics
+    .replace(/`([^`]+)`/g, '$1') // strip code wrappers
+    .replace(/~~([^~]+)~~/g, '$1') // strip strikethrough
+    .replace(/:\s*$/, '') // strip trailing colons
+    .trim()
+}
+
+function parseChangelogPeek(markdown?: string): { items: string[]; totalCount: number } {
   if (!markdown) return { items: [], totalCount: 0 }
   const lines = markdown.split(/\r?\n/)
   const allHighlights: string[] = []
@@ -26,7 +41,7 @@ export function parseChangelogPeek(markdown?: string): { items: string[]; totalC
     const line = rawLine.trim()
 
     // Match section headers
-    if (/^###?\s.*(?:highlights|features|novedades|what's new|cambios)/i.test(line)) {
+    if (/^###?\s.*(?:highlights|features|novedades|what's new|cambios|changelog)/i.test(line)) {
       inHighlightsSection = true
       continue
     }
@@ -40,16 +55,8 @@ export function parseChangelogPeek(markdown?: string): { items: string[]; totalC
     }
 
     // Top-level bullet items (not indented sub-bullets)
-    if (rawLine.startsWith('- ') || rawLine.startsWith('* ')) {
-      const text = rawLine.replace(/^[-*]\s+/, '').trim()
-      // Strip markdown bold/code/italics wrapper around the headline
-      const cleaned = text
-        .replace(/\*\*([^*]+)\*\*/g, '$1')
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/`([^`]+)`/g, '$1')
-        .replace(/:\s*$/, '')
-        .trim()
-
+    if (inHighlightsSection && (rawLine.startsWith('- ') || rawLine.startsWith('* '))) {
+      const cleaned = cleanItemText(rawLine)
       if (
         cleaned &&
         !cleaned.toLowerCase().includes('recommended installer') &&
@@ -60,22 +67,17 @@ export function parseChangelogPeek(markdown?: string): { items: string[]; totalC
     }
   }
 
-  // Fallback: if no highlights section was found, check all bullets
+  // Fallback 1: if no highlights section was found, check all bullets
   if (allHighlights.length === 0) {
     for (const raw of lines) {
       const line = raw.trim()
       if (line.startsWith('- ') || line.startsWith('* ')) {
-        const cleaned = line
-          .replace(/^[-*]\s+/, '')
-          .replace(/\*\*([^*]+)\*\*/g, '$1')
-          .replace(/\*([^*]+)\*/g, '$1')
-          .replace(/`([^`]+)`/g, '$1')
-          .replace(/:\s*$/, '')
-          .trim()
+        const cleaned = cleanItemText(line)
         if (
           cleaned &&
           !cleaned.toLowerCase().includes('recommended installer') &&
-          !cleaned.toLowerCase().includes('setup installer')
+          !cleaned.toLowerCase().includes('setup installer') &&
+          !cleaned.toLowerCase().includes('virustotal')
         ) {
           allHighlights.push(cleaned)
         }
@@ -83,16 +85,12 @@ export function parseChangelogPeek(markdown?: string): { items: string[]; totalC
     }
   }
 
-  // Secondary fallback: if no bullets exist, grab first few descriptive sentences
+  // Fallback 2: if no bullets exist, grab first few descriptive sentences
   if (allHighlights.length === 0) {
     for (const raw of lines) {
       const line = raw.trim()
       if (line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('|')) {
-        const cleaned = line
-          .replace(/\*\*([^*]+)\*\*/g, '$1')
-          .replace(/\*([^*]+)\*/g, '$1')
-          .replace(/`([^`]+)`/g, '$1')
-          .trim()
+        const cleaned = cleanItemText(line)
         if (cleaned.length > 10) {
           allHighlights.push(cleaned)
           if (allHighlights.length >= 2) break
@@ -117,33 +115,27 @@ export function UpdateNotificationModal({
   const { t } = useTranslation()
   const currentVersion = status.version || ''
 
-  const [releaseNotes, setReleaseNotes] = useState<string | undefined>(
-    status.state === 'available' ? status.releaseNotes : undefined
-  )
-  const [releaseUrl, setReleaseUrl] = useState<string>(
+  const initialNotes = status.state === 'available' ? status.releaseNotes : undefined
+  const [fetchedNotes, setFetchedNotes] = useState<string | undefined>(undefined)
+  const [fetchedUrl, setFetchedUrl] = useState<string | undefined>(undefined)
+
+  const releaseNotes = initialNotes || fetchedNotes
+  const releaseUrl =
     status.state === 'available' && status.releaseUrl
       ? status.releaseUrl
-      : `https://github.com/CyberGems/CyberFeeds/releases/tag/v${currentVersion}`
-  )
+      : fetchedUrl || `https://github.com/CyberGems/CyberFeeds/releases/tag/v${currentVersion}`
 
   useEffect(() => {
-    if (status.state === 'available') {
-      if (status.releaseNotes) {
-        setReleaseNotes(status.releaseNotes)
-      } else if (status.version) {
-        fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${status.version}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data?.body) setReleaseNotes(data.body)
-            if (data?.html_url) setReleaseUrl(data.html_url)
-          })
-          .catch(() => {
-            /* ignore network error */
-          })
-      }
-      if (status.releaseUrl) {
-        setReleaseUrl(status.releaseUrl)
-      }
+    if (status.state === 'available' && !status.releaseNotes && status.version) {
+      fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${status.version}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data?.body) setFetchedNotes(data.body)
+          if (data?.html_url) setFetchedUrl(data.html_url)
+        })
+        .catch(() => {
+          /* ignore network error */
+        })
     }
   }, [status])
 
@@ -154,73 +146,29 @@ export function UpdateNotificationModal({
 
   const remainingCount = Math.max(0, totalCount - peekItems.length)
 
+  const rawTitle =
+    status.state === 'available'
+      ? t.about.statuses.available
+      : status.state === 'downloading'
+        ? t.about.statuses.downloading.replace('… {percent}%', '…').replace('{percent}%', '')
+        : t.about.statuses.downloaded
+
+  // Clean trailing period so header doesn't render awkward sentence period before version tag
+  const titleText = rawTitle.replace(/\.$/, '')
+
   return (
-    <div
-      role="dialog"
-      aria-label="Update notification"
-      style={{
-        position: 'fixed',
-        bottom: 24,
-        right: 24,
-        zIndex: 9999,
-        width: 390,
-        maxWidth: 'calc(100vw - 48px)',
-        background: 'linear-gradient(145deg, var(--bg-1), var(--bg-0))',
-        border: '1px solid color-mix(in srgb, var(--accent) 35%, var(--border-subtle))',
-        boxShadow: '0 14px 36px rgba(0, 0, 0, 0.55), 0 0 16px var(--accent-subtle)',
-        borderRadius: 12,
-        padding: '14px 16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
-      }}
-    >
+    <div role="dialog" aria-label="Update notification" className="update-notification-modal">
       {/* Header Row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="update-notification-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: 'color-mix(in srgb, var(--accent) 15%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--accent) 30%, transparent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'var(--accent)',
-              flexShrink: 0
-            }}
-          >
+          <div className="update-notification-icon">
             <Sparkles size={15} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-primary)' }}>
-                {status.state === 'available'
-                  ? t.about.statuses.available
-                  : status.state === 'downloading'
-                    ? t.about.statuses.downloading
-                        .replace('… {percent}%', '…')
-                        .replace('{percent}%', '')
-                    : t.about.statuses.downloaded}
-              </span>
+            <div className="update-notification-title-group">
+              <span className="update-notification-title">{titleText}</span>
               {currentVersion && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    fontFamily: 'monospace',
-                    color: 'var(--accent)',
-                    background: 'color-mix(in srgb, var(--accent) 15%, transparent)',
-                    padding: '1px 6px',
-                    borderRadius: 4,
-                    lineHeight: '16px'
-                  }}
-                >
-                  v{currentVersion}
-                </span>
+                <span className="update-notification-badge">v{currentVersion}</span>
               )}
             </div>
           </div>
@@ -239,74 +187,23 @@ export function UpdateNotificationModal({
 
       {/* Body: Available State with Changelog Peek */}
       {status.state === 'available' && (
-        <div
-          style={{
-            background: 'color-mix(in srgb, var(--bg-2) 80%, black)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 8,
-            padding: '9px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 5
-          }}
-        >
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: '0.6px',
-              textTransform: 'uppercase',
-              color: 'var(--text-muted)'
-            }}
-          >
-            {t.about.whatsNew}
-          </div>
+        <div className="update-changelog-box">
+          <div className="update-changelog-header">{t.about.whatsNew}</div>
 
           {peekItems.length > 0 ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 4,
-                maxHeight: 125,
-                overflowY: 'auto'
-              }}
-            >
-              {peekItems.map((item, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 6,
-                    fontSize: 11.5,
-                    color: 'var(--text-secondary)',
-                    lineHeight: 1.4
-                  }}
-                >
-                  <span
-                    style={{
-                      color: 'var(--accent)',
-                      fontSize: 10,
-                      lineHeight: '17px',
-                      userSelect: 'none'
-                    }}
-                  >
-                    •
-                  </span>
-                  <span style={{ wordBreak: 'break-word' }}>{item}</span>
-                </div>
-              ))}
+            <div className="update-changelog-list">
+              {peekItems.map((item, idx) => {
+                const hasLeadEmoji = STARTS_WITH_EMOJI_REGEX.test(item)
+                return (
+                  <div key={idx} className="update-changelog-item">
+                    {!hasLeadEmoji && <span className="update-changelog-bullet">•</span>}
+                    <span style={{ wordBreak: 'break-word' }}>{item}</span>
+                  </div>
+                )
+              })}
 
               {remainingCount > 0 && (
-                <div
-                  style={{
-                    fontSize: 10.5,
-                    color: 'var(--text-muted)',
-                    fontStyle: 'italic',
-                    marginTop: 2
-                  }}
-                >
+                <div className="update-changelog-more">
                   {t.about.moreInFullNotes.replace('{count}', String(remainingCount))}
                 </div>
               )}
@@ -335,22 +232,11 @@ export function UpdateNotificationModal({
               {status.percent}%
             </span>
           </div>
-          <div
-            style={{
-              width: '100%',
-              height: 5,
-              background: 'rgba(255, 255, 255, 0.08)',
-              borderRadius: 999,
-              overflow: 'hidden'
-            }}
-          >
+          <div className="update-progress-track">
             <div
+              className="update-progress-bar"
               style={{
-                height: '100%',
-                width: `${Math.max(2, Math.min(100, status.percent))}%`,
-                background: 'linear-gradient(90deg, var(--accent), #38bdf8)',
-                borderRadius: 999,
-                transition: 'width 0.2s ease-out'
+                width: `${Math.max(2, Math.min(100, status.percent))}%`
               }}
             />
           </div>
@@ -365,29 +251,13 @@ export function UpdateNotificationModal({
       )}
 
       {/* Action Footer */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 2,
-          gap: 6
-        }}
-      >
+      <div className="update-notification-footer">
         {status.state === 'available' ? (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="update-notification-footer-actions">
               <button
                 type="button"
-                className="btn btn-ghost"
-                style={{
-                  padding: '3px 8px',
-                  fontSize: 11,
-                  height: 26,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4
-                }}
+                className="btn btn-ghost update-notification-btn"
                 onClick={() => window.api.openExternal(releaseUrl)}
                 title={t.about.viewReleaseNotes}
               >
@@ -397,16 +267,8 @@ export function UpdateNotificationModal({
 
               <button
                 type="button"
-                className="btn btn-ghost"
-                style={{
-                  padding: '3px 8px',
-                  fontSize: 11,
-                  height: 26,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  color: 'var(--text-muted)'
-                }}
+                className="btn btn-ghost update-notification-btn"
+                style={{ color: 'var(--text-muted)' }}
                 onClick={() => onSkip(currentVersion)}
                 title={t.about.skipUpdate}
               >
@@ -417,16 +279,8 @@ export function UpdateNotificationModal({
 
             <button
               type="button"
-              className="btn btn-primary"
-              style={{
-                padding: '4px 12px',
-                fontSize: 11,
-                height: 26,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontWeight: 600
-              }}
+              className="btn btn-primary update-notification-btn"
+              style={{ fontWeight: 600 }}
               onClick={onDownload}
             >
               <Download size={13} />
@@ -437,8 +291,7 @@ export function UpdateNotificationModal({
           <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <button
               type="button"
-              className="btn btn-ghost"
-              style={{ padding: '3px 8px', fontSize: 11, height: 24 }}
+              className="btn btn-ghost update-notification-btn"
               onClick={onClose}
             >
               {t.about.dismiss}
@@ -448,24 +301,15 @@ export function UpdateNotificationModal({
           <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: 6 }}>
             <button
               type="button"
-              className="btn btn-ghost"
-              style={{ padding: '3px 8px', fontSize: 11, height: 26 }}
+              className="btn btn-ghost update-notification-btn"
               onClick={onClose}
             >
               {t.about.dismiss}
             </button>
             <button
               type="button"
-              className="btn btn-primary"
-              style={{
-                padding: '4px 12px',
-                fontSize: 11,
-                height: 26,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontWeight: 600
-              }}
+              className="btn btn-primary update-notification-btn"
+              style={{ fontWeight: 600 }}
               onClick={onInstall}
             >
               <RefreshCw size={13} />
