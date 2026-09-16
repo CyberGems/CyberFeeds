@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback, useRef, memo } from 'react'
 import { X, Bell, Trash2, ExternalLink, Check, Eye, CheckCheck } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -27,55 +27,37 @@ function formatAbsoluteTime(ts: number, locale: string): string {
   })
 }
 
-export default function NotificationHistoryPanel(): JSX.Element {
-  const { closePanel, selectArticle, selectFeed } = useUIStore()
-  const { settings } = useSettingsStore()
-  const { markRead } = useArticlesStore()
-  const [history, setHistory] = useState<NotificationHistoryItem[]>([])
-  const [lastCheckedTime, setLastCheckedTime] = useState(0)
-  const { t, language } = useTranslation()
+// ── Batch size for incremental rendering ────────────────────────────────────
+const RENDER_BATCH = 50
 
-  useEffect(() => {
-    window.api.getNotificationHistory().then(setHistory)
-    const rawChecked = localStorage.getItem('lastCheckedNotificationsTime')
-    const prevChecked = Number(rawChecked || 0)
-    setLastCheckedTime(prevChecked)
-  }, [])
+// ── Memoized notification card to avoid re-rendering all items on state change
+interface NotifCardProps {
+  item: NotificationHistoryItem
+  isNew: boolean
+  openBehavior: string
+  showThumbnails: boolean
+  onSelectFeed: (id: string) => void
+  onSelectArticle: (id: string) => void
+  onClosePanel: () => void
+  onMarkRead: (id: string, read: boolean) => void
+  t: typeof translations.en
+  language: string
+}
 
-  useEffect(() => {
-    const unsub = window.api.onNewNotification((item) => {
-      setHistory((prev) => [item, ...prev.filter((x) => x.id !== item.id)])
-    })
-    return unsub
-  }, [])
-
-  const handleMarkAllSeen = async (): Promise<void> => {
-    const now = Date.now()
-    setLastCheckedTime(now)
-    localStorage.setItem('lastCheckedNotificationsTime', String(now))
-    await window.api.markNotificationsChecked(now)
-    useUIStore.setState({ unseenNotificationsCount: 0 })
-  }
-
-  const handleClear = async (): Promise<void> => {
-    await window.api.clearNotificationHistory()
-    setHistory([])
-    const now = Date.now()
-    setLastCheckedTime(now)
-    localStorage.setItem('lastCheckedNotificationsTime', String(now))
-    await window.api.markNotificationsChecked(now)
-    useUIStore.setState({ unseenNotificationsCount: 0 })
-  }
-
-  // Partition into new and seen notifications
-  const newNotifications = history.filter((item) => item.createdAt > lastCheckedTime)
-  const seenNotifications = history.filter((item) => item.createdAt <= lastCheckedTime)
-  const historyLimit = settings.notifications?.historyLimit ?? 1000
-  const isLimitReached = historyLimit > 0 && history.length >= historyLimit
-
-  const renderItem = (item: NotificationHistoryItem, isNew: boolean): JSX.Element => (
+const NotifCard = memo(function NotifCard({
+  item,
+  isNew,
+  openBehavior,
+  showThumbnails,
+  onSelectFeed,
+  onSelectArticle,
+  onClosePanel,
+  onMarkRead,
+  t,
+  language
+}: NotifCardProps): JSX.Element {
+  return (
     <div
-      key={item.id}
       className="notif-card"
       style={{
         opacity: isNew ? 1 : 0.65,
@@ -84,16 +66,16 @@ export default function NotificationHistoryPanel(): JSX.Element {
         marginBottom: 8
       }}
       onClick={() => {
-        if (settings.notifications.openBehavior === 'browser') {
+        if (openBehavior === 'browser') {
           if (item.link) window.api.openExternal(item.link)
         } else {
-          if (item.feedId) selectFeed(item.feedId)
-          if (item.articleId) selectArticle(item.articleId)
-          closePanel()
+          if (item.feedId) onSelectFeed(item.feedId)
+          if (item.articleId) onSelectArticle(item.articleId)
+          onClosePanel()
         }
       }}
     >
-      {item.thumbnail && settings.showArticleThumbnails && (
+      {item.thumbnail && showThumbnails && (
         <div className="notif-thumbnail">
           <img
             src={item.thumbnail}
@@ -165,7 +147,7 @@ export default function NotificationHistoryPanel(): JSX.Element {
               className="notif-btn"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
               onClick={() => {
-                markRead(item.articleId!, true)
+                onMarkRead(item.articleId!, true)
               }}
             >
               <Check size={11} />
@@ -179,9 +161,9 @@ export default function NotificationHistoryPanel(): JSX.Element {
               className="notif-btn"
               style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
               onClick={() => {
-                if (item.feedId) selectFeed(item.feedId)
-                if (item.articleId) selectArticle(item.articleId)
-                closePanel()
+                if (item.feedId) onSelectFeed(item.feedId)
+                if (item.articleId) onSelectArticle(item.articleId)
+                onClosePanel()
               }}
             >
               <Eye size={11} />
@@ -213,6 +195,126 @@ export default function NotificationHistoryPanel(): JSX.Element {
       </div>
     </div>
   )
+})
+
+export default function NotificationHistoryPanel(): JSX.Element {
+  const { closePanel, selectArticle, selectFeed } = useUIStore()
+  const { settings } = useSettingsStore()
+  const { markRead } = useArticlesStore()
+  const [history, setHistory] = useState<NotificationHistoryItem[]>([])
+  const [lastCheckedTime, setLastCheckedTime] = useState(0)
+  const { t, language } = useTranslation()
+
+  // ── Incremental rendering: only render `visibleCount` items ──────────────
+  const [visibleCount, setVisibleCount] = useState(RENDER_BATCH)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+
+  // Reset visible count when history changes significantly (e.g. clear)
+  const prevLenRef = useRef(0)
+  useEffect(() => {
+    if (history.length === 0 && prevLenRef.current > 0) {
+      setVisibleCount(RENDER_BATCH)
+    }
+    prevLenRef.current = history.length
+  }, [history.length])
+
+  // IntersectionObserver to progressively load more items
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((prev) => prev + RENDER_BATCH)
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [history.length > 0]) // re-attach when items appear/disappear
+
+  // ── Load initial data ───────────────────────────────────────────────────
+  useEffect(() => {
+    window.api.getNotificationHistory().then(setHistory)
+    const rawChecked = localStorage.getItem('lastCheckedNotificationsTime')
+    const prevChecked = Number(rawChecked || 0)
+    setLastCheckedTime(prevChecked)
+  }, [])
+
+  // ── Throttled incoming notification listener ────────────────────────────
+  // Batches incoming notifications for 500ms to avoid per-item re-renders
+  // when a feed poll returns many new articles at once.
+  useEffect(() => {
+    let pending: NotificationHistoryItem[] = []
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const flush = (): void => {
+      timer = null
+      if (pending.length === 0) return
+      const batch = pending
+      pending = []
+      setHistory((prev) => {
+        const ids = new Set(batch.map((b) => b.id))
+        return [...batch, ...prev.filter((x) => !ids.has(x.id))]
+      })
+    }
+
+    const unsub = window.api.onNewNotification((item) => {
+      pending.push(item)
+      if (!timer) timer = setTimeout(flush, 500)
+    })
+    return () => {
+      unsub()
+      if (timer) clearTimeout(timer)
+      // Flush remaining on unmount
+      if (pending.length > 0) flush()
+    }
+  }, [])
+
+  const handleMarkAllSeen = useCallback(async (): Promise<void> => {
+    const now = Date.now()
+    setLastCheckedTime(now)
+    localStorage.setItem('lastCheckedNotificationsTime', String(now))
+    await window.api.markNotificationsChecked(now)
+    useUIStore.setState({ unseenNotificationsCount: 0 })
+  }, [])
+
+  const handleClear = useCallback(async (): Promise<void> => {
+    await window.api.clearNotificationHistory()
+    setHistory([])
+    const now = Date.now()
+    setLastCheckedTime(now)
+    localStorage.setItem('lastCheckedNotificationsTime', String(now))
+    await window.api.markNotificationsChecked(now)
+    useUIStore.setState({ unseenNotificationsCount: 0 })
+  }, [])
+
+  // ── Memoized partitioning ───────────────────────────────────────────────
+  const { newNotifications, seenNotifications } = useMemo(() => {
+    const newItems: NotificationHistoryItem[] = []
+    const seenItems: NotificationHistoryItem[] = []
+    for (const item of history) {
+      if (item.createdAt > lastCheckedTime) newItems.push(item)
+      else seenItems.push(item)
+    }
+    return { newNotifications: newItems, seenNotifications: seenItems }
+  }, [history, lastCheckedTime])
+
+  const historyLimit = settings.notifications?.historyLimit ?? 1000
+  const isLimitReached = historyLimit > 0 && history.length >= historyLimit
+
+  // ── Compute the visible slice across new + seen ─────────────────────────
+  const visibleNew = newNotifications.slice(0, visibleCount)
+  const remainingSlots = Math.max(0, visibleCount - newNotifications.length)
+  const visibleSeen = remainingSlots > 0 ? seenNotifications.slice(0, remainingSlots) : []
+  const totalItems = newNotifications.length + seenNotifications.length
+  const hasMore = visibleCount < totalItems
+
+  // Stable callback refs for NotifCard
+  const openBehavior = settings.notifications.openBehavior
+  const showThumbnails = settings.showArticleThumbnails
 
   return (
     <div className="panel">
@@ -305,8 +407,22 @@ export default function NotificationHistoryPanel(): JSX.Element {
           </div>
         ) : (
           <>
-            {newNotifications.map((item) => renderItem(item, true))}
-            {newNotifications.length > 0 && seenNotifications.length > 0 && (
+            {visibleNew.map((item) => (
+              <NotifCard
+                key={item.id}
+                item={item}
+                isNew={true}
+                openBehavior={openBehavior}
+                showThumbnails={showThumbnails}
+                onSelectFeed={selectFeed}
+                onSelectArticle={selectArticle}
+                onClosePanel={closePanel}
+                onMarkRead={markRead}
+                t={t}
+                language={language}
+              />
+            ))}
+            {visibleNew.length > 0 && visibleSeen.length > 0 && (
               <div
                 style={{
                   display: 'flex',
@@ -325,7 +441,36 @@ export default function NotificationHistoryPanel(): JSX.Element {
                 <div style={{ height: 1, flex: 1, background: 'var(--border-muted)' }} />
               </div>
             )}
-            {seenNotifications.map((item) => renderItem(item, false))}
+            {visibleSeen.map((item) => (
+              <NotifCard
+                key={item.id}
+                item={item}
+                isNew={false}
+                openBehavior={openBehavior}
+                showThumbnails={showThumbnails}
+                onSelectFeed={selectFeed}
+                onSelectArticle={selectArticle}
+                onClosePanel={closePanel}
+                onMarkRead={markRead}
+                t={t}
+                language={language}
+              />
+            ))}
+            {/* Sentinel for progressive loading */}
+            {hasMore && (
+              <div
+                ref={sentinelRef}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  padding: 16,
+                  color: 'var(--text-muted)',
+                  fontSize: 11
+                }}
+              >
+                <div className="spinner" style={{ width: 16, height: 16 }} />
+              </div>
+            )}
           </>
         )}
       </div>
