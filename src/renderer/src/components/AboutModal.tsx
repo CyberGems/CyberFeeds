@@ -41,6 +41,7 @@ type AppVersions = {
   arch: string
   osRelease: string
   osType: string
+  isPortable?: boolean
 }
 
 type UpdateStatus =
@@ -108,6 +109,11 @@ export default function AboutModal(): JSX.Element {
   }, [aboutAutoCheck, handleCheck, setAboutAutoCheck])
 
   const handleDownload = async (): Promise<void> => {
+    if (versions?.isPortable) {
+      const url = status.state === 'available' && status.releaseUrl ? status.releaseUrl : `${REPO_URL}/releases`
+      window.api.openExternal(url)
+      return
+    }
     try {
       localStorage.removeItem('cyberfeeds_skipped_update_version')
     } catch {
@@ -132,11 +138,12 @@ export default function AboutModal(): JSX.Element {
   const handleCopyDiagnostics = useCallback(async () => {
     if (!versions) return
     const lines = [
-      `CyberFeeds ${versions.app}`,
+      `CyberFeeds ${versions.app}${versions.isPortable ? ' (Portable)' : ''}`,
       `Electron: ${versions.electron}`,
       `Chrome: ${versions.chrome}`,
       `Node: ${versions.node}`,
       `OS: ${platformLabel(versions.platform)} ${versions.osRelease} (${versions.arch})`,
+      `Portable: ${versions.isPortable ? 'Yes' : 'No'}`,
       `Locale: ${language}`
     ]
     try {
@@ -201,9 +208,27 @@ export default function AboutModal(): JSX.Element {
           </h1>
           <div style={{
             fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 14
+            textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 14,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7
           }}>
-            {t.about.version.replace('{version}', appVersion || '…')}
+            <span>{t.about.version.replace('{version}', appVersion || '…')}</span>
+            {versions?.isPortable && (
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  background: 'rgba(0, 216, 241, 0.12)',
+                  color: 'var(--accent)',
+                  border: '1px solid rgba(0, 216, 241, 0.35)',
+                  lineHeight: '1.2'
+                }}
+              >
+                {t.about.portableBadge}
+              </span>
+            )}
           </div>
 
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: 24 }}>
@@ -226,7 +251,7 @@ export default function AboutModal(): JSX.Element {
               {status.state === 'available' ? (
                 <button type="button" className="btn btn-primary about-action-btn" onClick={handleDownload}>
                   <Download size={14} />
-                  <span>{t.about.downloadBtn}</span>
+                  <span>{versions?.isPortable ? t.about.downloadPortableUpdate : t.about.downloadBtn}</span>
                 </button>
               ) : status.state === 'downloaded' || (status as any).state === 'restarting' ? (
                 <button

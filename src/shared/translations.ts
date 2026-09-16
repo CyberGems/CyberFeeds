@@ -500,7 +500,9 @@ export const translations = {
       skipUpdate: 'Skip this version',
       restartAndApply: 'Click to restart and apply',
       moreInFullNotes: '+{count} more in full release notes',
-      dismiss: 'Dismiss'
+      dismiss: 'Dismiss',
+      portableBadge: 'Portable',
+      downloadPortableUpdate: 'Download portable release'
     },
     doctor: {
       title: 'Feeds Doctor',
@@ -1167,7 +1169,9 @@ export const translations = {
       skipUpdate: 'Omitir esta versión',
       restartAndApply: 'Haz clic para reiniciar y aplicar',
       moreInFullNotes: '+{count} más en las notas completas',
-      dismiss: 'Descartar'
+      dismiss: 'Descartar',
+      portableBadge: 'Portable',
+      downloadPortableUpdate: 'Descargar versión portable'
     },
     doctor: {
       title: 'Doctor de feeds',

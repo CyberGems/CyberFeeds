@@ -20,10 +20,15 @@ import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
 
 // Keep development data isolated from the installed app's profile and database.
+// When running in portable mode, isolate user data in a 'data' folder alongside the executable.
 if (is.dev) {
   const devUserDataPath = path.join(app.getPath('appData'), 'CyberFeeds-dev')
   fs.mkdirSync(devUserDataPath, { recursive: true })
   app.setPath('userData', devUserDataPath)
+} else if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  const portableUserDataPath = path.join(process.env.PORTABLE_EXECUTABLE_DIR, 'data')
+  fs.mkdirSync(portableUserDataPath, { recursive: true })
+  app.setPath('userData', portableUserDataPath)
 }
 
 // Single instance lock

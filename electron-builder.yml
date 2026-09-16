@@ -14,6 +14,13 @@ asarUnpack:
 win:
   executableName: CyberFeeds
   icon: build/icon.png
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
 nsis:
   artifactName: ${productName}-${version}-setup.${ext}
   shortcutName: ${productName}
@@ -29,6 +36,10 @@ nsis:
   menuCategory: true
   runAfterFinish: true
   deleteAppDataOnUninstall: false
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
+  unpackDirName: CyberFeeds-portable
+  requestExecutionLevel: user
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:

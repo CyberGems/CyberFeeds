@@ -49,10 +49,19 @@ jobs:
 
           $installerPath = $installerItem.FullName
           $installerHash = (Get-FileHash $installerPath -Algorithm SHA256).Hash.ToLower()
+
+          $portableItem = Get-ChildItem -Path "./dist" -Filter "*portable.exe" | Select-Object -First 1
+          $portablePath = if ($portableItem) { $portableItem.FullName } else { $null }
+          $portableHash = if ($portablePath) { (Get-FileHash $portablePath -Algorithm SHA256).Hash.ToLower() } else { "" }
+
           $rawVersion = "${{ github.ref_name }}".TrimStart('v')
 
           Write-Host "Installer: $($installerItem.Name)"
           Write-Host "Installer SHA256: $installerHash"
+          if ($portableItem) {
+            Write-Host "Portable: $($portableItem.Name)"
+            Write-Host "Portable SHA256: $portableHash"
+          }
           Write-Host "Raw Version: $rawVersion"
 
           if ($env:VIRUSTOTAL_API_KEY) {
@@ -76,15 +85,18 @@ jobs:
 
             try {
               Upload-VirusTotal $installerPath $env:VIRUSTOTAL_API_KEY
+              if ($portablePath) {
+                Upload-VirusTotal $portablePath $env:VIRUSTOTAL_API_KEY
+              }
             } catch {
-              Write-Warning "VirusTotal installer upload warning: $_"
+              Write-Warning "VirusTotal upload warning: $_"
             }
           } else {
             Write-Host "VIRUSTOTAL_API_KEY secret not found; skipping direct upload and using computed SHA256 hashes for reports."
           }
 
           $template = [System.IO.File]::ReadAllText(".github/release-template.md", [System.Text.Encoding]::UTF8)
-          $notes = $template.Replace("{{VERSION}}", "${{ github.ref_name }}").Replace("{{RAW_VERSION}}", $rawVersion).Replace("{{INSTALLER_HASH}}", $installerHash)
+          $notes = $template.Replace("{{VERSION}}", "${{ github.ref_name }}").Replace("{{RAW_VERSION}}", $rawVersion).Replace("{{INSTALLER_HASH}}", $installerHash).Replace("{{PORTABLE_HASH}}", $portableHash)
           [System.IO.File]::WriteAllText("release_notes.md", $notes, [System.Text.Encoding]::UTF8)
 
       - name: Upload Release Assets

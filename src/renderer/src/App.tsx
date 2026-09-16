@@ -63,6 +63,7 @@ export default function App(): JSX.Element {
   const dismissSettings = useOverlayDismiss(handleCloseSettings)
 
   const [updateStatus, setUpdateStatus] = useState<ActiveUpdateStatus | null>(null)
+  const [isPortable, setIsPortable] = useState(false)
 
   // ── Resize hooks — MUST be at top level, before any conditionals ──────────
   const [sidebarDragging, setSidebarDragging] = useState(false)
@@ -91,6 +92,13 @@ export default function App(): JSX.Element {
     window.api.getUserInfo?.().then((info) => {
       if (info?.username) {
         useUIStore.getState().setDetectedUserName(info.username)
+      }
+    }).catch(() => {})
+
+    // Detect portable mode
+    window.api.getVersions?.().then((v: any) => {
+      if (v?.isPortable) {
+        setIsPortable(true)
       }
     }).catch(() => {})
 
@@ -469,6 +477,7 @@ export default function App(): JSX.Element {
       {updateStatus && (
         <UpdateNotificationModal
           status={updateStatus}
+          isPortable={isPortable}
           onClose={() => setUpdateStatus(null)}
           onSkip={(version) => {
             try {

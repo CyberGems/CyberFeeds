@@ -661,7 +661,8 @@ export function registerIpc(): void {
     platform: process.platform,
     arch: process.arch,
     osRelease: os.release(),
-    osType: os.type()
+    osType: os.type(),
+    isPortable: Boolean(process.env.PORTABLE_EXECUTABLE_DIR)
   }))
 
   ipcMain.handle('app:openDataFolder', () => {

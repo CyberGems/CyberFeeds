@@ -13,6 +13,7 @@ interface UpdateNotificationModalProps {
   onSkip: (version: string) => void
   onDownload: () => void
   onInstall: () => void
+  isPortable?: boolean
 }
 
 const STARTS_WITH_EMOJI_REGEX = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u{1F300}-\u{1FAFF}]|[\u2600-\u27BF])/u
@@ -110,7 +111,8 @@ export function UpdateNotificationModal({
   onClose,
   onSkip,
   onDownload,
-  onInstall
+  onInstall,
+  isPortable
 }: UpdateNotificationModalProps): JSX.Element {
   const { t } = useTranslation()
   const currentVersion = status.version || ''
@@ -281,10 +283,17 @@ export function UpdateNotificationModal({
               type="button"
               className="btn btn-primary update-notification-btn"
               style={{ fontWeight: 600 }}
-              onClick={onDownload}
+              onClick={() => {
+                if (isPortable) {
+                  window.api.openExternal(releaseUrl)
+                  onClose()
+                } else {
+                  onDownload()
+                }
+              }}
             >
               <Download size={13} />
-              <span>{t.about.downloadBtn}</span>
+              <span>{isPortable ? t.about.downloadPortableUpdate : t.about.downloadBtn}</span>
             </button>
           </>
         ) : status.state === 'downloading' ? (

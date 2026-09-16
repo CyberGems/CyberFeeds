@@ -1,5 +1,5 @@
 import { autoUpdater } from 'electron-updater'
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, shell } from 'electron'
 import type { AppSettings } from '../shared/types'
 
 /**
@@ -8,6 +8,9 @@ import type { AppSettings } from '../shared/types'
  * when off, an available update is reported but not fetched until the user
  * triggers it from the About modal.
  */
+
+const isPortable = Boolean(process.env.PORTABLE_EXECUTABLE_DIR)
+let latestReleaseUrl: string | undefined
 
 let autoUpdateEnabled = false
 let manualCheck = false
@@ -79,6 +82,7 @@ export function initUpdater(settings: AppSettings): void {
 
   autoUpdater.on('update-available', async (info) => {
     const details = await fetchReleaseDetails(info.version, info.releaseNotes)
+    latestReleaseUrl = details.url
     broadcast({
       state: 'available',
       version: info.version,
@@ -134,12 +138,14 @@ function registerUpdateIpc(): void {
       let details: { notes?: string; url?: string } | undefined
       if (ver) {
         details = await fetchReleaseDetails(ver, result?.updateInfo?.releaseNotes)
+        latestReleaseUrl = details.url
       }
       return {
         ok: true,
         version: ver,
         releaseNotes: details?.notes,
-        releaseUrl: details?.url
+        releaseUrl: details?.url,
+        isPortable
       }
     } catch (err) {
       console.error('[Updater] Check failed:', err)
@@ -150,6 +156,12 @@ function registerUpdateIpc(): void {
   })
 
   ipcMain.handle('update:download', async () => {
+    if (isPortable) {
+      if (latestReleaseUrl) {
+        shell.openExternal(latestReleaseUrl)
+      }
+      return { ok: true, isPortable: true }
+    }
     broadcast({ state: 'downloading', percent: 0 })
     try {
       await autoUpdater.downloadUpdate()
@@ -162,6 +174,12 @@ function registerUpdateIpc(): void {
   })
 
   ipcMain.handle('update:install', () => {
+    if (isPortable) {
+      if (latestReleaseUrl) {
+        shell.openExternal(latestReleaseUrl)
+      }
+      return
+    }
     // Quit and install the downloaded update silently (unattended) with auto-relaunch.
     autoUpdater.quitAndInstall(true, true)
   })
