@@ -3,7 +3,7 @@ import path from 'path'
 import { app, BrowserWindow } from 'electron'
 import * as db from './db'
 import type { Feed } from './types'
-import { setTrayActivity } from './tray'
+import { setTrayActivity, rebuildTrayMenu } from './tray'
 import { setPollingBatchHold } from './notifications'
 
 let pollingTimer: ReturnType<typeof setInterval> | null = null
@@ -140,12 +140,13 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
     if (activeWorker === worker) activeWorker = null
     setTrayActivity('polling', false)
     setPollingBatchHold(false)
+    rebuildTrayMenu()
     onComplete?.()
   }
 
   clearWatchdog()
   pollWatchdog = setTimeout(() => {
-    console.error(`[Polling] Watchdog triggered — worker did not complete within ${POLL_WATCHDOG_MS / 1000}s, terminating`)
+    console.error(`[Polling] Watchdog triggered: worker did not complete within ${POLL_WATCHDOG_MS / 1000}s, terminating`)
     worker.terminate()
     isPolling = false
     complete()

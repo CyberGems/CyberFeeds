@@ -200,12 +200,15 @@ export default function App(): JSX.Element {
     }
   }, [refresh, refreshUnreadCounts])
 
-  // Listen for open article requests (e.g. from notifier click)
+  // Listen for open article requests (e.g. from notifier click or tray menu)
   useEffect(() => {
     const unsub = window.api.onOpenArticle((feedId, articleId) => {
       useUIStore.setState({
-        selectedFeedId: feedId,
+        selectedFeedId: !feedId || feedId === 'all' ? null : feedId,
         selectedArticleId: articleId || null,
+        unreadOnly: false,
+        readOnly: false,
+        search: '',
         activePanel: null
       })
     })

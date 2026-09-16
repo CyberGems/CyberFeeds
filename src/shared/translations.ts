@@ -578,9 +578,12 @@ export const translations = {
     mainProcess: {
       tray: {
         showHide: 'Show / Hide',
-        recentNotifications: 'Recent notifications',
-        noRecentNotifications: 'No recent notifications',
-        viewAllNotifications: 'View all notifications...',
+        recentArticles: 'Recent articles',
+        noRecentArticles: 'No recent articles',
+        viewAllArticles: 'View all articles...',
+        recentNotifications: 'Recent articles',
+        noRecentNotifications: 'No recent articles',
+        viewAllNotifications: 'View all articles...',
         notifications: 'Notifications panel...',
         settings: 'Configuration...',
         updateFeeds: 'Update feeds',
@@ -1197,9 +1200,12 @@ export const translations = {
     mainProcess: {
       tray: {
         showHide: 'Mostrar / Ocultar',
-        recentNotifications: 'Notificaciones recientes',
-        noRecentNotifications: 'Sin notificaciones recientes',
-        viewAllNotifications: 'Ver todas las notificaciones...',
+        recentArticles: 'Artículos recientes',
+        noRecentArticles: 'Sin artículos recientes',
+        viewAllArticles: 'Ver todos los artículos...',
+        recentNotifications: 'Artículos recientes',
+        noRecentNotifications: 'Sin artículos recientes',
+        viewAllNotifications: 'Ver todos los artículos...',
         notifications: 'Panel de notificaciones...',
         settings: 'Configuración...',
         updateFeeds: 'Actualizar feeds',

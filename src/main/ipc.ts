@@ -226,12 +226,14 @@ export function registerIpc(): void {
 
   ipcMain.handle('feeds:update', (_, id: string, changes: Partial<Feed>) => {
     db.updateFeed({ id, ...changes })
+    rebuildTrayMenu()
     return db.getFeedById(id)
   })
 
   ipcMain.handle('feeds:delete', (_, id: string) => {
     db.deleteFeed(id)
     pruneFeedFilter(id)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
@@ -246,6 +248,7 @@ export function registerIpc(): void {
       db.saveSettings({ ...current, notifications })
       updateNotifierSettings(notifications)
     }
+    rebuildTrayMenu()
     return { ok: true, deleted }
   })
 
@@ -358,26 +361,31 @@ export function registerIpc(): void {
 
   ipcMain.handle('articles:markRead', (_, id: string, read: boolean) => {
     db.markArticleRead(id, read)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:markAllRead', (_, feedId?: string) => {
     db.markAllRead(feedId)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:markAllFilteredRead', (_, starredOnly?: boolean) => {
     db.markAllFilteredRead(Boolean(starredOnly))
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:deleteAllActive', (_, starredOnly?: boolean) => {
     db.deleteAllActiveArticles(Boolean(starredOnly))
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:deleteAllFiltered', (_, query?: db.ArticleQuery) => {
     db.deleteAllFilteredArticles(query || {})
+    rebuildTrayMenu()
     return { ok: true }
   })
 
@@ -393,41 +401,49 @@ export function registerIpc(): void {
 
   ipcMain.handle('articles:delete', (_, id: string) => {
     db.deleteArticle(id)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:deleteMultiple', (_, ids: string[]) => {
     db.deleteArticles(ids)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:restore', (_, id: string) => {
     db.restoreArticle(id)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:restoreMultiple', (_, ids: string[]) => {
     db.restoreArticles(ids)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:restoreAllTrash', () => {
     db.restoreAllTrash()
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:purge', (_, id: string) => {
     db.purgeArticle(id)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:purgeMultiple', (_, ids: string[]) => {
     db.purgeArticles(ids)
+    rebuildTrayMenu()
     return { ok: true }
   })
 
   ipcMain.handle('articles:emptyTrash', () => {
     db.emptyTrash()
+    rebuildTrayMenu()
     return { ok: true }
   })
 
@@ -553,6 +569,7 @@ export function registerIpc(): void {
     }
 
     db.addFeeds(newFeeds)
+    rebuildTrayMenu()
 
     // Initial OPML sync is deliberately silent and throttled. Imported feeds
     // often contain a historical backlog that should not become hundreds of
@@ -669,6 +686,7 @@ export function registerIpc(): void {
   ipcMain.handle('app:cleanup', (_, days: number) => {
     db.cleanupOldArticles(days)
     db.purgeOldTrash(db.TRASH_RETENTION_DAYS)
+    rebuildTrayMenu()
     return { ok: true }
   })
 

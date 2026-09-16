@@ -73,19 +73,28 @@ async function fetchTrayFavicon(url: string): Promise<void> {
   }
 }
 
-function formatTrayNotificationTitle(item: { title: string; feedName?: string }): string {
-  const maxTitleLen = 50
-  const maxFeedLen = 18
+function formatTrayArticleTitle(item: {
+  title: string
+  feedTitle?: string
+  feedName?: string
+  read?: number
+}): string {
+  const maxTitleLen = 46
+  const maxFeedLen = 16
   const cleanTitle = (item.title || '').replace(/\s+/g, ' ').trim()
   const truncatedTitle =
     cleanTitle.length > maxTitleLen ? cleanTitle.slice(0, maxTitleLen) + '…' : cleanTitle
 
+  const feedName = item.feedTitle || item.feedName
   let raw = truncatedTitle
-  if (item.feedName) {
-    const cleanFeed = item.feedName.replace(/\s+/g, ' ').trim()
+  if (feedName) {
+    const cleanFeed = feedName.replace(/\s+/g, ' ').trim()
     const truncatedFeed =
       cleanFeed.length > maxFeedLen ? cleanFeed.slice(0, maxFeedLen) + '…' : cleanFeed
     raw = `[${truncatedFeed}] ${truncatedTitle}`
+  }
+  if (item.read === 0) {
+    raw = `• ${raw}`
   }
   // Escape ampersands so Windows doesn't interpret them as shortcut mnemonics
   return raw.replace(/&/g, '&&')
@@ -254,6 +263,10 @@ export function createTray(mainWindow: BrowserWindow): Tray {
     restoreMainWindow()
   })
 
+  tray.on('right-click', () => {
+    buildMenu()
+  })
+
   // Rebuild menu automatically when window is shown or hidden to update label
   mainWindow.on('show', () => {
     buildMenu()
@@ -266,7 +279,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
 }
 
 export function rebuildTrayMenu(): void {
-  buildMenu()
+  scheduleMenuRebuild()
 }
 
 export function rebuildGlobalShortcuts(): void {
@@ -357,10 +370,11 @@ function buildMenu(): void {
   const t = translations[lang].mainProcess.tray
   const shortcuts = settings.shortcuts as KeyboardShortcuts
 
-  const recentItems = db.getRecentNotifications(15)
+  const recentArticles = db.getArticles({ limit: 15 })
+  const unreadCount = db.getArticleCount({ unreadOnly: true })
   const unseenCount = db.getUnseenNotificationCount()
   const recentLabel =
-    unseenCount > 0 ? `${t.recentNotifications} (${unseenCount})` : t.recentNotifications
+    unreadCount > 0 ? `${t.recentArticles} (${unreadCount})` : t.recentArticles
 
   const resourcesDir = path.join(__dirname, '../../resources')
   const iconsDir = path.join(resourcesDir, 'menu-icons')
@@ -446,46 +460,49 @@ function buildMenu(): void {
       label: recentLabel,
       icon: iconNotifications,
       submenu:
-        recentItems.length === 0
+        recentArticles.length === 0
           ? [
               {
-                label: t.noRecentNotifications,
+                label: t.noRecentArticles,
                 enabled: false
               }
             ]
           : [
-              ...recentItems.map((item) => ({
-                label: formatTrayNotificationTitle(item),
-                icon: getTrayIcon(item.icon),
+              ...recentArticles.map((article) => ({
+                label: formatTrayArticleTitle({
+                  title: article.title,
+                  feedTitle: article.feedTitle,
+                  read: article.read
+                }),
+                icon: getTrayIcon(article.feedIcon),
                 click: () => {
                   const win = _mainWindow
                   if (!win || win.isDestroyed()) return
                   restoreMainWindow()
-                  if (item.feedId && item.articleId) {
-                    win.webContents.send('app:openArticle', {
-                      feedId: item.feedId,
-                      articleId: item.articleId
-                    })
-                  } else if (item.link) {
-                    shell.openExternal(item.link)
-                  }
+                  win.webContents.send('app:openArticle', {
+                    feedId: article.feedId,
+                    articleId: article.id
+                  })
                 }
               })),
               { type: 'separator' as const },
               {
-                label: t.viewAllNotifications,
-                icon: iconNotifications,
+                label: t.viewAllArticles,
+                icon: iconShowHide,
                 click: () => {
                   const win = _mainWindow
                   if (!win || win.isDestroyed()) return
                   restoreMainWindow()
-                  win.webContents.send('app:openHistory')
+                  win.webContents.send('app:openArticle', {
+                    feedId: 'all',
+                    articleId: ''
+                  })
                 }
               }
             ]
     },
     {
-      label: t.notifications,
+      label: unseenCount > 0 ? `${t.notifications} (${unseenCount})` : t.notifications,
       icon: iconNotifications,
       accelerator: shortcuts.notifications.enabled ? shortcuts.notifications.accelerator : undefined,
       click: () => {

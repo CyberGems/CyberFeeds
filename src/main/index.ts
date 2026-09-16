@@ -14,7 +14,7 @@ import { startPolling, setOnNewArticles } from './polling'
 import { registerIpc, setAutoStart } from './ipc'
 import { initUpdater } from './updater'
 import { initNotifier, registerNotifierIpc, showNotification } from './notifications'
-import { createTray, destroyTray } from './tray'
+import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
@@ -393,6 +393,9 @@ app.whenReady().then(() => {
         }
         showNotification(item)
       }
+    }
+    if (inserted.length > 0) {
+      rebuildTrayMenu()
     }
     // Tell renderer to refresh article count
     if (mainWindow && !mainWindow.isDestroyed()) {
