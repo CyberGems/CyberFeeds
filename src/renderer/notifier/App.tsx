@@ -462,7 +462,7 @@ export default function NotifierApp(): JSX.Element {
                 gap: 5,
                 backgroundColor: historyHovered ? 'var(--accent, #58a6ff)' : 'var(--bg-1, #161b22)',
                 borderColor: isLimitReached
-                  ? '#f59e0b'
+                  ? 'var(--red, #f85149)'
                   : historyHovered
                     ? 'var(--accent, #58a6ff)'
                     : 'var(--border, #30363d)',
@@ -479,7 +479,7 @@ export default function NotifierApp(): JSX.Element {
                 size={12}
                 style={{
                   flexShrink: 0,
-                  color: isLimitReached && !historyHovered ? '#f59e0b' : undefined
+                  color: isLimitReached && !historyHovered ? 'var(--red, #f85149)' : undefined
                 }}
               />
               {t.notifier.history}
@@ -490,7 +490,7 @@ export default function NotifierApp(): JSX.Element {
                     color: historyHovered
                       ? '#0d1117'
                       : isLimitReached
-                        ? '#f59e0b'
+                        ? 'var(--red, #f85149)'
                         : 'var(--accent, #58a6ff)'
                   }}
                 >

@@ -235,9 +235,9 @@ export default function NotificationHistoryPanel(): JSX.Element {
                 style={{
                   fontSize: 10,
                   padding: '2px 6px',
-                  color: '#f59e0b',
-                  borderColor: '#f59e0b',
-                  background: 'rgba(245, 158, 11, 0.1)',
+                  color: 'var(--red, #f85149)',
+                  borderColor: 'var(--red, #f85149)',
+                  background: 'rgba(248, 81, 73, 0.12)',
                   cursor: 'help'
                 }}
               >
@@ -286,10 +286,10 @@ export default function NotificationHistoryPanel(): JSX.Element {
               padding: '8px 12px',
               marginBottom: 12,
               borderRadius: 'var(--radius, 6px)',
-              background: 'rgba(245, 158, 11, 0.08)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
+              background: 'rgba(248, 81, 73, 0.08)',
+              border: '1px solid rgba(248, 81, 73, 0.3)',
               fontSize: 12,
-              color: '#f59e0b',
+              color: 'var(--red, #f85149)',
               lineHeight: 1.4
             }}
           >
