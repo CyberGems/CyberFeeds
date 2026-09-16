@@ -1085,10 +1085,14 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 32px;
+  user-select: text;
+  -webkit-user-select: text;
 }
 .reader-wrap {
   max-width: 720px;
   margin: 0 auto;
+  user-select: text;
+  -webkit-user-select: text;
 }
 .reader-title {
   font-size: 22px;

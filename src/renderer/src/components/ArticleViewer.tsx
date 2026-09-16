@@ -671,14 +671,20 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           <h1 className="reader-title">
             <Tooltip label={t.articleViewer.openDefaultBrowser} placement="bottom">
               <a
-                href="#"
+                role="link"
+                tabIndex={0}
                 draggable={false}
-                onDragStart={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.preventDefault()
                   const selection = window.getSelection()?.toString()
                   if (selection && selection.trim().length > 0) return
                   window.api.openExternal(article.link)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    window.api.openExternal(article.link)
+                  }
                 }}
                 onMouseOver={() => setHoveredLink(article.link)}
                 onMouseLeave={() => setHoveredLink(null)}
