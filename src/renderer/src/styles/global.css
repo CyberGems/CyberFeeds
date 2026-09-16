@@ -2685,7 +2685,6 @@ body {
 }
 .notif-card.is-compact .notif-time {
   font-size: 10px;
-  opacity: 0.85;
 }
 .notif-header {
   display: flex;

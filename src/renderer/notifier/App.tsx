@@ -332,7 +332,7 @@ export default function NotifierApp(): JSX.Element {
     const hasMore = state.stack.length > maxStack
     const peekH = hasMore ? 44 : 0
     // 16px root padding + 34px topbar + 4px scrollRef paddingTop + 8px bottom safety + peekH
-    const totalH = cardsH + 16 + 34 + 8 + peekH
+    const totalH = cardsH + 16 + 34 + 4 + 8 + peekH
     window.api.resizeNotifier?.(totalH)
   }, [state.stack, state.settings?.maxStack])
 

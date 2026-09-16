@@ -28,7 +28,7 @@ const HARD_CAP = 50
 const DEFAULT_MAX_HEIGHT_PERCENT = 65
 const MIN_MAX_HEIGHT_PERCENT = 35
 const MAX_MAX_HEIGHT_PERCENT = 90
-const CARD_COMPACT_H = 92
+const CARD_COMPACT_H = 114
 // Extra width reserved for the scrollbar so action buttons aren't cramped/clipped
 // when the stack overflows and the scrollbar appears.
 const SCROLLBAR_W = 16
