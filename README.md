@@ -29,61 +29,62 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 | Need | Solution |
 |---|---|
 | Follow RSS, Atom, and Reddit | Native support for all formats + Reddit subreddits and user feeds |
-| Read full articles | Content extraction via worker threads — no truncated summaries |
+| Read full articles | Content extraction via worker threads: no truncated summaries |
 | Stay updated | Smart notifications with keyword filtering, snooze, and multi-monitor support |
 | Manage large libraries | Virtualized lists, search, star/read/unread, auto-cleanup |
 | Migrate from another reader | OPML import/export with folder structure preserved |
-| Keep your data | Local SQLite database — no cloud, no accounts, no tracking |
+| Keep your data | Local SQLite database: no cloud, no accounts, no tracking |
 
 ---
 
 ## ✨ Key Features
 
 ### 📰 Feed Management
-- **Universal Feed Support** — RSS, Atom, and XML with automatic discovery
-- **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app playback and CDN thumbnails
-- **Reddit Integration** — Native subreddit and user feed support with fallback chain (RSS → JSON API)
-- **OPML Import/Export** — Migrate your feeds with folder structure preserved
-- **Feed Preview** — Preview feed content before subscribing
-- **Feed Doctor** — Diagnostic scanner for connectivity and parsing issues
-- **Background Polling** — Configurable refresh intervals with per-feed and per-folder pause/resume
+- **Universal Feed Support**: RSS, Atom, and XML with automatic discovery
+- **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app or external browser playback and CDN thumbnails
+- **Reddit Integration**: Native subreddit and user feed support with fallback chain (RSS → JSON API)
+- **OPML Import/Export**: Migrate your feeds with folder structure preserved
+- **Feed Preview**: Preview feed content before subscribing
+- **Feed Doctor**: Diagnostic scanner for connectivity and parsing issues
+- **Background Polling**: Configurable refresh intervals with per-feed and per-folder pause/resume
 
 ### 📖 Article Management
-- **Full-Content Extraction** — Fetch complete article content via worker threads
-- **Text Selection Flyout** — Search selected text, copy it, or translate it without leaving the reader
-- **Star/Unstar** — Mark articles as favorites
-- **Read/Unread Tracking** — Know what you've read at a glance
-- **Soft Delete** — Move articles to trash with 30-day auto-purge
-- **Instant Search** — Search articles with instant or Enter-to-search modes
-- **Virtualized Lists** — Smooth scrolling for large article libraries
-- **Multiple Layouts** — Three-panel, two-panel, one-panel, and horizontal-split views
+- **Full-Content Extraction**: Fetch complete article content via worker threads
+- **Text Selection Flyout**: Search selected text, copy it, or translate it from titles and article body without leaving the reader
+- **Star/Unstar**: Mark articles as favorites
+- **Read/Unread Tracking**: Know what you've read at a glance
+- **Soft Delete**: Move articles to trash with 30-day auto-purge
+- **Instant Search**: Search articles with instant or Enter-to-search modes
+- **Virtualized Lists & Incremental Rendering**: Smooth scrolling for large article libraries and progressive batch loading for high-volume notification panels
+- **Multiple Layouts**: Three-panel, two-panel, one-panel, and horizontal-split views
 
 ### 🔔 Smart Notifications
-- **Custom Notification Window** — Built-in notifier with batching and action buttons
-- **Live Article Updates** — See newly fetched articles in a floating pill while keeping your place in the list
-- **Keyword Filtering** — Only get notified about topics that matter
-- **Notification History** — Configurable history limit, accurate unseen counts, and recent items in the tray
-- **Snooze** — Pause notifications for a configurable duration
-- **Multi-Monitor Support** — Choose which display shows notifications
-- **Sound Alerts** — Custom notification sounds
-- **Fullscreen Detection** — Suppress notifications during games or videos
+- **Custom Notification Window**: Built-in notifier with batching and action buttons
+- **Live Article Updates**: See newly fetched articles in a floating pill while keeping your place in the list
+- **Keyword Filtering**: Only get notified about topics that matter
+- **Notification History**: Configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
+- **Snooze**: Pause notifications for a configurable duration
+- **Multi-Monitor Support**: Choose which display shows notifications
+- **Sound Alerts**: Custom notification sounds
+- **Fullscreen Detection**: Suppress notifications during games or videos
 
 ### 🖥️ Desktop Integration
-- **System Tray** — Minimize to tray, quick actions menu, activity indicator
-- **Global Hotkeys** — Configurable shortcuts (default show/hide: `Alt+Shift+S`)
-- **Auto-Start** — Start with Windows option
-- **Auto-Updates** — Built-in update checker with manual download control
-- **Custom Browser** — Open links in a user-selected browser
+- **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, and bidirectional animation during background polling
+- **Multi-Monitor Window Memory**: Automatically remembers active display bounds and restores window to designated monitor
+- **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+S`)
+- **Auto-Start**: Start with Windows option
+- **Interactive Auto-Updates**: Built-in update checker with release changelog preview, immediate update, and version skip options
+- **Custom Browser**: Open links in a user-selected browser
 
 ### 🎨 Customization
-- **6 Themes** — CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)
-- **Reading Preferences** — Font size, line height, max width, reading theme (Default, Sepia, Dark)
-- **Bilingual UI** — Full English and Spanish interface
+- **6 Themes**: CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)
+- **Reading Preferences**: Font size, line height, max width, reading theme (Default, Sepia, Dark), and in-app YouTube playback toggle
+- **Bilingual UI**: Full English and Spanish interface
 
 ### 💾 Data Management
-- **Backup & Restore** — JSON-based backup of feeds, folders, and settings
-- **Auto-Cleanup** — Automatically delete old read articles
-- **SQLite Database** — High-performance local storage with WAL mode
+- **Backup & Restore**: JSON-based backup of feeds, folders, and settings
+- **Auto-Cleanup**: Automatically delete old read articles
+- **SQLite Database**: High-performance local storage with WAL mode
 
 ---
 
@@ -130,11 +131,11 @@ src/
 
 ### Architecture Highlights
 
-- **Worker Threads** — Feed fetching and content extraction run in dedicated workers to keep the main process responsive
-- **Optimistic UI** — Article state updates immediately in the renderer, then syncs with the main process
-- **CSS Variable Resizing** — Column/row resizing updates DOM directly during drag (zero React re-renders)
-- **Context Bridge** — Strict preload API surface with no Node integration in renderer
-- **WAL Mode SQLite** — High-performance concurrent reads with write-ahead logging
+- **Worker Threads**: Feed fetching and content extraction run in dedicated workers to keep the main process responsive
+- **Optimistic UI**: Article state updates immediately in the renderer, then syncs with the main process
+- **CSS Variable Resizing**: Column/row resizing updates DOM directly during drag (zero React re-renders)
+- **Context Bridge**: Strict preload API surface with no Node integration in renderer
+- **WAL Mode SQLite**: High-performance concurrent reads with write-ahead logging
 
 ---
 
@@ -213,7 +214,7 @@ If you’d like to support future updates, I’d truly appreciate it. Your donat
 <div align="center">
 
 <details>
-<summary><b>Crypto donations (BTC, ETH, USDT, LTC) — click to view addresses</b></summary>
+<summary><b>Crypto donations (BTC, ETH, USDT, LTC): click to view addresses</b></summary>
 
 | Asset | Address | QR |
 |---|---|---|
