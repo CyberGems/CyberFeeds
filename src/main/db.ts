@@ -587,10 +587,30 @@ export function pruneNotificationHistory(limit: number): void {
 }
 
 export function addNotificationHistory(item: NotificationHistoryItem): void {
-  db.prepare(`
+  addNotificationHistoryBatch([item])
+}
+
+export function addNotificationHistoryBatch(items: NotificationHistoryItem[]): void {
+  if (items.length === 0) return
+  const stmt = db.prepare(`
     INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(item.id, item.title, item.body, item.link, item.feedName, item.icon ?? null, item.thumbnail ?? null, item.articleId ?? null, item.createdAt)
+  `)
+  db.transaction(() => {
+    for (const item of items) {
+      stmt.run(
+        item.id,
+        item.title,
+        item.body,
+        item.link,
+        item.feedName,
+        item.icon ?? null,
+        item.thumbnail ?? null,
+        item.articleId ?? null,
+        item.createdAt
+      )
+    }
+  })()
   const limit = getSettings().notifications?.historyLimit ?? 1000
   if (limit > 0) {
     pruneNotificationHistory(limit)

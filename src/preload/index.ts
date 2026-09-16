@@ -118,6 +118,11 @@ const api = {
     ipcRenderer.on('notifications:new', handler)
     return () => { ipcRenderer.removeListener('notifications:new', handler) }
   },
+  onNewNotificationBatch: (cb: (items: any[]) => void) => {
+    const handler = (_: unknown, items: any[]) => cb(items)
+    ipcRenderer.on('notifications:batch', handler)
+    return () => { ipcRenderer.removeListener('notifications:batch', handler) }
+  },
   onOpenHistory: (cb: () => void) => {
     const handler = (): void => cb()
     ipcRenderer.on('app:openHistory', handler)

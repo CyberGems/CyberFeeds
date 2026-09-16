@@ -244,11 +244,13 @@ export default function NotificationHistoryPanel(): JSX.Element {
   }, [])
 
   // ── Throttled incoming notification listener ────────────────────────────
-  // Batches incoming notifications for 500ms to avoid per-item re-renders
-  // when a feed poll returns many new articles at once.
+  // Batches incoming notifications to avoid per-item re-renders
+  // when a feed poll returns many new articles at once, and caps state to historyLimit.
   useEffect(() => {
     let pending: NotificationHistoryItem[] = []
     let timer: ReturnType<typeof setTimeout> | null = null
+
+    const limit = settings.notifications?.historyLimit ?? 1000
 
     const flush = (): void => {
       timer = null
@@ -257,21 +259,32 @@ export default function NotificationHistoryPanel(): JSX.Element {
       pending = []
       setHistory((prev) => {
         const ids = new Set(batch.map((b) => b.id))
-        return [...batch, ...prev.filter((x) => !ids.has(x.id))]
+        const merged = [...batch, ...prev.filter((x) => !ids.has(x.id))]
+        return limit > 0 ? merged.slice(0, limit) : merged
       })
     }
 
-    const unsub = window.api.onNewNotification((item) => {
-      pending.push(item)
-      if (!timer) timer = setTimeout(flush, 500)
+    const unsubBatch = window.api.onNewNotificationBatch
+      ? window.api.onNewNotificationBatch((items: NotificationHistoryItem[]) => {
+          pending.push(...items)
+          if (!timer) timer = setTimeout(flush, 300)
+        })
+      : undefined
+
+    const unsubNew = window.api.onNewNotification((item) => {
+      if (!unsubBatch) {
+        pending.push(item)
+        if (!timer) timer = setTimeout(flush, 300)
+      }
     })
+
     return () => {
-      unsub()
+      unsubBatch?.()
+      unsubNew()
       if (timer) clearTimeout(timer)
-      // Flush remaining on unmount
       if (pending.length > 0) flush()
     }
-  }, [])
+  }, [settings.notifications?.historyLimit])
 
   const handleMarkAllSeen = useCallback(async (): Promise<void> => {
     const now = Date.now()

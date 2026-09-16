@@ -590,31 +590,55 @@ async function flushBatch(): Promise<void> {
     setTrayActivity('batch', false)
     return
   }
-  const batch = [...incomingBatchQueue]
+  const fullBatch = [...incomingBatchQueue]
   incomingBatchQueue.length = 0
   batchStartTime = 0
   const thisBatchId = ++currentBatchId
 
-  console.log(`[Notifier] Preparing batch of ${batch.length} notification(s)...`)
+  // Cap to at most HARD_CAP (50) items for the notifier window popup
+  const batch = fullBatch.slice(-HARD_CAP)
+
+  console.log(`[Notifier] Preparing batch of ${batch.length} notification(s) (queue had ${fullBatch.length})...`)
 
   try {
-    // Preload all thumbnails in parallel for the whole batch
-    const processed = await Promise.all(
-      batch.map(async (item) => {
-        const displayItem: NotificationHistoryItem = { ...item }
-        if (settings.showThumbnails && displayItem.thumbnail) {
-          const dataUrl = await preloadImageDataUrl(displayItem.thumbnail)
-          if (dataUrl) displayItem.thumbnail = dataUrl
+    // Only preload thumbnails for the top items that can actually be visible (max 10),
+    // and limit concurrency to at most 3 with a short timeout to prevent network saturation and 100% CPU.
+    const MAX_PRELOAD_CARDS = 10
+    const itemsToPreload = batch.slice(0, MAX_PRELOAD_CARDS)
+
+    const preloadMap = new Map<string, string>()
+    if (settings.showThumbnails) {
+      const candidates = itemsToPreload.filter(
+        (item) => item.thumbnail && /^https?:\/\//i.test(item.thumbnail)
+      )
+      // Concurrency pool of 3
+      const pool: Promise<void>[] = []
+      for (const item of candidates) {
+        const p: Promise<void> = (async () => {
+          const dataUrl = await preloadImageDataUrl(item.thumbnail!, 2500)
+          if (dataUrl) preloadMap.set(item.id, dataUrl)
+        })().finally(() => {
+          const idx = pool.indexOf(p)
+          if (idx !== -1) pool.splice(idx, 1)
+        })
+        pool.push(p)
+        if (pool.length >= 3) {
+          await Promise.race(pool)
         }
-        return displayItem
-      })
-    )
+      }
+      await Promise.all(pool)
+    }
 
     // If the batch was cancelled while preloading (e.g. user dismissed all / snoozed)
     if (thisBatchId !== currentBatchId) {
       console.log(`[Notifier] Batch ${thisBatchId} was cancelled during preparation, skipping push`)
       return
     }
+
+    const processed = batch.map((item) => {
+      const dataUrl = preloadMap.get(item.id)
+      return dataUrl ? { ...item, thumbnail: dataUrl } : { ...item }
+    })
 
     const allowed = processed.filter((item) => !(settings.feedFilters ?? []).includes(item.feedId || ''))
     if (allowed.length === 0) return
@@ -689,48 +713,61 @@ function stopQueueChecker(): void {
   }
 }
 
-export async function showNotification(item: NotificationHistoryItem): Promise<void> {
-  console.log(`[Notifier] showNotification triggered for: ${item.title}`)
-  if (!settings.enabled) {
-    console.warn('[Notifier] Notification suppressed: notifications are disabled')
-    return
-  }
+export async function showNotificationsBatch(items: NotificationHistoryItem[]): Promise<void> {
+  if (!settings.enabled || items.length === 0) return
   if (settings.snoozedUntil && Date.now() < settings.snoozedUntil) {
-    console.warn('[Notifier] Notification suppressed: snoozed until', new Date(settings.snoozedUntil).toISOString())
-    return
-  }
-  if ((settings.feedFilters ?? []).includes(item.feedId || '')) {
-    console.warn(`[Notifier] Notification suppressed: feed ${item.feedId} is filtered`)
+    console.warn('[Notifier] Notifications suppressed: snoozed until', new Date(settings.snoozedUntil).toISOString())
     return
   }
 
-  const combined = `${item.title} ${item.body}`.toLowerCase()
-  if (settings.keywordFilters.some(kw => combined.includes(kw.toLowerCase()))) {
-    console.warn('[Notifier] Notification suppressed: matched keyword filter')
-    return
-  }
+  const allowedFeedFilters = settings.feedFilters ?? []
+  const keywordFilters = (settings.keywordFilters ?? []).map((k) => k.toLowerCase())
 
-  // History and the main-window badge update immediately. The popup and sound
-  // are deferred until the batch has passed fullscreen filtering and rendering.
-  db.addNotificationHistory(item)
+  const allowed = items.filter((item) => {
+    if (allowedFeedFilters.includes(item.feedId || '')) return false
+    if (keywordFilters.length > 0) {
+      const combined = `${item.title} ${item.body}`.toLowerCase()
+      if (keywordFilters.some((kw) => combined.includes(kw))) return false
+    }
+    return true
+  })
+
+  if (allowed.length === 0) return
+
+  // 1. History and main-window badge: insert in a single transaction
+  db.addNotificationHistoryBatch(allowed)
   rebuildTrayMenu()
 
-  const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow && !w.isDestroyed())
+  // 2. Notify renderer window efficiently via batch
+  const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow && !w.isDestroyed())
   if (mainWin && !mainWin.isDestroyed()) {
-    mainWin.webContents.send('notifications:new', item)
+    mainWin.webContents.send('notifications:batch', allowed)
+    // Send individual notifications:new for up to 5 items to avoid IPC flooding
+    for (const item of allowed.slice(0, 5)) {
+      mainWin.webContents.send('notifications:new', item)
+    }
   }
 
+  // 3. Fullscreen check
   if (settings.disableOnFullscreen) {
     const isFullscreen = await isAnyAppFullscreen()
     if (isFullscreen) {
-      console.log(`[Notifier] Suppressing popup: full screen detected. Queuing notification: ${item.title}`)
-      queuedNotifications.push(item)
+      console.log(`[Notifier] Suppressing popup: full screen detected. Queuing ${allowed.length} notification(s)`)
+      queuedNotifications.push(...allowed)
       startQueueChecker()
       return
     }
   }
 
-  queueForBatch(item)
+  // 4. Queue for popup batch (cap to at most HARD_CAP so desktop toast never gets flooded)
+  const forPopup = allowed.slice(-HARD_CAP)
+  for (const item of forPopup) {
+    queueForBatch(item)
+  }
+}
+
+export async function showNotification(item: NotificationHistoryItem): Promise<void> {
+  return showNotificationsBatch([item])
 }
 
 /**

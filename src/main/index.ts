@@ -13,7 +13,7 @@ import {
 import { startPolling, setOnNewArticles } from './polling'
 import { registerIpc, setAutoStart } from './ipc'
 import { initUpdater } from './updater'
-import { initNotifier, registerNotifierIpc, showNotification } from './notifications'
+import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './notifications'
 import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import type { NotificationHistoryItem, WindowState } from './types'
@@ -407,22 +407,20 @@ app.whenReady().then(() => {
   // Wire new-article notifications
   setOnNewArticles((feedId, inserted, feedTitle, feedIcon, options) => {
     const suppressForFeed = options?.suppressNotificationFeedIds?.includes(feedId) ?? false
-    if (!options?.suppressNotifications && !suppressForFeed) {
-      for (const article of inserted) {
-        const item: NotificationHistoryItem = {
-          id: crypto.randomUUID(),
-          title: article.title,
-          body: article.snippet,
-          link: article.link,
-          feedName: feedTitle,
-          icon: feedIcon,
-          thumbnail: article.thumbnail,
-          createdAt: Date.now(),
-          feedId: feedId,
-          articleId: article.id
-        }
-        showNotification(item)
-      }
+    if (!options?.suppressNotifications && !suppressForFeed && inserted.length > 0) {
+      const items: NotificationHistoryItem[] = inserted.map((article) => ({
+        id: crypto.randomUUID(),
+        title: article.title,
+        body: article.snippet,
+        link: article.link,
+        feedName: feedTitle,
+        icon: feedIcon,
+        thumbnail: article.thumbnail,
+        createdAt: Date.now(),
+        feedId: feedId,
+        articleId: article.id
+      }))
+      void showNotificationsBatch(items)
     }
     if (inserted.length > 0) {
       rebuildTrayMenu()
