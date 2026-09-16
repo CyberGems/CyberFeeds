@@ -6,35 +6,33 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ### ✨ Key Features & Highlights
 
-- 🎬 **Enriched YouTube Feeds & In-App Playback**:
-  - Improved channel resolution, metadata, thumbnail handling, and error reporting.
-  - Featured images now include an interactive play overlay with embedded in-app video playback.
-  - YouTube articles avoid unnecessary full-page extraction while preserving canonical video identity.
+- 🎬 **Enhanced YouTube Playback & In-App Player Stability**:
+  - Resolved YouTube embed error 153 by injecting canonical Referer headers and sanitizing request headers for video embeds.
+  - Added a dedicated setting in Reading Preferences to toggle between in-app YouTube video playback and opening directly in your default browser.
+  - Embedded YouTube players now initialize cleanly in a paused state when opening articles.
+  - Enlarged and refined the interactive play button overlay on video thumbnails.
 
-- 📝 **Article Text Selection Flyout**:
-  - Select article text to search Google, copy, or translate without leaving the viewer.
-  - Selection is preserved while content refreshes, and the viewer now forwards wheel scrolling correctly.
-  - More resilient media-error handling prevents viewer crashes and preserves the surrounding content.
+- 💎 **Modern Squircle Branding & Bidirectional Tray Animation**:
+  - Refreshed application icons with a sleek squircle design across all resolutions and taskbar shortcuts.
+  - Added a smooth bidirectional tray icon animation (frames ping-ponging smoothly) to indicate active background feed polling.
+  - Synchronized tray context menu with real-time recent articles, displaying titles and timestamps for one-click access.
 
-- 💫 **Live Article Updates & More Stable Reading**:
-  - Twitter/X-style floating pill announces newly available articles during background polling.
-  - Active selection and reading state are preserved when fresh content arrives.
-  - Article list controls, smart-view icons, and viewer interactions received a broad accessibility and polish pass.
+- 🚀 **Interactive Update Dialog with Changelog Preview**:
+  - Redesigned update notification modal with an instant release notes peek, letting you review highlights before updating.
+  - Added flexible update controls: update immediately, view full notes, or skip the current release version.
 
-- 🔔 **Notification History & Tray Improvements**:
-  - Configurable notification history limits with accurate counts across badges.
-  - Recent notifications are available from the tray with feed icons and manual badge clearance.
-  - Compact notification cards now use more reliable sizing, wider actions, relative times, and multi-line descriptions.
+- 📖 **Reader & Text Selection Polish**:
+  - Fixed article title selection to allow highlighting from the very first character without drag boundary clipping.
+  - Seamless integration with the floating selection toolbar for rapid copying, Google searches, or translation.
 
-- 📥 **Feed Management & Onboarding**:
-  - Faster OPML imports and bulk feed controls.
-  - Better YouTube feed suggestions and a direct CyberFeeds release feed example using the official app icon.
-  - First-run onboarding and feed setup flows are clearer and more consistent.
+- 🔔 **Smarter Notifications & Dynamic Badges**:
+  - Notification badges now adaptively adopt your active theme accent color and switch to an alert indicator when reaching the configured history limit.
+  - Enhanced compact notification cards with clearer relative timestamps, improved spacing, and stable card dimensions.
+  - Moved muted feeds indicator to a clean header badge in Settings to eliminate layout shifts.
 
-- 🎨 **Cohesive Interface Polish**:
-  - CyberClock-inspired icon tiles improve settings navigation and section headings.
-  - Titlebar menus, sidebar navigation, tooltips, feed favicons, and article context actions were refined.
-  - Translation parsing and fallback validation are more robust, including Spanish UI coverage.
+- 🎨 **About Modal & Suite Alignment**:
+  - Harmonized About modal footer with CyberGems ecosystem standards, featuring updated icon layouts and an animated support badge.
+  - Full bilingual coverage across English and Spanish for all new preferences and dialogues.
 
 ---
 
