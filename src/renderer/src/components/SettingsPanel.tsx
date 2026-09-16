@@ -41,12 +41,14 @@ function CardTitle({
   icon: Icon,
   accent,
   children,
-  danger
+  danger,
+  badge
 }: {
   icon: typeof Bell
   accent: string
   children: React.ReactNode
   danger?: boolean
+  badge?: React.ReactNode
 }): JSX.Element {
   const color = danger ? 'var(--red)' : accent
   return (
@@ -59,6 +61,7 @@ function CardTitle({
         <Icon size={13} strokeWidth={2.2} />
       </span>
       <span>{children}</span>
+      {badge}
     </h3>
   )
 }
@@ -1312,17 +1315,36 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Card 5: Ignored/Muted Feeds */}
               <div className="settings-card">
-                <CardTitle icon={BellOff} accent={TAB_META.notifications.accent}>{t.settings.notifications.ignoredFeeds}</CardTitle>
+                <CardTitle
+                  icon={BellOff}
+                  accent={TAB_META.notifications.accent}
+                  badge={
+                    mutedCount > 0 ? (
+                      <span
+                        className="cyber-badge"
+                        style={{
+                          marginLeft: 'auto',
+                          fontSize: 10,
+                          padding: '2px 6px',
+                          color: 'var(--amber, #d29922)',
+                          borderColor: 'var(--amber, #d29922)',
+                          background: 'rgba(210, 153, 34, 0.12)',
+                          textTransform: 'none',
+                          letterSpacing: 'normal',
+                          fontWeight: 600
+                        }}
+                      >
+                        {mutedCount === 1
+                          ? t.settings.notifications.mutedCountOne
+                          : t.settings.notifications.mutedCount.replace('{count}', String(mutedCount))}
+                      </span>
+                    ) : undefined
+                  }
+                >
+                  {t.settings.notifications.ignoredFeeds}
+                </CardTitle>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8 }}>
                   {t.settings.notifications.ignoredFeedsHint}
-                  {mutedCount > 0 && (
-                    <>
-                      {' · '}
-                      {mutedCount === 1
-                        ? t.settings.notifications.mutedCountOne
-                        : t.settings.notifications.mutedCount.replace('{count}', String(mutedCount))}
-                    </>
-                  )}
                 </div>
                 {feeds.length === 0 ? (
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
