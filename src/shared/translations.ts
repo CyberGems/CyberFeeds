@@ -462,7 +462,14 @@ export const translations = {
         restarting: 'Restarting application…'
       },
       downloadBtn: 'Download update',
-      installBtn: 'Restart and update'
+      installBtn: 'Restart and update',
+      whatsNew: "What's new:",
+      viewRelease: 'View release',
+      viewReleaseNotes: 'View release notes',
+      skipUpdate: 'Skip this version',
+      restartAndApply: 'Click to restart and apply',
+      moreInFullNotes: '+{count} more in full release notes',
+      dismiss: 'Dismiss'
     },
     doctor: {
       title: 'Feeds Doctor',
@@ -1073,7 +1080,14 @@ export const translations = {
         restarting: 'Reiniciando aplicación…'
       },
       downloadBtn: 'Descargar actualización',
-      installBtn: 'Reiniciar y actualizar'
+      installBtn: 'Reiniciar y actualizar',
+      whatsNew: 'Novedades:',
+      viewRelease: 'Ver release',
+      viewReleaseNotes: 'Ver notas de la versión',
+      skipUpdate: 'Omitir esta versión',
+      restartAndApply: 'Haz clic para reiniciar y aplicar',
+      moreInFullNotes: '+{count} más en las notas completas',
+      dismiss: 'Descartar'
     },
     doctor: {
       title: 'Doctor de feeds',

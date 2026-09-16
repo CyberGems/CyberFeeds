@@ -12,13 +12,56 @@ import type { AppSettings } from '../shared/types'
 let autoUpdateEnabled = false
 let manualCheck = false
 
-type UpdateStatus =
+export type UpdateStatus =
   | { state: 'checking' }
-  | { state: 'available'; version: string }
+  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { state: 'not-available'; version: string }
   | { state: 'downloading'; percent: number }
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
+
+async function fetchReleaseDetails(
+  version: string,
+  rawNotes?: string | null | Array<{ version: string; note: string | null }>
+): Promise<{ notes?: string; url: string }> {
+  const defaultUrl = `https://github.com/CyberGems/CyberFeeds/releases/tag/v${version}`
+  let existingNotes: string | undefined
+  if (typeof rawNotes === 'string' && rawNotes.trim().length > 0) {
+    existingNotes = rawNotes.trim()
+  } else if (Array.isArray(rawNotes)) {
+    existingNotes = rawNotes
+      .map((r) => r.note)
+      .filter((n): n is string => Boolean(n))
+      .join('\n\n')
+  }
+
+  if (existingNotes) {
+    return { notes: existingNotes, url: defaultUrl }
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${version}`,
+      {
+        headers: {
+          'User-Agent': 'CyberFeeds',
+          Accept: 'application/vnd.github.v3+json'
+        }
+      }
+    )
+    if (res.ok) {
+      const data = await res.json()
+      return {
+        notes: typeof data?.body === 'string' ? data.body : undefined,
+        url: typeof data?.html_url === 'string' ? data.html_url : defaultUrl
+      }
+    }
+  } catch (err) {
+    console.warn('[Updater] Could not fetch release notes from GitHub API:', err)
+  }
+
+  return { url: defaultUrl }
+}
 
 function broadcast(status: UpdateStatus): void {
   for (const win of BrowserWindow.getAllWindows()) {
@@ -34,8 +77,14 @@ export function initUpdater(settings: AppSettings): void {
 
   autoUpdater.on('checking-for-update', () => broadcast({ state: 'checking' }))
 
-  autoUpdater.on('update-available', (info) => {
-    broadcast({ state: 'available', version: info.version })
+  autoUpdater.on('update-available', async (info) => {
+    const details = await fetchReleaseDetails(info.version, info.releaseNotes)
+    broadcast({
+      state: 'available',
+      version: info.version,
+      releaseNotes: details.notes,
+      releaseUrl: details.url
+    })
   })
 
   autoUpdater.on('update-not-available', (info) => {
@@ -60,7 +109,9 @@ export function initUpdater(settings: AppSettings): void {
   // Silent check shortly after launch when auto-update is enabled.
   if (autoUpdateEnabled) {
     setTimeout(() => {
-      autoUpdater.checkForUpdates().catch(() => { /* offline: ignore */ })
+      autoUpdater.checkForUpdates().catch(() => {
+        /* offline: ignore */
+      })
     }, 8000)
   }
 }
@@ -78,11 +129,18 @@ function registerUpdateIpc(): void {
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Update check timed out')), 20000)
       })
-      const result = await Promise.race([
-        autoUpdater.checkForUpdates(),
-        timeoutPromise
-      ]) as any
-      return { ok: true, version: result?.updateInfo?.version }
+      const result = (await Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])) as any
+      const ver = result?.updateInfo?.version
+      let details: { notes?: string; url?: string } | undefined
+      if (ver) {
+        details = await fetchReleaseDetails(ver, result?.updateInfo?.releaseNotes)
+      }
+      return {
+        ok: true,
+        version: ver,
+        releaseNotes: details?.notes,
+        releaseUrl: details?.url
+      }
     } catch (err) {
       console.error('[Updater] Check failed:', err)
       return { ok: false, error: String((err as Error)?.message || err) }

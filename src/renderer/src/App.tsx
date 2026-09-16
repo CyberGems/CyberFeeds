@@ -1,5 +1,4 @@
 import React, { useEffect, useCallback, useState } from 'react'
-import { Bell, X } from 'lucide-react'
 import { useFeedsStore } from './store/feeds.store'
 import { useArticlesStore } from './store/articles.store'
 import { useUIStore } from './store/ui.store'
@@ -23,12 +22,13 @@ import NotificationHistoryPanel from './components/NotificationHistoryPanel'
 import AboutModal from './components/AboutModal'
 import DoctorPanel from './components/DoctorPanel'
 import Tooltip from './components/Tooltip'
+import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
 
-type UpdateStatus =
+export type UpdateStatus =
   | { state: 'checking' }
-  | { state: 'available'; version: string }
+  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { state: 'not-available'; version: string }
-  | { state: 'downloading'; percent: number }
+  | { state: 'downloading'; version?: string; percent: number }
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
 
@@ -47,10 +47,10 @@ export default function App(): JSX.Element {
     closePanel
   } = useUIStore()
   const { load: loadSettings, settings } = useSettingsStore()
-  const { t, language } = useTranslation()
+  const { t } = useTranslation()
   const dismissInbox = useOverlayDismiss(closePanel)
   const dismissHistory = useOverlayDismiss(closePanel)
-  
+
   const [isSettingsClosing, setIsSettingsClosing] = useState(false)
   const handleCloseSettings = useCallback(() => {
     setIsSettingsClosing(true)
@@ -60,8 +60,8 @@ export default function App(): JSX.Element {
     }, 200)
   }, [closePanel])
   const dismissSettings = useOverlayDismiss(handleCloseSettings)
-  
-  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
+
+  const [updateStatus, setUpdateStatus] = useState<ActiveUpdateStatus | null>(null)
 
   // ── Resize hooks — MUST be at top level, before any conditionals ──────────
   const [sidebarDragging, setSidebarDragging] = useState(false)
@@ -88,7 +88,13 @@ export default function App(): JSX.Element {
 
     const offUpdates = window.api.onUpdateStatus((raw) => {
       const s = raw as UpdateStatus
-      if (s.state === 'available' || s.state === 'downloading' || s.state === 'downloaded') {
+      if (s.state === 'available') {
+        const skipped = localStorage.getItem('cyberfeeds_skipped_update_version')
+        if (skipped === s.version) {
+          return
+        }
+        setUpdateStatus(s)
+      } else if (s.state === 'downloading' || s.state === 'downloaded') {
         setUpdateStatus(s)
       } else {
         setUpdateStatus(null)
@@ -231,17 +237,6 @@ export default function App(): JSX.Element {
       useUIStore.setState((s) => ({ unseenNotificationsCount: s.unseenNotificationsCount + 1 }))
     })
     return unsub
-  }, [])
-
-  // Listen for background auto-update status to show visual toast
-  useEffect(() => {
-    const off = window.api.onUpdateStatus((s) => {
-      const status = s as UpdateStatus
-      if (status.state === 'available' || status.state === 'downloaded') {
-        setUpdateStatus(status)
-      }
-    })
-    return off
   }, [])
 
   // Listen for opening notification history from the notifier sub-app
@@ -421,120 +416,33 @@ export default function App(): JSX.Element {
       {activePanel === 'about' && <AboutModal />}
       {activePanel === 'doctor' && <DoctorPanel />}
 
-      {/* Toast Notification for Updates */}
+      {/* Rich Notification Modal for Updates */}
       {updateStatus && (
-        <div
-          className="cyber-toast"
-          style={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            zIndex: 9999,
-            background: 'linear-gradient(135deg, var(--bg-1), var(--bg-0))',
-            border: '1px solid var(--accent)',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px var(--accent-subtle)',
-            borderRadius: 'var(--radius)',
-            padding: '12px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            maxWidth: 360,
-            animation: 'slideUp 0.3s ease'
+        <UpdateNotificationModal
+          status={updateStatus}
+          onClose={() => setUpdateStatus(null)}
+          onSkip={(version) => {
+            try {
+              localStorage.setItem('cyberfeeds_skipped_update_version', version)
+            } catch {
+              /* ignore */
+            }
+            setUpdateStatus(null)
           }}
-        >
-          <Bell size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0, fontSize: 13, color: 'var(--text-primary)' }}>
-            {updateStatus.state === 'available' ? (
-              <div>
-                <strong style={{ fontWeight: 600 }}>{t.about.statuses.available}</strong>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  Version {updateStatus.version}
-                </div>
-              </div>
-            ) : updateStatus.state === 'downloading' ? (
-              <div style={{ minWidth: 160 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
-                  <strong style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                    {language === 'es' ? 'Descargando…' : 'Downloading…'}
-                  </strong>
-                  <span style={{ fontWeight: 700, color: 'var(--accent)', fontFamily: 'monospace' }}>
-                    {updateStatus.percent}%
-                  </span>
-                </div>
-                <div style={{ width: '100%', height: 4, background: 'rgba(255, 255, 255, 0.1)', borderRadius: 999, overflow: 'hidden' }}>
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${Math.max(2, Math.min(100, updateStatus.percent))}%`,
-                      background: 'linear-gradient(90deg, var(--accent), #38bdf8)',
-                      borderRadius: 999,
-                      transition: 'width 0.2s ease-out'
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <strong style={{ fontWeight: 600 }}>{t.about.statuses.downloaded}</strong>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: 'var(--text-accent)',
-                    marginTop: 2,
-                    fontWeight: 500
-                  }}
-                >
-                  {language === 'es'
-                    ? 'Haz clic para reiniciar y aplicar'
-                    : 'Click to restart and apply'}
-                </div>
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexShrink: 0, alignItems: 'center' }}>
-            {updateStatus.state === 'available' ? (
-              <button
-                className="btn btn-primary"
-                style={{
-                  padding: '4px 8px',
-                  fontSize: 11,
-                  height: 24,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-                onClick={async () => {
-                  setUpdateStatus({ state: 'downloading', percent: 0 })
-                  await window.api.downloadUpdate()
-                }}
-              >
-                {t.about.downloadBtn}
-              </button>
-            ) : updateStatus.state === 'downloading' ? null : (
-              <button
-                className="btn btn-primary"
-                style={{
-                  padding: '4px 8px',
-                  fontSize: 11,
-                  height: 24,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-                onClick={() => {
-                  window.api.installUpdate()
-                }}
-              >
-                {language === 'es' ? 'Reiniciar' : 'Restart'}
-              </button>
-            )}
-            <button
-              className="btn btn-ghost btn-icon"
-              style={{ width: 22, height: 22 }}
-              onClick={() => setUpdateStatus(null)}
-            >
-              <X size={12} />
-            </button>
-          </div>
-        </div>
+          onDownload={async () => {
+            const currentVer = updateStatus.version
+            try {
+              localStorage.removeItem('cyberfeeds_skipped_update_version')
+            } catch {
+              /* ignore */
+            }
+            setUpdateStatus({ state: 'downloading', version: currentVer, percent: 0 })
+            await window.api.downloadUpdate()
+          }}
+          onInstall={() => {
+            window.api.installUpdate()
+          }}
+        />
       )}
     </div>
   )

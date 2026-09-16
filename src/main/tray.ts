@@ -147,7 +147,7 @@ function updateTrayTooltip(busy: boolean): void {
     const lang = db.getSettings().language || 'en'
     const loadingText = translations[lang]?.mainProcess?.tray?.loadingFeeds || 'Loading feeds...'
     try {
-      tray.setToolTip(`CyberFeeds v${version} — ${loadingText}`)
+      tray.setToolTip(`CyberFeeds v${version}: ${loadingText}`)
     } catch {
       /* ignore if destroyed */
     }
@@ -210,7 +210,7 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
             animTimer = null
           }
         }
-      }, 175)
+      }, 235)
     }
   } else {
     if (animTimer) {

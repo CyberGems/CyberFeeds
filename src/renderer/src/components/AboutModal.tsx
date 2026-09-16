@@ -29,7 +29,7 @@ type AppVersions = {
 type UpdateStatus =
   | { state: 'idle' }
   | { state: 'checking' }
-  | { state: 'available'; version: string }
+  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { state: 'not-available'; version: string }
   | { state: 'downloading'; percent: number }
   | { state: 'downloaded'; version: string }
@@ -91,6 +91,11 @@ export default function AboutModal(): JSX.Element {
   }, [aboutAutoCheck, handleCheck, setAboutAutoCheck])
 
   const handleDownload = async (): Promise<void> => {
+    try {
+      localStorage.removeItem('cyberfeeds_skipped_update_version')
+    } catch {
+      /* ignore */
+    }
     setStatus({ state: 'downloading', percent: 0 })
     await window.api.downloadUpdate()
   }
