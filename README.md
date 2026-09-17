@@ -50,6 +50,8 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 📖 Article Management
 - **Full-Content Extraction**: Fetch complete article content via worker threads
+- **In-Article Search**: Fast in-article text search (`Ctrl+F`) with real-time match highlighting, match counter, and next/previous match cycling
+- **Sticky Reader Header**: Floating header bar with source icon and article title on scroll, plus quick return-to-top navigation
 - **Text Selection Flyout**: Search selected text, copy it, or translate it from titles and article body without leaving the reader
 - **Star/Unstar**: Mark articles as favorites
 - **Read/Unread Tracking**: Know what you've read at a glance
@@ -187,7 +189,9 @@ To continue:
 | Key | Action | Scope |
 |---|---|---|
 | `Alt+Shift+S` | Show/hide CyberFeeds | Global |
-| `Escape` | Close panel | Application |
+| `Ctrl+F` | Find text in current article | Article Reader |
+| `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
+| `Escape` | Close panel or search bar | Application |
 
 Additional shortcuts (Notifications, Settings, Fetch Now) are configurable in Settings → Keyboard.
 
