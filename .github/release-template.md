@@ -31,18 +31,22 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ### 📦 Downloads & Packages
 
+> ⬇️ **Direct download:** click a file name to download it now. Same files as in **Assets** at the bottom of this page.
+
 | File | Description | Platform |
 | :--- | :--- | :--- |
-| **`CyberFeeds-{{RAW_VERSION}}-setup.exe`** | 🚀 **Recommended Installer** (NSIS Assisted Setup with Desktop & Start Menu options) | Windows 10 / 11 (x64) |
-| **`CyberFeeds-{{RAW_VERSION}}-portable.exe`** | 💼 **Portable Executable** (Zero install, self-contained data directory) | Windows 10 / 11 (x64) |
+| **[`CyberFeeds-{{RAW_VERSION}}-setup.exe`](https://github.com/CyberGems/CyberFeeds/releases/download/{{VERSION}}/CyberFeeds-{{RAW_VERSION}}-setup.exe)** | 🚀 **Recommended Installer** (NSIS Assisted Setup with Desktop & Start Menu options) | Windows 10 / 11 (x64) |
+| **[`CyberFeeds-{{RAW_VERSION}}-portable.exe`](https://github.com/CyberGems/CyberFeeds/releases/download/{{VERSION}}/CyberFeeds-{{RAW_VERSION}}-portable.exe)** | 💼 **Portable Executable** (Zero install, self-contained data directory) | Windows 10 / 11 (x64) |
 
 ---
 
 ### 🔍 VirusTotal Scan Results (70+ Antivirus Engines)
 
-- 🛡️ **Setup Installer**: [View VirusTotal Inspection Report](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}})  
+> ℹ️ These links open the security report on VirusTotal in a new tab, they do not download the app.
+
+- 🛡️ **Setup Installer**: [View security report on VirusTotal](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}})  
   *(SHA256: `{{INSTALLER_HASH}}`)*
-- 🛡️ **Portable Executable**: [View VirusTotal Inspection Report](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}})  
+- 🛡️ **Portable Executable**: [View security report on VirusTotal](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}})  
   *(SHA256: `{{PORTABLE_HASH}}`)*
 
 ---
