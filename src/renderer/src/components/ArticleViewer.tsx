@@ -1147,24 +1147,28 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       )}
 
       <div className={`viewer-sticky-header ${showStickyTitle ? 'is-visible' : ''}`}>
-        <div
-          className="viewer-sticky-header-content"
-          onClick={scrollToTop}
-          title={article.feedTitle ? `${article.feedTitle} · ${article.title}` : article.title}
-          role="button"
-          tabIndex={showStickyTitle ? 0 : -1}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              scrollToTop()
-            }
-          }}
+        <Tooltip
+          label={article.feedTitle ? `${article.feedTitle} · ${article.title}` : article.title}
+          placement="bottom"
         >
-          {(article.feedIcon || article.feedTitle) && (
-            <FeedFavicon icon={article.feedIcon} title={article.feedTitle} size={15} />
-          )}
-          <span className="viewer-sticky-title-text">{article.title}</span>
-        </div>
+          <div
+            className="viewer-sticky-header-content"
+            onClick={scrollToTop}
+            role="button"
+            tabIndex={showStickyTitle ? 0 : -1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                scrollToTop()
+              }
+            }}
+          >
+            {(article.feedIcon || article.feedTitle) && (
+              <FeedFavicon icon={article.feedIcon} title="" size={15} />
+            )}
+            <span className="viewer-sticky-title-text">{article.title}</span>
+          </div>
+        </Tooltip>
 
         <Tooltip label={t.articleViewer.scrollToTop} placement="bottom">
           <button
