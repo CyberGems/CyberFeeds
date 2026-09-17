@@ -1150,7 +1150,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         <div
           className="viewer-sticky-header-content"
           onClick={scrollToTop}
-          title={article.title}
+          title={article.feedTitle ? `${article.feedTitle} · ${article.title}` : article.title}
           role="button"
           tabIndex={showStickyTitle ? 0 : -1}
           onKeyDown={(e) => {
@@ -1161,12 +1161,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           }}
         >
           {(article.feedIcon || article.feedTitle) && (
-            <FeedFavicon icon={article.feedIcon} title={article.feedTitle} size={14} />
+            <FeedFavicon icon={article.feedIcon} title={article.feedTitle} size={15} />
           )}
-          {article.feedTitle && (
-            <span className="viewer-sticky-feed-name">{article.feedTitle}</span>
-          )}
-          {article.feedTitle && <span className="viewer-sticky-bullet">·</span>}
           <span className="viewer-sticky-title-text">{article.title}</span>
         </div>
 
