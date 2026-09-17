@@ -318,6 +318,45 @@ function highlightMatches(container: HTMLElement, query: string): HTMLElement[] 
   return matchedElements
 }
 
+interface ArticleBodyProps {
+  html: string
+  fontSize: number
+  onLinkHover: (url: string | null) => void
+}
+
+const ArticleBody = memo(
+  function ArticleBody({ html, fontSize, onLinkHover }: ArticleBodyProps) {
+    return (
+      <div
+        className="reader-body"
+        style={{ fontSize, userSelect: 'text', cursor: 'text' }}
+        dangerouslySetInnerHTML={{ __html: html }}
+        onClick={(e) => {
+          const target = e.target as HTMLElement
+          const a = target.closest('a')
+          if (a && a.href) {
+            e.preventDefault()
+            window.api.openExternal(a.href)
+          }
+        }}
+        onMouseOver={(e) => {
+          const target = e.target as HTMLElement
+          const a = target.closest('a')
+          if (a && a.href) {
+            onLinkHover(a.href)
+          } else {
+            onLinkHover(null)
+          }
+        }}
+        onMouseLeave={() => onLinkHover(null)}
+      />
+    )
+  },
+  (prev, next) => {
+    return prev.html === next.html && prev.fontSize === next.fontSize
+  }
+)
+
 const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const { selectedArticleId } = useUIStore()
   const { articles, starArticle } = useArticlesStore()
@@ -507,6 +546,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   useEffect(() => {
     const handleSelectionChange = (): void => {
       if (!pendingFullHtmlRef.current) return
+      if (searchOpen) return
       const sel = window.getSelection()
       if (!sel || sel.isCollapsed) {
         const nextHtml = pendingFullHtmlRef.current
@@ -518,7 +558,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange)
     }
-  }, [])
+  }, [searchOpen])
 
   // Handle <video> tags in reader body: provide interactive fallback card if error / CORS / unplayable
   useEffect(() => {
@@ -659,27 +699,45 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }, [])
 
   const goToMatch = useCallback((index: number) => {
-    const matches = matchesRef.current
-    if (matches.length === 0) return
-    matches.forEach((m) => m.classList.remove('reader-search-active'))
-    const target = matches[index]
+    const root = contentRef.current
+    if (!root) return
+    const readerBody = root.querySelector('.reader-body') as HTMLElement | null
+    if (!readerBody) return
+
+    const marks = Array.from(readerBody.querySelectorAll<HTMLElement>('mark.reader-search-match'))
+    if (marks.length === 0) return
+
+    const safeIndex = ((index % marks.length) + marks.length) % marks.length
+
+    marks.forEach((m, i) => {
+      if (i === safeIndex) {
+        m.classList.add('reader-search-active')
+      } else {
+        m.classList.remove('reader-search-active')
+      }
+    })
+
+    const target = marks[safeIndex]
     if (target) {
-      target.classList.add('reader-search-active')
       target.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setCurrentMatchIndex(index)
     }
+    setCurrentMatchIndex(safeIndex)
   }, [])
 
   const goToNextMatch = useCallback(() => {
-    if (matchCount === 0) return
-    const nextIdx = (currentMatchIndex + 1) % matchCount
-    goToMatch(nextIdx)
+    const root = contentRef.current
+    const readerBody = root?.querySelector('.reader-body') as HTMLElement | null
+    const total = readerBody ? readerBody.querySelectorAll('mark.reader-search-match').length : matchCount
+    if (total === 0) return
+    goToMatch(currentMatchIndex + 1)
   }, [matchCount, currentMatchIndex, goToMatch])
 
   const goToPrevMatch = useCallback(() => {
-    if (matchCount === 0) return
-    const prevIdx = (currentMatchIndex - 1 + matchCount) % matchCount
-    goToMatch(prevIdx)
+    const root = contentRef.current
+    const readerBody = root?.querySelector('.reader-body') as HTMLElement | null
+    const total = readerBody ? readerBody.querySelectorAll('mark.reader-search-match').length : matchCount
+    if (total === 0) return
+    goToMatch(currentMatchIndex - 1)
   }, [matchCount, currentMatchIndex, goToMatch])
 
   const closeSearch = useCallback(() => {
@@ -758,13 +816,9 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
 
   useEffect(() => {
     if (searchOpen && searchQuery) {
-      const timer = setTimeout(() => {
-        executeSearch(searchQuery)
-      }, 50)
-      return () => clearTimeout(timer)
+      executeSearch(searchQuery)
     }
-    return undefined
-  }, [fullHtml, searchOpen, searchQuery, executeSearch])
+  }, [fullHtml])
 
   const scrollToTop = useCallback(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -936,22 +990,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           </Tooltip>
         </div>
 
-        <Tooltip label={t.articleViewer.scrollToTop} placement="bottom">
-          <div
-            className={`viewer-toolbar-title ${showStickyTitle ? 'is-visible' : ''}`}
-            onClick={scrollToTop}
-            role="button"
-            tabIndex={showStickyTitle ? 0 : -1}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                scrollToTop()
-              }
-            }}
-          >
-            {article.title}
-          </div>
-        </Tooltip>
+        <div className="viewer-toolbar-spacer" />
 
         <div className="viewer-toolbar-right">
           {loading && (
@@ -1106,6 +1145,42 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           </Tooltip>
         </div>
       )}
+
+      <div className={`viewer-sticky-header ${showStickyTitle ? 'is-visible' : ''}`}>
+        <div
+          className="viewer-sticky-header-content"
+          onClick={scrollToTop}
+          title={article.title}
+          role="button"
+          tabIndex={showStickyTitle ? 0 : -1}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              scrollToTop()
+            }
+          }}
+        >
+          {(article.feedIcon || article.feedTitle) && (
+            <FeedFavicon icon={article.feedIcon} title={article.feedTitle} size={14} />
+          )}
+          {article.feedTitle && (
+            <span className="viewer-sticky-feed-name">{article.feedTitle}</span>
+          )}
+          {article.feedTitle && <span className="viewer-sticky-bullet">·</span>}
+          <span className="viewer-sticky-title-text">{article.title}</span>
+        </div>
+
+        <Tooltip label={t.articleViewer.scrollToTop} placement="bottom">
+          <button
+            className="viewer-sticky-back-to-top"
+            onClick={scrollToTop}
+            aria-label={t.articleViewer.scrollToTop}
+          >
+            <ArrowUp size={12} />
+            <span>{t.articleViewer.backToTop}</span>
+          </button>
+        </Tooltip>
+      </div>
 
       <div
         className="viewer-content"
@@ -1413,28 +1488,10 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             </div>
           )}
 
-          <div
-            className="reader-body"
-            style={{ fontSize: settings.readingFontSize || 15, userSelect: 'text', cursor: 'text' }}
-            dangerouslySetInnerHTML={{ __html: safeHtml }}
-            onClick={(e) => {
-              const target = e.target as HTMLElement
-              const a = target.closest('a')
-              if (a && a.href) {
-                e.preventDefault()
-                window.api.openExternal(a.href)
-              }
-            }}
-            onMouseOver={(e) => {
-              const target = e.target as HTMLElement
-              const a = target.closest('a')
-              if (a && a.href) {
-                setHoveredLink(a.href)
-              } else {
-                setHoveredLink(null)
-              }
-            }}
-            onMouseLeave={() => setHoveredLink(null)}
+          <ArticleBody
+            html={safeHtml}
+            fontSize={settings.readingFontSize || 15}
+            onLinkHover={setHoveredLink}
           />
           {!fullHtml && !loading && !isYt && !isReddit && (
             <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
