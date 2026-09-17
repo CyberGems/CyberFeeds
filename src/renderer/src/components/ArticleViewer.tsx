@@ -930,150 +930,144 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   return (
     <div className="article-viewer">
       <div className="viewer-toolbar">
-        <div className="viewer-toolbar-left">
-          <Tooltip label={t.articleViewer.quickSummary} placement="bottom">
+        <Tooltip label={t.articleViewer.quickSummary} placement="bottom">
+          <button
+            className="btn btn-ghost has-label"
+            style={{ fontSize: 12 }}
+            onClick={handleSummary}
+          >
+            <FileText size={13} />
+            <span className="viewer-toolbar-label">{t.articleViewer.summary}</span>
+          </button>
+        </Tooltip>
+        {!isYt && !isReddit && (
+          <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
             <button
               className="btn btn-ghost has-label"
-              style={{ fontSize: 12 }}
-              onClick={handleSummary}
-            >
-              <FileText size={13} />
-              <span className="viewer-toolbar-label">{t.articleViewer.summary}</span>
-            </button>
-          </Tooltip>
-          {!isYt && !isReddit && (
-            <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
-              <button
-                className="btn btn-ghost has-label"
-                style={{
-                  fontSize: 12,
-                  color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
-                }}
-                onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
-              >
-                <BookOpen size={13} />
-                <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
-              </button>
-            </Tooltip>
-          )}
-          {isYt && (
-            <Tooltip label={t.articleViewer.autoPlayYouTubeTooltip} placement="bottom">
-              <button
-                className={`btn btn-ghost has-label ${settings.autoPlayYouTube ? 'is-active' : ''}`}
-                style={{
-                  fontSize: 12,
-                  color: settings.autoPlayYouTube ? 'var(--accent)' : 'inherit'
-                }}
-                onClick={() => {
-                  const next = !settings.autoPlayYouTube
-                  update({ autoPlayYouTube: next })
-                  setIsPlayingVideo(next)
-                }}
-              >
-                <Play size={13} fill={settings.autoPlayYouTube ? 'currentColor' : 'none'} />
-                <span className="viewer-toolbar-label">{t.articleViewer.autoPlayYouTube}</span>
-              </button>
-            </Tooltip>
-          )}
-          <Tooltip label={`${t.articleViewer.searchInArticle} (Ctrl+F)`} placement="bottom">
-            <button
-              className={`btn btn-ghost has-label ${searchOpen ? 'is-active' : ''}`}
               style={{
                 fontSize: 12,
-                color: searchOpen ? 'var(--accent)' : 'inherit'
+                color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
               }}
-              onClick={toggleSearch}
+              onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
             >
-              <Search size={13} />
-              <span className="viewer-toolbar-label">{t.articleViewer.searchInArticle}</span>
+              <BookOpen size={13} />
+              <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
             </button>
           </Tooltip>
-        </div>
-
-        <div className="viewer-toolbar-spacer" />
-
-        <div className="viewer-toolbar-right">
-          {loading && (
-            <div
-              className="viewer-toolbar-loading"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '0 8px',
-                color: 'var(--text-muted)',
-                fontSize: 11
-              }}
-            >
-              <div className="spinner" style={{ width: 11, height: 11 }} />
-              <span>{t.articleViewer.loadingFull}</span>
-            </div>
-          )}
-          <Tooltip label={t.articleViewer.openInBrowserTooltip} placement="bottom">
+        )}
+        {isYt && (
+          <Tooltip label={t.articleViewer.autoPlayYouTubeTooltip} placement="bottom">
             <button
-              className="btn btn-ghost has-label"
-              style={{ fontSize: 12 }}
-              onClick={() => window.api.openExternal(article.link)}
+              className={`btn btn-ghost has-label ${settings.autoPlayYouTube ? 'is-active' : ''}`}
+              style={{
+                fontSize: 12,
+                color: settings.autoPlayYouTube ? 'var(--accent)' : 'inherit'
+              }}
+              onClick={() => {
+                const next = !settings.autoPlayYouTube
+                update({ autoPlayYouTube: next })
+                setIsPlayingVideo(next)
+              }}
             >
-              <ExternalLink size={13} />
-              <span className="viewer-toolbar-label">{t.articleViewer.openInBrowser}</span>
+              <Play size={13} fill={settings.autoPlayYouTube ? 'currentColor' : 'none'} />
+              <span className="viewer-toolbar-label">{t.articleViewer.autoPlayYouTube}</span>
             </button>
           </Tooltip>
+        )}
+        <Tooltip label={`${t.articleViewer.searchInArticle} (Ctrl+F)`} placement="bottom">
+          <button
+            className={`btn btn-ghost has-label ${searchOpen ? 'is-active' : ''}`}
+            style={{
+              fontSize: 12,
+              color: searchOpen ? 'var(--accent)' : 'inherit'
+            }}
+            onClick={toggleSearch}
+          >
+            <Search size={13} />
+            <span className="viewer-toolbar-label">{t.articleViewer.searchBtn}</span>
+          </button>
+        </Tooltip>
+
+        {loading && (
+          <div
+            className="viewer-toolbar-loading"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '0 8px',
+              color: 'var(--text-muted)',
+              fontSize: 11
+            }}
+          >
+            <div className="spinner" style={{ width: 11, height: 11 }} />
+            <span>{t.articleViewer.loadingFull}</span>
+          </div>
+        )}
+        <Tooltip label={t.articleViewer.openInBrowserTooltip} placement="bottom">
+          <button
+            className="btn btn-ghost has-label"
+            style={{ fontSize: 12 }}
+            onClick={() => window.api.openExternal(article.link)}
+          >
+            <ExternalLink size={13} />
+            <span className="viewer-toolbar-label">{t.articleViewer.openInBrowser}</span>
+          </button>
+        </Tooltip>
+        <Tooltip
+          label={linkCopied ? t.articleViewer.linkCopied : t.articleViewer.shareTooltip}
+          placement="bottom"
+        >
+          <button
+            className={`btn btn-ghost has-label${linkCopied ? ' is-copied' : ''}`}
+            style={{ fontSize: 12 }}
+            onClick={handleShare}
+          >
+            {linkCopied ? <Check size={13} /> : <Share2 size={13} />}
+            <span className="viewer-toolbar-label">
+              {linkCopied ? t.articleViewer.copied : t.articleViewer.share}
+            </span>
+          </button>
+        </Tooltip>
+        <div className="viewer-toolbar-sep" />
+        <Tooltip label={t.articleViewer.decreaseFont} placement="bottom">
+          <button
+            className="btn btn-ghost btn-icon"
+            onClick={() =>
+              update({ readingFontSize: Math.max(12, (settings.readingFontSize || 15) - 1) })
+            }
+          >
+            <span style={{ fontSize: 11, fontWeight: 700 }}>A-</span>
+          </button>
+        </Tooltip>
+        <Tooltip label={t.articleViewer.increaseFont} placement="bottom">
+          <button
+            className="btn btn-ghost btn-icon"
+            onClick={() =>
+              update({ readingFontSize: Math.min(24, (settings.readingFontSize || 15) + 1) })
+            }
+          >
+            <span style={{ fontSize: 13, fontWeight: 700 }}>A+</span>
+          </button>
+        </Tooltip>
+        <div className="viewer-toolbar-sep" />
+        {!article.deletedAt && (
           <Tooltip
-            label={linkCopied ? t.articleViewer.linkCopied : t.articleViewer.shareTooltip}
+            label={article.starred ? t.articleViewer.unstar : t.articleViewer.star}
             placement="bottom"
           >
             <button
-              className={`btn btn-ghost has-label${linkCopied ? ' is-copied' : ''}`}
-              style={{ fontSize: 12 }}
-              onClick={handleShare}
-            >
-              {linkCopied ? <Check size={13} /> : <Share2 size={13} />}
-              <span className="viewer-toolbar-label">
-                {linkCopied ? t.articleViewer.copied : t.articleViewer.share}
-              </span>
-            </button>
-          </Tooltip>
-          <div className="viewer-toolbar-sep" />
-          <Tooltip label={t.articleViewer.decreaseFont} placement="bottom">
-            <button
               className="btn btn-ghost btn-icon"
-              onClick={() =>
-                update({ readingFontSize: Math.max(12, (settings.readingFontSize || 15) - 1) })
-              }
+              onClick={() => starArticle(article.id, !article.starred)}
             >
-              <span style={{ fontSize: 11, fontWeight: 700 }}>A-</span>
+              <Star
+                size={15}
+                fill={article.starred ? 'var(--star)' : 'none'}
+                color={article.starred ? 'var(--star)' : undefined}
+              />
             </button>
           </Tooltip>
-          <Tooltip label={t.articleViewer.increaseFont} placement="bottom">
-            <button
-              className="btn btn-ghost btn-icon"
-              onClick={() =>
-                update({ readingFontSize: Math.min(24, (settings.readingFontSize || 15) + 1) })
-              }
-            >
-              <span style={{ fontSize: 13, fontWeight: 700 }}>A+</span>
-            </button>
-          </Tooltip>
-          <div className="viewer-toolbar-sep" />
-          {!article.deletedAt && (
-            <Tooltip
-              label={article.starred ? t.articleViewer.unstar : t.articleViewer.star}
-              placement="bottom"
-            >
-              <button
-                className="btn btn-ghost btn-icon"
-                onClick={() => starArticle(article.id, !article.starred)}
-              >
-                <Star
-                  size={15}
-                  fill={article.starred ? 'var(--star)' : 'none'}
-                  color={article.starred ? 'var(--star)' : undefined}
-                />
-              </button>
-            </Tooltip>
-          )}
-        </div>
+        )}
       </div>
 
       {searchOpen && (

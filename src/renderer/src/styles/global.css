@@ -1056,23 +1056,13 @@ body {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
-}
-.viewer-toolbar-left,
-.viewer-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.viewer-toolbar-spacer {
-  flex: 1;
 }
 .viewer-sticky-header {
   display: flex;
