@@ -105,24 +105,26 @@ function removeDuplicateFeaturedImage(html: string, thumbnail: string, baseUrl: 
  * formatted paragraphs, running automatic background scraping is unnecessary, wastes
  * bandwidth, and destroys/restarts active video playback.
  */
-function isContentAlreadyFull(content: string | undefined | null, snippet: string | undefined | null): boolean {
+function isContentAlreadyFull(content: string | undefined | null, _snippet?: string | null): boolean {
   if (!content) return false
   const trimmed = content.trim()
   if (trimmed.length < 300) return false
 
-  // If content contains an embedded media player (iframe or video), it is already rich
+  // If content contains an embedded media player (iframe or video), it is already rich and self-contained
   if (/<(?:iframe|video)\b/i.test(trimmed)) {
     return true
   }
 
-  // If content has 3+ paragraphs and exceeds 1200 chars, it's a full article
-  const pCount = (trimmed.match(/<p\b/gi) || []).length
-  if (pCount >= 3 && trimmed.length > 1200) {
-    return true
+  // If the content references video platforms/players but lacks an embedded player,
+  // do not consider it full so auto-scraping can fetch the real embedded player.
+  const hasVideoReference = /(?:youtube\.com|youtu\.be|jwplayer|jwplatform|vimeo\.com|rumble\.com|dailymotion\.com|twitch\.tv|bitchute\.com)/i.test(trimmed)
+  if (hasVideoReference) {
+    return false
   }
 
-  // If content length is substantially longer than snippet and exceeds 2000 chars
-  if (trimmed.length > 2000 && trimmed.length > (snippet?.length || 0) * 3) {
+  // If content has 4+ paragraphs and exceeds 3000 chars without missing media, it's a full article
+  const pCount = (trimmed.match(/<p\b/gi) || []).length
+  if (pCount >= 4 && trimmed.length > 3000) {
     return true
   }
 
@@ -157,7 +159,35 @@ function transformDynamicEmbeds(html: string): string {
     return `<iframe class="reader-embed-player reader-rumble-player" src="https://rumble.com/embed/${videoId}/?pub=4" frameborder="0" allowfullscreen loading="lazy"></iframe>`
   })
 
-  // 3. Ensure YouTube and video iframes have proper permissions and referrerpolicy
+  // 3. JWPlayer dynamic video containers & scripts
+  const jwMatch =
+    result.match(/"(?:floating_player_playlist_id|player_playlist_id|media_id|playlist_id)"\s*:\s*"([a-zA-Z0-9]{8})"/i) ||
+    result.match(/cdn\.jwplayer\.com\/(?:v2\/playlists|players|manifests)\/([a-zA-Z0-9]{8})/i) ||
+    result.match(/content\.jwplatform\.com\/(?:players|videos|manifests)\/([a-zA-Z0-9]{8})/i)
+
+  const jwId = jwMatch ? jwMatch[1] : null
+
+  result = result.replace(
+    /<(?:div|aside)\b[^>]*?(?:class=["'][^"']*\bjwplayer\b[^"']*["']|id=["']jwplayer--floatingVideo["'])[^>]*>(?:[\s\S]*?<\/(?:div|aside)>)?/gi,
+    (m) => {
+      const mediaMatch = m.match(/data-(?:media|playlist)-id=["']([a-zA-Z0-9]{8})["']/i)
+      const mediaId = mediaMatch ? mediaMatch[1] : jwId
+      if (mediaId) {
+        return `<iframe class="reader-embed-player reader-jwplayer-player" src="https://cdn.jwplayer.com/players/${mediaId}.html" frameborder="0" allowfullscreen loading="lazy"></iframe>`
+      }
+      return m
+    }
+  )
+
+  // 4. Standalone YouTube video links in isolated paragraphs
+  result = result.replace(
+    /<p\b[^>]*>\s*<a\b[^>]*\bhref=["'](?:https?:)?\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?][^"']*)?["'][^>]*>(?:https?:\/\/[^<]+|Watch (?:video|on YouTube)[^<]*|YouTube:?[^<]*)<\/a>\s*<\/p>/gi,
+    (_, videoId) => {
+      return `<iframe class="reader-embed-player reader-youtube-player" src="https://www.youtube-nocookie.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>`
+    }
+  )
+
+  // 5. Ensure YouTube and video iframes have proper permissions and referrerpolicy
   result = result.replace(
     /<iframe\b([^>]*\bsrc=["']https:\/\/(?:[a-zA-Z0-9-]+\.)?(?:youtube\.com|youtube-nocookie\.com)\/embed\/[^"']+["'][^>]*)>/gi,
     (m) => {
@@ -170,6 +200,18 @@ function transformDynamicEmbeds(html: string): string {
       }
       if (!tag.includes('referrerpolicy=')) {
         tag = tag.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"')
+      }
+      return tag
+    }
+  )
+
+  // 6. Ensure JWPlayer iframes have allowfullscreen
+  result = result.replace(
+    /<iframe\b([^>]*\bsrc=["']https:\/\/(?:[a-zA-Z0-9-]+\.)?(?:jwplayer\.com|jwplatform\.com)\/[^"']+["'][^>]*)>/gi,
+    (m) => {
+      let tag = m
+      if (!tag.includes('allowfullscreen')) {
+        tag = tag.replace('<iframe', '<iframe allowfullscreen')
       }
       return tag
     }

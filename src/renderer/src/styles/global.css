@@ -1462,7 +1462,9 @@ mark.reader-search-match.reader-search-active {
 .reader-body video,
 .reader-body iframe,
 .reader-embed-player,
-.reader-rumble-player {
+.reader-rumble-player,
+.reader-jwplayer-player,
+.reader-youtube-player {
   max-width: 100%;
   width: 100%;
   aspect-ratio: 16 / 9;

@@ -93,17 +93,47 @@ const ALLOWED_IFRAME_DOMAINS = [
   'bitchute.com',
   'odysee.com',
   'soundcloud.com',
-  'spotify.com'
+  'spotify.com',
+  'jwplayer.com',
+  'jwplatform.com'
 ]
 
 function extractArticle(html: string, baseUrl: string): string {
   const { document } = parseHTML(html)
 
-  // Remove noise (keep iframes for separate filtering below)
+  // Detect JWPlayer configs & embed containers before noise removal
+  try {
+    const jwMatch =
+      html.match(/"(?:floating_player_playlist_id|player_playlist_id|media_id|playlist_id)"\s*:\s*"([a-zA-Z0-9]{8})"/i) ||
+      html.match(/cdn\.jwplayer\.com\/(?:v2\/playlists|players|manifests)\/([a-zA-Z0-9]{8})/i) ||
+      html.match(/content\.jwplatform\.com\/(?:players|videos|manifests)\/([a-zA-Z0-9]{8})/i)
+
+    const jwId = jwMatch ? jwMatch[1] : null
+
+    document.querySelectorAll('.jwplayer, #jwplayer--floatingVideo, [class*="jwPlayer"], [class*="jwplayer"]').forEach((el: Element) => {
+      const mediaId = el.getAttribute('data-media-id') || el.getAttribute('data-playlist-id') || jwId
+      if (mediaId) {
+        const iframe = document.createElement('iframe')
+        iframe.className = 'reader-embed-player reader-jwplayer-player'
+        iframe.setAttribute('src', `https://cdn.jwplayer.com/players/${mediaId}.html`)
+        iframe.setAttribute('frameborder', '0')
+        iframe.setAttribute('allowfullscreen', '')
+        iframe.setAttribute('loading', 'lazy')
+        el.replaceWith(iframe)
+      }
+    })
+  } catch { /* ignore */ }
+
+  // Remove noise (preserve containers holding valid media/iframes)
   const noise = ['script', 'style', 'noscript', 'nav', 'header', 'footer', 'aside', '[role="navigation"]', '[role="banner"]', '[role="complementary"]']
   noise.forEach(sel => {
     try {
-      document.querySelectorAll(sel).forEach((el: Element) => el.remove())
+      document.querySelectorAll(sel).forEach((el: Element) => {
+        if (el.querySelector('iframe, video, audio, .reader-embed-player')) {
+          return
+        }
+        el.remove()
+      })
     } catch { /* ignore */ }
   })
 
@@ -129,6 +159,8 @@ function extractArticle(html: string, baseUrl: string): string {
           if (!iframe.getAttribute('referrerpolicy')) {
             iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
           }
+          iframe.setAttribute('allowfullscreen', '')
+        } else if (rawSrc.includes('jwplayer.com') || rawSrc.includes('jwplatform.com')) {
           iframe.setAttribute('allowfullscreen', '')
         }
       }
