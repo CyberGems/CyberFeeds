@@ -304,39 +304,56 @@ export interface ArticleQuery {
   offset?: number
 }
 
+const VIDEO_LINK_PATTERNS = [
+  '%youtube.com%',
+  '%youtu.be%',
+  '%rumble.com%',
+  '%vimeo.com%',
+  '%dailymotion.com%',
+  '%bitchute.com%',
+  '%streamable.com%',
+  '%odysee.com%',
+  '%tiktok.com%',
+  '%twitch.tv%'
+]
+
+const VIDEO_CONTENT_PATTERNS = [
+  '%<video%',
+  '%<iframe%',
+  '%youtube.com%',
+  '%youtu.be%',
+  '%player.vimeo.com%',
+  '%vimeo.com/video/%',
+  '%rumble.com/embed%',
+  '%rumble_%',
+  '%Rumble(%',
+  '%dailymotion.com%',
+  '%jwplatform.com%',
+  '%jwplayer.com%',
+  '%facebook.com/plugins/video%',
+  '%tiktok.com%',
+  '%twitch.tv%',
+  '%bitchute.com%',
+  '%streamable.com%',
+  '%odysee.com%'
+]
+
 function buildVideoClause(): { sql: string; params: string[] } {
+  const clauses: string[] = []
+  const params: string[] = []
+
+  for (const pattern of VIDEO_LINK_PATTERNS) {
+    clauses.push('a.link LIKE ?')
+    params.push(pattern)
+  }
+  for (const pattern of VIDEO_CONTENT_PATTERNS) {
+    clauses.push('a.content LIKE ?')
+    params.push(pattern)
+  }
+
   return {
-    sql: ` AND (
-      a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ?
-      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
-      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
-      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
-      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
-    )`,
-    params: [
-      '%youtube.com%',
-      '%youtu.be%',
-      '%rumble.com%',
-      '%vimeo.com%',
-      '%dailymotion.com%',
-      '%<video%',
-      '%youtube.com%',
-      '%youtu.be%',
-      '%player.vimeo.com%',
-      '%vimeo.com/video/%',
-      '%rumble.com/embed%',
-      '%rumble_%',
-      '%Rumble(%',
-      '%dailymotion.com%',
-      '%jwplatform.com%',
-      '%jwplayer.com%',
-      '%facebook.com/plugins/video%',
-      '%tiktok.com%',
-      '%twitch.tv%',
-      '%bitchute.com%',
-      '%streamable.com%',
-      '%odysee.com%'
-    ]
+    sql: ` AND (${clauses.join(' OR ')})`,
+    params
   }
 }
 

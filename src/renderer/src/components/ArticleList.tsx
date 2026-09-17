@@ -304,7 +304,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const selectedFolder = selectedFeedId?.startsWith('folder:')
     ? folders.find((folder) => folder.id === selectedFeedId.slice('folder:'.length))
     : undefined
-  const isLoadingNewFeed = pendingFeedId === selectedFeedId && articles.length === 0
+  const isLoadingNewFeed = Boolean(pendingFeedId) && pendingFeedId === selectedFeedId && articles.length === 0
   const isEmptyLibrary = !feedsLoading && feeds.length === 0 && selectedFeedId === null
   const isAllArticles = selectedFeedId === null && !unreadOnly && !readOnly
   const isUnreadArticles = selectedFeedId === null && unreadOnly
