@@ -4,23 +4,28 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ---
 
-### ⚡ Performance & Stability Highlights
+### ⚡ Feature & Stability Highlights
 
-- ⚡ **Incremental Notification & Inbox Rendering (Prevent UI Freezes)**:
-  - Fixed a critical performance issue where loading large notification histories (1,000+ items) rendered thousands of active tooltips and DOM elements simultaneously, causing severe UI freezing and high CPU/memory consumption.
-  - Implemented progressive batch rendering via `IntersectionObserver` (50 to 80 items per slice) for smooth, stutter-free scrolling across both Notification History and Inbox panels.
-  - Extracted and memoized notification card components (`NotifCard`) to eliminate cascading re-renders across the list.
-  - Added 500ms batched event throttling for real-time incoming feed notifications to maintain high framerates during intensive background feed polling.
-  - Memoized date partitioning and grouping computations using `useMemo` for instant panel transitions.
+- 🔍 **In-Article Text Search with Dynamic Highlighting**:
+  - Fast in-article text search accessible via `Ctrl+F` or the dedicated reader toolbar button.
+  - Non-destructive DOM `TreeWalker` text marking (`<mark class="reader-search-match">`) with zero interruption or reloading of active media.
+  - Live match counter, Next / Previous navigation (`Enter` / `Shift+Enter`), smooth centering into view, and `Escape` to close.
+  - Isolated reader body rendering via `React.memo` to eliminate DOM resets during search navigation.
+  - Fully bilingual (English and Spanish).
 
-- 🖥️ **Multi-Monitor Display Restoration & Window Memory**:
-  - Fixed window state persistence on minimize-to-tray so the active monitor and display bounds are properly preserved across sessions.
-  - `restoreMainWindow` now accurately nudges and restores the window onto the designated saved monitor before maximizing, preventing accidental jumps back to the primary display.
-  - Delegated second-instance window activation to the unified window restore handler for consistent multi-display behavior.
+- 📌 **Sticky Header Bar on Scroll**:
+  - Full-width reader header bar that smoothly slides down below the toolbar when scrolling past the main article title.
+  - Displays the source feed icon and article title with native tooltip metadata and quick "Back to top" action.
+  - Smoothly hides when returning to the top of the article.
 
-- 📖 **Documentation & Community Polish**:
-  - Harmonized donation and support guidance across documentation to align with the CyberGems application suite.
-  - Reorganized repository share badges for quicker access to Reddit and direct channels.
+- 🎬 **Refined Video Filter & Detection Accuracy**:
+  - Eliminated false-positive video classifications caused by generic non-video `<iframe>` elements (such as polls, comment boxes, WordPress embed cards, and social widgets).
+  - Targeted SQL filtering for verified video providers: YouTube, Vimeo, Rumble, Dailymotion, JW Player, Facebook Video, TikTok, Twitch, BitChute, Streamable, Odysee, and native `<video>` elements.
+
+- ⚡ **Media Player Reliability & Playback Stability**:
+  - Protocol-relative `//` embed normalization to `https://`.
+  - YouTube player parameters and sandbox policy enhancements.
+  - Prevented background article scraping from tearing down active media playback.
 
 ---
 
