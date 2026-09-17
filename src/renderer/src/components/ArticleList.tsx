@@ -654,6 +654,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     const onKeyDown = (e: KeyboardEvent): void => {
       if (e.ctrlKey || e.altKey || e.metaKey) return
       if (useUIStore.getState().activePanel) return
+      if (useUIStore.getState().topbarMenuOpen) return
       if (confirmState.isOpen) return
 
       const inArticleSearch =
