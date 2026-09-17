@@ -304,6 +304,42 @@ export interface ArticleQuery {
   offset?: number
 }
 
+function buildVideoClause(): { sql: string; params: string[] } {
+  return {
+    sql: ` AND (
+      a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ? OR a.link LIKE ?
+      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
+      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
+      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
+      OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.content LIKE ?
+    )`,
+    params: [
+      '%youtube.com%',
+      '%youtu.be%',
+      '%rumble.com%',
+      '%vimeo.com%',
+      '%dailymotion.com%',
+      '%<video%',
+      '%youtube.com%',
+      '%youtu.be%',
+      '%player.vimeo.com%',
+      '%vimeo.com/video/%',
+      '%rumble.com/embed%',
+      '%rumble_%',
+      '%Rumble(%',
+      '%dailymotion.com%',
+      '%jwplatform.com%',
+      '%jwplayer.com%',
+      '%facebook.com/plugins/video%',
+      '%tiktok.com%',
+      '%twitch.tv%',
+      '%bitchute.com%',
+      '%streamable.com%',
+      '%odysee.com%'
+    ]
+  }
+}
+
 export function getArticles(query: ArticleQuery = {}): Article[] {
   const {
     feedId,
@@ -352,8 +388,9 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
   }
 
   if (hasVideo) {
-    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ?)"
-    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%', '%rumble.com%', '%rumble_%', '%Rumble(%', '%vimeo.com%')
+    const videoClause = buildVideoClause()
+    sql += videoClause.sql
+    params.push(...videoClause.params)
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {
@@ -425,8 +462,9 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
   }
 
   if (hasVideo) {
-    sql += " AND (a.link LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ? OR a.content LIKE ? OR a.content LIKE ? OR a.link LIKE ?)"
-    params.push('%youtube.com%', '%youtu.be%', '%<iframe%', '%<video%', '%rumble.com%', '%rumble_%', '%Rumble(%', '%vimeo.com%')
+    const videoClause = buildVideoClause()
+    sql += videoClause.sql
+    params.push(...videoClause.params)
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {

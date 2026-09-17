@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DOMPurify from 'dompurify'
-import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X } from 'lucide-react'
+import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X, Search, ChevronUp, ChevronDown } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -235,6 +235,89 @@ function stripUnplayableMedia(html: string): string {
   return document.body.innerHTML
 }
 
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function clearHighlights(container: HTMLElement): void {
+  const marks = Array.from(container.querySelectorAll('mark.reader-search-match'))
+  marks.forEach((mark) => {
+    const parent = mark.parentNode
+    if (parent) {
+      const text = mark.textContent || ''
+      parent.replaceChild(document.createTextNode(text), mark)
+      parent.normalize()
+    }
+  })
+}
+
+function highlightMatches(container: HTMLElement, query: string): HTMLElement[] {
+  clearHighlights(container)
+  const trimmed = query.trim()
+  if (!trimmed) return []
+
+  const escaped = escapeRegex(trimmed)
+  const regex = new RegExp(escaped, 'gi')
+  const matchedElements: HTMLElement[] = []
+
+  const textNodes: Text[] = []
+  const walker = document.createTreeWalker(
+    container,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node) {
+        const parent = node.parentElement
+        if (!parent) return NodeFilter.FILTER_REJECT
+        const tag = parent.tagName.toUpperCase()
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'IFRAME' || tag === 'VIDEO' || tag === 'BUTTON') {
+          return NodeFilter.FILTER_REJECT
+        }
+        return NodeFilter.FILTER_ACCEPT
+      }
+    }
+  )
+
+  let currentNode = walker.nextNode()
+  while (currentNode) {
+    textNodes.push(currentNode as Text)
+    currentNode = walker.nextNode()
+  }
+
+  for (const node of textNodes) {
+    const text = node.nodeValue
+    if (!text || !regex.test(text)) continue
+    regex.lastIndex = 0
+
+    const fragment = document.createDocumentFragment()
+    let lastIndex = 0
+    let match: RegExpExecArray | null
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)))
+      }
+
+      const mark = document.createElement('mark')
+      mark.className = 'reader-search-match'
+      mark.textContent = match[0]
+      fragment.appendChild(mark)
+      matchedElements.push(mark)
+
+      lastIndex = regex.lastIndex
+    }
+
+    if (lastIndex < text.length) {
+      fragment.appendChild(document.createTextNode(text.slice(lastIndex)))
+    }
+
+    if (node.parentNode) {
+      node.parentNode.replaceChild(fragment, node)
+    }
+  }
+
+  return matchedElements
+}
+
 const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const { selectedArticleId } = useUIStore()
   const { articles, starArticle } = useArticlesStore()
@@ -256,15 +339,35 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
   const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
 
+  const [showStickyTitle, setShowStickyTitle] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [matchCount, setMatchCount] = useState(0)
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const matchesRef = useRef<HTMLElement[]>([])
+
   useEffect(() => {
     return () => {
       if (copiedTimer.current) clearTimeout(copiedTimer.current)
       if (scrollRaf.current != null) cancelAnimationFrame(scrollRaf.current)
+      const root = contentRef.current
+      if (root) {
+        const readerBody = root.querySelector('.reader-body') as HTMLElement | null
+        if (readerBody) clearHighlights(readerBody)
+      }
     }
   }, [])
 
   // Load article when selection changes
   useEffect(() => {
+    setShowStickyTitle(false)
+    setSearchOpen(false)
+    setSearchQuery('')
+    setMatchCount(0)
+    setCurrentMatchIndex(0)
+    matchesRef.current = []
+
     if (!selectedArticleId) {
       setArticle(null)
       setFullHtml(null)
@@ -524,9 +627,144 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       scrollRaf.current = undefined
       const el = contentRef.current
       if (!el) return
+      setShowStickyTitle(el.scrollTop > 100)
       setShowScrollTop(el.scrollTop > 400)
     })
   }, [])
+
+  const executeSearch = useCallback((query: string) => {
+    const root = contentRef.current
+    if (!root) return
+    const readerBody = root.querySelector('.reader-body') as HTMLElement | null
+    if (!readerBody) return
+
+    if (!query.trim()) {
+      clearHighlights(readerBody)
+      matchesRef.current = []
+      setMatchCount(0)
+      setCurrentMatchIndex(0)
+      return
+    }
+
+    const matches = highlightMatches(readerBody, query)
+    matchesRef.current = matches
+    setMatchCount(matches.length)
+    if (matches.length > 0) {
+      setCurrentMatchIndex(0)
+      matches[0].classList.add('reader-search-active')
+      matches[0].scrollIntoView({ behavior: 'smooth', block: 'center' })
+    } else {
+      setCurrentMatchIndex(0)
+    }
+  }, [])
+
+  const goToMatch = useCallback((index: number) => {
+    const matches = matchesRef.current
+    if (matches.length === 0) return
+    matches.forEach((m) => m.classList.remove('reader-search-active'))
+    const target = matches[index]
+    if (target) {
+      target.classList.add('reader-search-active')
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setCurrentMatchIndex(index)
+    }
+  }, [])
+
+  const goToNextMatch = useCallback(() => {
+    if (matchCount === 0) return
+    const nextIdx = (currentMatchIndex + 1) % matchCount
+    goToMatch(nextIdx)
+  }, [matchCount, currentMatchIndex, goToMatch])
+
+  const goToPrevMatch = useCallback(() => {
+    if (matchCount === 0) return
+    const prevIdx = (currentMatchIndex - 1 + matchCount) % matchCount
+    goToMatch(prevIdx)
+  }, [matchCount, currentMatchIndex, goToMatch])
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false)
+    setSearchQuery('')
+    setMatchCount(0)
+    setCurrentMatchIndex(0)
+    const root = contentRef.current
+    if (root) {
+      const readerBody = root.querySelector('.reader-body') as HTMLElement | null
+      if (readerBody) clearHighlights(readerBody)
+    }
+    contentRef.current?.focus()
+  }, [])
+
+  const openSearch = useCallback(() => {
+    setSearchOpen(true)
+    setTimeout(() => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus()
+        searchInputRef.current.select()
+      }
+    }, 50)
+  }, [])
+
+  const toggleSearch = useCallback(() => {
+    if (searchOpen) {
+      closeSearch()
+    } else {
+      openSearch()
+    }
+  }, [searchOpen, closeSearch, openSearch])
+
+  const handleSearchChange = useCallback((val: string) => {
+    setSearchQuery(val)
+    executeSearch(val)
+  }, [executeSearch])
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (e.shiftKey) {
+        goToPrevMatch()
+      } else {
+        goToNextMatch()
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      closeSearch()
+    }
+  }, [goToNextMatch, goToPrevMatch, closeSearch])
+
+  useEffect(() => {
+    if (!article) return
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      const target = e.target as HTMLElement
+      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault()
+        openSearch()
+        return
+      }
+
+      if (e.key === 'Escape' && searchOpen && !isInput) {
+        e.preventDefault()
+        closeSearch()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [article, searchOpen, openSearch, closeSearch])
+
+  useEffect(() => {
+    if (searchOpen && searchQuery) {
+      const timer = setTimeout(() => {
+        executeSearch(searchQuery)
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+    return undefined
+  }, [fullHtml, searchOpen, searchQuery, executeSearch])
 
   const scrollToTop = useCallback(() => {
     contentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
@@ -638,131 +876,236 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   return (
     <div className="article-viewer">
       <div className="viewer-toolbar">
-        <Tooltip label={t.articleViewer.quickSummary} placement="bottom">
-          <button
-            className="btn btn-ghost has-label"
-            style={{ fontSize: 12 }}
-            onClick={handleSummary}
-          >
-            <FileText size={13} />
-            <span className="viewer-toolbar-label">{t.articleViewer.summary}</span>
-          </button>
-        </Tooltip>
-        {!isYt && !isReddit && (
-          <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
+        <div className="viewer-toolbar-left">
+          <Tooltip label={t.articleViewer.quickSummary} placement="bottom">
             <button
               className="btn btn-ghost has-label"
-              style={{
-                fontSize: 12,
-                color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
-              }}
-              onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
+              style={{ fontSize: 12 }}
+              onClick={handleSummary}
             >
-              <BookOpen size={13} />
-              <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
+              <FileText size={13} />
+              <span className="viewer-toolbar-label">{t.articleViewer.summary}</span>
             </button>
           </Tooltip>
-        )}
-        {isYt && (
-          <Tooltip label={t.articleViewer.autoPlayYouTubeTooltip} placement="bottom">
+          {!isYt && !isReddit && (
+            <Tooltip label={t.articleViewer.autoFetchTooltip} placement="bottom">
+              <button
+                className="btn btn-ghost has-label"
+                style={{
+                  fontSize: 12,
+                  color: settings.autoFetchFullContent ? 'var(--accent)' : 'inherit'
+                }}
+                onClick={() => update({ autoFetchFullContent: !settings.autoFetchFullContent })}
+              >
+                <BookOpen size={13} />
+                <span className="viewer-toolbar-label">{t.articleViewer.autoFetch}</span>
+              </button>
+            </Tooltip>
+          )}
+          {isYt && (
+            <Tooltip label={t.articleViewer.autoPlayYouTubeTooltip} placement="bottom">
+              <button
+                className={`btn btn-ghost has-label ${settings.autoPlayYouTube ? 'is-active' : ''}`}
+                style={{
+                  fontSize: 12,
+                  color: settings.autoPlayYouTube ? 'var(--accent)' : 'inherit'
+                }}
+                onClick={() => {
+                  const next = !settings.autoPlayYouTube
+                  update({ autoPlayYouTube: next })
+                  setIsPlayingVideo(next)
+                }}
+              >
+                <Play size={13} fill={settings.autoPlayYouTube ? 'currentColor' : 'none'} />
+                <span className="viewer-toolbar-label">{t.articleViewer.autoPlayYouTube}</span>
+              </button>
+            </Tooltip>
+          )}
+          <Tooltip label={`${t.articleViewer.searchInArticle} (Ctrl+F)`} placement="bottom">
             <button
-              className={`btn btn-ghost has-label ${settings.autoPlayYouTube ? 'is-active' : ''}`}
+              className={`btn btn-ghost has-label ${searchOpen ? 'is-active' : ''}`}
               style={{
                 fontSize: 12,
-                color: settings.autoPlayYouTube ? 'var(--accent)' : 'inherit'
+                color: searchOpen ? 'var(--accent)' : 'inherit'
               }}
-              onClick={() => {
-                const next = !settings.autoPlayYouTube
-                update({ autoPlayYouTube: next })
-                setIsPlayingVideo(next)
-              }}
+              onClick={toggleSearch}
             >
-              <Play size={13} fill={settings.autoPlayYouTube ? 'currentColor' : 'none'} />
-              <span className="viewer-toolbar-label">{t.articleViewer.autoPlayYouTube}</span>
+              <Search size={13} />
+              <span className="viewer-toolbar-label">{t.articleViewer.searchInArticle}</span>
             </button>
           </Tooltip>
-        )}
-        {loading && (
+        </div>
+
+        <Tooltip label={t.articleViewer.scrollToTop} placement="bottom">
           <div
-            className="viewer-toolbar-loading"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '0 8px',
-              color: 'var(--text-muted)',
-              fontSize: 11
+            className={`viewer-toolbar-title ${showStickyTitle ? 'is-visible' : ''}`}
+            onClick={scrollToTop}
+            role="button"
+            tabIndex={showStickyTitle ? 0 : -1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                scrollToTop()
+              }
             }}
           >
-            <div className="spinner" style={{ width: 11, height: 11 }} />
-            <span>{t.articleViewer.loadingFull}</span>
+            {article.title}
           </div>
-        )}
-        <Tooltip label={t.articleViewer.openInBrowserTooltip} placement="bottom">
-          <button
-            className="btn btn-ghost has-label"
-            style={{ fontSize: 12 }}
-            onClick={() => window.api.openExternal(article.link)}
-          >
-            <ExternalLink size={13} />
-            <span className="viewer-toolbar-label">{t.articleViewer.openInBrowser}</span>
-          </button>
         </Tooltip>
-        <Tooltip
-          label={linkCopied ? t.articleViewer.linkCopied : t.articleViewer.shareTooltip}
-          placement="bottom"
-        >
-          <button
-            className={`btn btn-ghost has-label${linkCopied ? ' is-copied' : ''}`}
-            style={{ fontSize: 12 }}
-            onClick={handleShare}
-          >
-            {linkCopied ? <Check size={13} /> : <Share2 size={13} />}
-            <span className="viewer-toolbar-label">
-              {linkCopied ? t.articleViewer.copied : t.articleViewer.share}
-            </span>
-          </button>
-        </Tooltip>
-        <div className="viewer-toolbar-sep" />
-        <Tooltip label={t.articleViewer.decreaseFont} placement="bottom">
-          <button
-            className="btn btn-ghost btn-icon"
-            onClick={() =>
-              update({ readingFontSize: Math.max(12, (settings.readingFontSize || 15) - 1) })
-            }
-          >
-            <span style={{ fontSize: 11, fontWeight: 700 }}>A-</span>
-          </button>
-        </Tooltip>
-        <Tooltip label={t.articleViewer.increaseFont} placement="bottom">
-          <button
-            className="btn btn-ghost btn-icon"
-            onClick={() =>
-              update({ readingFontSize: Math.min(24, (settings.readingFontSize || 15) + 1) })
-            }
-          >
-            <span style={{ fontSize: 13, fontWeight: 700 }}>A+</span>
-          </button>
-        </Tooltip>
-        <div className="viewer-toolbar-sep" />
-        {!article.deletedAt && (
+
+        <div className="viewer-toolbar-right">
+          {loading && (
+            <div
+              className="viewer-toolbar-loading"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '0 8px',
+                color: 'var(--text-muted)',
+                fontSize: 11
+              }}
+            >
+              <div className="spinner" style={{ width: 11, height: 11 }} />
+              <span>{t.articleViewer.loadingFull}</span>
+            </div>
+          )}
+          <Tooltip label={t.articleViewer.openInBrowserTooltip} placement="bottom">
+            <button
+              className="btn btn-ghost has-label"
+              style={{ fontSize: 12 }}
+              onClick={() => window.api.openExternal(article.link)}
+            >
+              <ExternalLink size={13} />
+              <span className="viewer-toolbar-label">{t.articleViewer.openInBrowser}</span>
+            </button>
+          </Tooltip>
           <Tooltip
-            label={article.starred ? t.articleViewer.unstar : t.articleViewer.star}
+            label={linkCopied ? t.articleViewer.linkCopied : t.articleViewer.shareTooltip}
             placement="bottom"
           >
             <button
-              className="btn btn-ghost btn-icon"
-              onClick={() => starArticle(article.id, !article.starred)}
+              className={`btn btn-ghost has-label${linkCopied ? ' is-copied' : ''}`}
+              style={{ fontSize: 12 }}
+              onClick={handleShare}
             >
-              <Star
-                size={15}
-                fill={article.starred ? 'var(--star)' : 'none'}
-                color={article.starred ? 'var(--star)' : undefined}
-              />
+              {linkCopied ? <Check size={13} /> : <Share2 size={13} />}
+              <span className="viewer-toolbar-label">
+                {linkCopied ? t.articleViewer.copied : t.articleViewer.share}
+              </span>
             </button>
           </Tooltip>
-        )}
+          <div className="viewer-toolbar-sep" />
+          <Tooltip label={t.articleViewer.decreaseFont} placement="bottom">
+            <button
+              className="btn btn-ghost btn-icon"
+              onClick={() =>
+                update({ readingFontSize: Math.max(12, (settings.readingFontSize || 15) - 1) })
+              }
+            >
+              <span style={{ fontSize: 11, fontWeight: 700 }}>A-</span>
+            </button>
+          </Tooltip>
+          <Tooltip label={t.articleViewer.increaseFont} placement="bottom">
+            <button
+              className="btn btn-ghost btn-icon"
+              onClick={() =>
+                update({ readingFontSize: Math.min(24, (settings.readingFontSize || 15) + 1) })
+              }
+            >
+              <span style={{ fontSize: 13, fontWeight: 700 }}>A+</span>
+            </button>
+          </Tooltip>
+          <div className="viewer-toolbar-sep" />
+          {!article.deletedAt && (
+            <Tooltip
+              label={article.starred ? t.articleViewer.unstar : t.articleViewer.star}
+              placement="bottom"
+            >
+              <button
+                className="btn btn-ghost btn-icon"
+                onClick={() => starArticle(article.id, !article.starred)}
+              >
+                <Star
+                  size={15}
+                  fill={article.starred ? 'var(--star)' : 'none'}
+                  color={article.starred ? 'var(--star)' : undefined}
+                />
+              </button>
+            </Tooltip>
+          )}
+        </div>
       </div>
+
+      {searchOpen && (
+        <div className="viewer-search-bar" role="search">
+          <div className="viewer-search-input-wrap">
+            <Search size={14} className="viewer-search-icon" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="viewer-search-input"
+              placeholder={t.articleViewer.searchPlaceholder}
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+            {searchQuery && (
+              <button
+                className="viewer-search-clear"
+                onClick={() => handleSearchChange('')}
+                title={t.articleViewer.clearSearch}
+                aria-label={t.articleViewer.clearSearch}
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          <span className="viewer-search-count">
+            {searchQuery.trim()
+              ? matchCount > 0
+                ? `${currentMatchIndex + 1} ${t.articleViewer.matchOf} ${matchCount}`
+                : t.articleViewer.noMatches
+              : ''}
+          </span>
+
+          <div className="viewer-search-nav">
+            <Tooltip label={`${t.articleViewer.prevMatch} (Shift+Enter)`} placement="bottom">
+              <button
+                className="btn btn-ghost btn-icon"
+                disabled={matchCount === 0}
+                onClick={goToPrevMatch}
+                aria-label={t.articleViewer.prevMatch}
+              >
+                <ChevronUp size={14} />
+              </button>
+            </Tooltip>
+            <Tooltip label={`${t.articleViewer.nextMatch} (Enter)`} placement="bottom">
+              <button
+                className="btn btn-ghost btn-icon"
+                disabled={matchCount === 0}
+                onClick={goToNextMatch}
+                aria-label={t.articleViewer.nextMatch}
+              >
+                <ChevronDown size={14} />
+              </button>
+            </Tooltip>
+          </div>
+
+          <div className="viewer-toolbar-sep" style={{ height: 14 }} />
+
+          <Tooltip label={`${t.articleViewer.closeSearch} (Esc)`} placement="bottom">
+            <button
+              className="btn btn-ghost btn-icon"
+              onClick={closeSearch}
+              aria-label={t.articleViewer.closeSearch}
+            >
+              <X size={14} />
+            </button>
+          </Tooltip>
+        </div>
+      )}
 
       <div
         className="viewer-content"
