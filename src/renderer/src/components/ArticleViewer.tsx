@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DOMPurify from 'dompurify'
-import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X, Search, ChevronUp, ChevronDown } from 'lucide-react'
+import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X, Search, ChevronUp, ChevronDown, PictureInPicture2 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -9,6 +9,7 @@ import Tooltip from './Tooltip'
 import SelectionFlyout from './SelectionFlyout'
 import WelcomeLounge from './WelcomeLounge'
 import type { Article } from '../types'
+import type { PipVideoPayload } from '@shared/types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
 
@@ -413,12 +414,52 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const [linkCopied, setLinkCopied] = useState(false)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isPlayingVideo, setIsPlayingVideo] = useState(false)
+  const [pipArticleId, setPipArticleId] = useState<string | null>(null)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollRaf = useRef<number | undefined>(undefined)
   const pendingFullHtmlRef = useRef<string | null>(null)
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
   const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
+
+  // Picture-in-Picture status synchronization
+  useEffect(() => {
+    window.api.pip.getStatus().then((status) => {
+      if (status?.active) {
+        setPipArticleId(status.articleId || null)
+      } else {
+        setPipArticleId(null)
+      }
+    }).catch(() => {})
+
+    const unsub = window.api.pip.onStatusChange(({ active, articleId }) => {
+      if (active) {
+        setPipArticleId(articleId || null)
+      } else {
+        setPipArticleId(null)
+      }
+    })
+
+    return () => {
+      unsub()
+    }
+  }, [])
+
+  const handleOpenPip = useCallback((payload: PipVideoPayload) => {
+    window.api.pip.open(payload)
+    setPipArticleId(payload.articleId || article?.id || null)
+  }, [article?.id])
+
+  const handleReturnFromPip = useCallback(() => {
+    window.api.pip.returnToReader()
+    setPipArticleId(null)
+    setIsPlayingVideo(true)
+  }, [])
+
+  const handleClosePip = useCallback(() => {
+    window.api.pip.close()
+    setPipArticleId(null)
+  }, [])
 
   const [showStickyTitle, setShowStickyTitle] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -672,12 +713,88 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       )
     }
 
+    // Attach Firefox-style PiP overlay button to videos and embedded player iframes
+    const mediaElements = Array.from(
+      readerBody.querySelectorAll<HTMLElement>(
+        'video, iframe.reader-embed-player, iframe[src*="youtube"], iframe[src*="rumble"], iframe[src*="vimeo"], iframe[src*="jwplayer"]'
+      )
+    )
+
+    for (const mediaEl of mediaElements) {
+      if (mediaEl.dataset.pipAttached) continue
+      mediaEl.dataset.pipAttached = 'true'
+
+      let container = mediaEl.parentElement
+      if (!container?.classList.contains('reader-pip-container')) {
+        container = document.createElement('div')
+        container.className = 'reader-pip-container'
+        mediaEl.parentNode?.insertBefore(container, mediaEl)
+        container.appendChild(mediaEl)
+      }
+
+      const pipBtn = document.createElement('button')
+      pipBtn.type = 'button'
+      pipBtn.className = 'reader-pip-overlay-btn'
+      pipBtn.title = t.articleViewer.pipTooltip
+      pipBtn.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 9V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h4"></path>
+          <rect width="10" height="7" x="12" y="13" rx="1"></rect>
+        </svg>
+        <span class="reader-pip-overlay-text">${t.articleViewer.pipButton}</span>
+      `
+
+      pipBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        let payload: PipVideoPayload | null = null
+        if (mediaEl.tagName === 'VIDEO') {
+          const v = mediaEl as HTMLVideoElement
+          v.pause()
+          const src = v.currentSrc || v.getAttribute('src') || v.querySelector('source')?.getAttribute('src') || ''
+          payload = {
+            type: 'video',
+            src,
+            title: article?.title || '',
+            articleId: article?.id,
+            currentTime: v.currentTime
+          }
+        } else if (mediaEl.tagName === 'IFRAME') {
+          const iframe = mediaEl as HTMLIFrameElement
+          const src = iframe.getAttribute('src') || iframe.src || ''
+          const ytId = extractYouTubeVideoId(src)
+          if (ytId) {
+            payload = {
+              type: 'youtube',
+              videoId: ytId,
+              src,
+              title: article?.title || '',
+              articleId: article?.id
+            }
+          } else {
+            payload = {
+              type: 'embed',
+              src,
+              title: article?.title || '',
+              articleId: article?.id
+            }
+          }
+        }
+        if (payload) {
+          handleOpenPip(payload)
+        }
+      })
+
+      container.appendChild(pipBtn)
+    }
+
     return () => {
       for (const timer of timers) window.clearTimeout(timer)
       const cards = Array.from(readerBody.querySelectorAll('.reader-video-fallback-card'))
       for (const c of cards) c.remove()
+      const pipBtns = Array.from(readerBody.querySelectorAll('.reader-pip-overlay-btn'))
+      for (const b of pipBtns) b.remove()
     }
-  }, [article?.id, fullHtml, article?.content, article?.link, t])
+  }, [article?.id, fullHtml, article?.content, article?.link, t, handleOpenPip])
 
   // Hide broken <img> tags inside article content that fail to load or error (CORS / 404 / dead URLs).
   // Uses non-destructive display:none so React's DOM tree is never mutated.
@@ -1304,7 +1421,35 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           </div>
 
           {ytVideoId ? (
-            isPlayingVideo ? (
+            pipArticleId === article.id ? (
+              <div className="reader-pip-active-card">
+                <div className="reader-pip-active-icon">
+                  <PictureInPicture2 size={26} />
+                </div>
+                <div className="reader-pip-active-content">
+                  <div className="reader-pip-active-title">{t.articleViewer.pipActiveTitle}</div>
+                  <div className="reader-pip-active-desc">{t.articleViewer.pipActiveDesc}</div>
+                </div>
+                <div className="reader-pip-active-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary reader-pip-active-btn"
+                    onClick={handleReturnFromPip}
+                  >
+                    <PictureInPicture2 size={14} />
+                    <span>{t.articleViewer.pipReturnToReader}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary reader-pip-active-btn"
+                    onClick={handleClosePip}
+                  >
+                    <X size={14} />
+                    <span>{t.articleViewer.pipCloseFloating}</span>
+                  </button>
+                </div>
+              </div>
+            ) : isPlayingVideo ? (
               <div
                 className="reader-youtube-player-wrapper"
                 style={{
@@ -1315,9 +1460,35 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   style={{
                     display: 'flex',
                     justifyContent: 'flex-end',
+                    alignItems: 'center',
+                    gap: '6px',
                     marginBottom: '8px'
                   }}
                 >
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      handleOpenPip({
+                        type: 'youtube',
+                        videoId: ytVideoId,
+                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}`,
+                        title: article.title,
+                        articleId: article.id
+                      })
+                    }}
+                    style={{
+                      fontSize: '12px',
+                      padding: '4px 10px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      color: 'var(--text-secondary)'
+                    }}
+                    title={t.articleViewer.pipTooltip}
+                  >
+                    <PictureInPicture2 size={13} />
+                    <span>{t.articleViewer.pipButton}</span>
+                  </button>
                   <button
                     className="btn btn-ghost"
                     onClick={() => {
@@ -1352,6 +1523,24 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                     border: '1px solid var(--border)'
                   }}
                 >
+                  <button
+                    type="button"
+                    className="reader-pip-overlay-btn"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleOpenPip({
+                        type: 'youtube',
+                        videoId: ytVideoId,
+                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}`,
+                        title: article.title,
+                        articleId: article.id
+                      })
+                    }}
+                    title={t.articleViewer.pipTooltip}
+                  >
+                    <PictureInPicture2 size={15} />
+                    <span className="reader-pip-overlay-text">{t.articleViewer.pipButton}</span>
+                  </button>
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=0&rel=0`}
                     title={article.title}

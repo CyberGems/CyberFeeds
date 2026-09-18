@@ -4329,5 +4329,134 @@ mark.reader-search-match.reader-search-active {
   background: rgba(255, 255, 255, 0.15);
 }
 
+/* ─── Picture-in-Picture (PiP) Overlay Button & Card ────────────────────── */
+.reader-pip-container {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 16px 0;
+}
 
+.reader-pip-container video,
+.reader-pip-container iframe {
+  margin: 0 !important;
+}
 
+.reader-pip-overlay-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(18, 24, 38, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  opacity: 0.75;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.reader-pip-overlay-btn:hover {
+  opacity: 1;
+  background: rgba(0, 216, 241, 0.25);
+  border-color: rgba(0, 216, 241, 0.6);
+  color: #ffffff;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 18px rgba(0, 216, 241, 0.3), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.reader-pip-overlay-btn svg {
+  flex-shrink: 0;
+}
+
+.reader-pip-overlay-text {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  transition: max-width 0.25s ease, opacity 0.2s ease, margin 0.2s ease;
+}
+
+.reader-pip-overlay-btn:hover .reader-pip-overlay-text {
+  max-width: 140px;
+  opacity: 1;
+  margin-left: 2px;
+}
+
+/* Reader PiP Active Card (Shown in reader when video is floating) */
+.reader-pip-active-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  padding: 32px 24px;
+  margin: 20px 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(18, 24, 38, 0.8) 0%, rgba(13, 17, 23, 0.95) 100%);
+  border: 1px solid rgba(0, 216, 241, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.reader-pip-active-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: rgba(0, 216, 241, 0.12);
+  border: 1px solid rgba(0, 216, 241, 0.3);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-pip 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-pip {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 216, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(0, 216, 241, 0);
+  }
+}
+
+.reader-pip-active-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.reader-pip-active-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 420px;
+  line-height: 1.5;
+}
+
+.reader-pip-active-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.reader-pip-active-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 8px;
+}

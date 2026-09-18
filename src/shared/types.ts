@@ -37,6 +37,16 @@ export interface Article {
   thumbnail?: string
 }
 
+export interface PipVideoPayload {
+  type: 'youtube' | 'video' | 'embed'
+  src: string
+  title: string
+  videoId?: string
+  currentTime?: number
+  articleId?: string
+  feedTitle?: string
+}
+
 export interface NotificationHistoryItem {
   id: string
   title: string

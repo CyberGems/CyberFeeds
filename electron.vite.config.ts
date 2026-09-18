@@ -36,7 +36,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve('src/renderer/index.html'),
-          notifier: resolve('src/renderer/notifier/index.html')
+          notifier: resolve('src/renderer/notifier/index.html'),
+          pip: resolve('src/renderer/pip/index.html')
         }
       }
     }

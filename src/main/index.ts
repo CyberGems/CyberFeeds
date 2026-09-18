@@ -17,6 +17,7 @@ import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './not
 import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import { initAutoBackup } from './auto-backup'
+import { initPipIpc, closePipWindow } from './pip'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
 
@@ -47,6 +48,10 @@ app.on('second-instance', () => {
 })
 
 let mainWindow: BrowserWindow | null = null
+
+export function getMainWindow(): BrowserWindow | null {
+  return mainWindow
+}
 
 const THEME_BACKGROUND: Record<string, string> = {
   dark: '#0d1117',
@@ -452,12 +457,16 @@ app.whenReady().then(() => {
   // Auto-backup scheduler
   initAutoBackup()
 
+  // Picture-in-Picture IPC
+  initPipIpc()
+
   // Auto-update (electron-updater). No-op in dev / unpacked builds.
   initUpdater(settings)
 })
 
 app.on('before-quit', () => {
   ;(app as any).isQuitting = true
+  closePipWindow()
   destroyTray()
 })
 
