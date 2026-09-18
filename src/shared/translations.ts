@@ -436,6 +436,57 @@ export const translations = {
           importFailMsg: 'Import failed: {error}'
         }
       },
+      autoBackup: {
+        title: 'Scheduled Automatic Backups',
+        explanation:
+          'Automatically generate periodic backup copies of your feeds, folders, starred articles, and settings.',
+        enabled: 'Enable automatic backups',
+        frequency: 'Backup frequency',
+        frequencies: {
+          onStartup: 'On application startup',
+          daily: 'Daily (every 24 hours)',
+          weekly: 'Weekly (every 7 days)',
+          monthly: 'Monthly (every 30 days)'
+        },
+        maxBackups: 'Max backups to keep',
+        maxBackupsHint: 'Oldest automatic backup files will be safely rotated when new ones are created.',
+        backupLocation: 'Backup folder',
+        defaultLocation: 'Default directory',
+        customLocation: 'Custom directory',
+        browseFolder: 'Browse...',
+        openFolder: 'Open Folder',
+        resetLocation: 'Reset to Default',
+        status: {
+          lastBackup: 'Last backup: {time}',
+          never: 'Never',
+          backupCount: '{count} backup file(s) available ({size})',
+          noBackups: 'No automatic backups found yet.'
+        },
+        runNowBtn: 'Back Up Now',
+        runningBackup: 'Backing up...',
+        recentBackups: 'Available Automatic Backups',
+        restoreBtn: 'Restore',
+        deleteBtn: 'Delete',
+        dialogs: {
+          runSuccessTitle: 'Backup Completed',
+          runSuccessMsg: 'Automatic backup generated successfully.',
+          runFailTitle: 'Backup Failed',
+          runFailMsg: 'Could not create automatic backup: {error}',
+          restoreConfirmTitle: 'Restore from automatic backup?',
+          restoreConfirmMsg:
+            'This will replace your current feeds and settings with this backup ({file}). The application will reload. Continue?',
+          restoreSuccessTitle: 'Restore Successful',
+          restoreSuccessMsg: 'Backup restored successfully! The app will reload to apply changes.',
+          restoreFailTitle: 'Restore Failed',
+          restoreFailMsg: 'Failed to restore backup: {error}',
+          deleteConfirmTitle: 'Delete backup file?',
+          deleteConfirmMsg: 'Permanently delete {file}? This action cannot be undone.',
+          deleteSuccessTitle: 'Backup Deleted',
+          deleteSuccessMsg: 'Backup file was deleted.',
+          deleteFailTitle: 'Delete Failed',
+          deleteFailMsg: 'Could not delete backup file: {error}'
+        }
+      },
       maintenance: {
         title: 'Maintenance',
         explanation:
@@ -665,15 +716,25 @@ export const translations = {
       goodAfternoon: 'Good afternoon',
       goodEvening: 'Good evening',
       welcomeBack: 'Welcome back',
-      emptyTitle: 'Welcome to your feed sanctuary',
-      emptySubtitle: 'Select any article from the list to start reading, or use keyboard shortcuts to browse.',
-      allCaughtUp: 'All caught up!',
-      allCaughtUpDesc: 'No unread articles pending in your feeds.',
-      unreadArticlesCount: '{count} unread articles waiting for you',
-      oneUnreadArticle: '1 unread article waiting for you',
+      editName: 'Edit display name',
+      emptyTitle: 'Your reading space',
+      emptySubtitle: 'Select an article from the list to begin reading, or use the keyboard shortcuts to browse.',
+      allCaughtUp: 'No unread articles',
+      allCaughtUpDesc: 'There are no unread articles in your feeds.',
+      unreadArticlesCount: '{count} unread articles',
+      oneUnreadArticle: '1 unread article',
+      unreadArticleLabel: 'unread article',
+      unreadArticlesLabel: 'unread articles',
       activeFeeds: '{count} active feeds',
-      keyboardHint: 'Tip: Press J / K to navigate articles, Enter to read, or M to mark as read.',
-      quickActions: 'Quick Navigation'
+      keyboardHint: 'Press J / K to navigate articles, Enter to read, or M to mark as read.',
+      quickActions: 'Keyboard shortcuts',
+      navigateArticles: 'Navigate articles',
+      nextArticle: 'Next article',
+      previousArticle: 'Previous article',
+      openAndRead: 'Open and read',
+      markAsRead: 'Mark as read',
+      openFirstUnread: 'Open first unread article',
+      manageShortcuts: 'Manage keyboard shortcuts'
     }
   },
   es: {
@@ -1118,6 +1179,58 @@ export const translations = {
           importFailMsg: 'La importación falló: {error}'
         }
       },
+      autoBackup: {
+        title: 'Copias de seguridad automáticas programadas',
+        explanation:
+          'Genera periódicamente copias de respaldo de tus feeds, carpetas, favoritos y configuración de forma automática.',
+        enabled: 'Activar copias de seguridad automáticas',
+        frequency: 'Frecuencia de respaldo',
+        frequencies: {
+          onStartup: 'Al iniciar la aplicación',
+          daily: 'Diaria (cada 24 horas)',
+          weekly: 'Semanal (cada 7 días)',
+          monthly: 'Mensual (cada 30 días)'
+        },
+        maxBackups: 'Máximo de copias a conservar',
+        maxBackupsHint: 'Los respaldos automáticos más antiguos se rotarán automáticamente al crear nuevos.',
+        backupLocation: 'Carpeta de respaldos',
+        defaultLocation: 'Directorio predeterminado',
+        customLocation: 'Directorio personalizado',
+        browseFolder: 'Examinar...',
+        openFolder: 'Abrir carpeta',
+        resetLocation: 'Restablecer a predeterminado',
+        status: {
+          lastBackup: 'Último respaldo: {time}',
+          never: 'Nunca',
+          backupCount: '{count} copia(s) disponible(s) ({size})',
+          noBackups: 'Aún no hay copias de seguridad automáticas.'
+        },
+        runNowBtn: 'Crear copia ahora',
+        runningBackup: 'Creando copia...',
+        recentBackups: 'Copias automáticas disponibles',
+        restoreBtn: 'Restaurar',
+        deleteBtn: 'Eliminar',
+        dialogs: {
+          runSuccessTitle: 'Copia completada',
+          runSuccessMsg: 'Copia de seguridad automática creada con éxito.',
+          runFailTitle: 'Error en la copia',
+          runFailMsg: 'No se pudo crear la copia de seguridad: {error}',
+          restoreConfirmTitle: '¿Restaurar copia de seguridad automática?',
+          restoreConfirmMsg:
+            'Esto reemplazará tus feeds y configuración actuales con los de esta copia ({file}). La aplicación se recargará. ¿Continuar?',
+          restoreSuccessTitle: 'Restauración exitosa',
+          restoreSuccessMsg:
+            '¡Copia de seguridad restaurada con éxito! La aplicación se recargará para aplicar los cambios.',
+          restoreFailTitle: 'Error al restaurar',
+          restoreFailMsg: 'No se pudo restaurar la copia: {error}',
+          deleteConfirmTitle: '¿Eliminar archivo de copia de seguridad?',
+          deleteConfirmMsg: '¿Eliminar permanentemente {file}? Esta acción no se puede deshacer.',
+          deleteSuccessTitle: 'Copia eliminada',
+          deleteSuccessMsg: 'El archivo de copia de seguridad fue eliminado.',
+          deleteFailTitle: 'Error al eliminar',
+          deleteFailMsg: 'No se pudo eliminar el archivo de copia: {error}'
+        }
+      },
       maintenance: {
         title: 'Mantenimiento',
         explanation:
@@ -1348,15 +1461,25 @@ export const translations = {
       goodAfternoon: 'Buenas tardes',
       goodEvening: 'Buenas noches',
       welcomeBack: 'Te damos la bienvenida',
-      emptyTitle: 'Te damos la bienvenida a tu espacio de lectura',
-      emptySubtitle: 'Selecciona cualquier artículo de la lista para comenzar a leer, o usa los atajos de teclado para navegar.',
-      allCaughtUp: '¡Todo al día!',
-      allCaughtUpDesc: 'No hay artículos pendientes en tus feeds.',
-      unreadArticlesCount: '{count} artículos sin leer esperando por ti',
-      oneUnreadArticle: '1 artículo sin leer esperando por ti',
-      activeFeeds: '{count} feeds activos',
-      keyboardHint: 'Consejo: Pulsa J / K para navegar entre artículos, Enter para leer, o M para marcar como leído.',
-      quickActions: 'Navegación rápida'
+      editName: 'Editar nombre mostrado',
+      emptyTitle: 'Su espacio de lectura',
+      emptySubtitle: 'Seleccione un artículo de la lista para comenzar a leer, o utilice los atajos de teclado para navegar.',
+      allCaughtUp: 'No hay artículos sin leer',
+      allCaughtUpDesc: 'No hay artículos sin leer en sus feeds.',
+      unreadArticlesCount: '{count} artículos sin leer',
+      oneUnreadArticle: '1 artículo sin leer',
+      unreadArticleLabel: 'artículo sin leer',
+      unreadArticlesLabel: 'artículos sin leer',
+      activeFeeds: '{count} fuentes activas',
+      keyboardHint: 'Pulse J / K para navegar entre artículos, Enter para leer o M para marcar como leído.',
+      quickActions: 'Atajos de teclado',
+      navigateArticles: 'Navegar por artículos',
+      nextArticle: 'Artículo siguiente',
+      previousArticle: 'Artículo anterior',
+      openAndRead: 'Abrir y leer',
+      markAsRead: 'Marcar como leído',
+      openFirstUnread: 'Abrir el primer artículo sin leer',
+      manageShortcuts: 'Administrar atajos de teclado'
     }
   }
 }

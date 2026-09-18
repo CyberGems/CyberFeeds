@@ -11,6 +11,7 @@ import { importOpml, exportOpml } from './opml'
 import { updateNotifierSettings, pruneFeedFilter } from './notifications'
 import { setAutoUpdate } from './updater'
 import { rebuildTrayMenu, rebuildGlobalShortcuts } from './tray'
+import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
 import { translations } from '../shared/translations'
 import { DEFAULT_SETTINGS } from '../shared/types'
 import { normalizeFeedUrl } from '../shared/reddit'
@@ -487,6 +488,14 @@ export function registerIpc(): void {
       rebuildGlobalShortcuts()
     }
 
+    if (
+      settings.autoBackup?.frequency !== current.autoBackup?.frequency ||
+      settings.autoBackup?.enabled !== current.autoBackup?.enabled ||
+      settings.autoBackup?.customPath !== current.autoBackup?.customPath
+    ) {
+      rescheduleAutoBackup()
+    }
+
     return { ok: true }
   })
 
@@ -720,6 +729,39 @@ export function registerIpc(): void {
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) }
     }
+  })
+
+  // ─── Auto Backup ──────────────────────────────────────────────────────────
+  ipcMain.handle('autoBackup:runNow', async () => {
+    return await performAutoBackup('manual-trigger')
+  })
+
+  ipcMain.handle('autoBackup:list', async () => {
+    return await listAutoBackups()
+  })
+
+  ipcMain.handle('autoBackup:pickFolder', async (event) => {
+    const win = event.sender ? BrowserWindow.fromWebContents(event.sender) : null
+    const result = await dialog.showOpenDialog(win!, {
+      title: 'Select Backup Folder',
+      properties: ['openDirectory', 'createDirectory']
+    })
+    if (result.canceled || result.filePaths.length === 0) return null
+    return result.filePaths[0]
+  })
+
+  ipcMain.handle('autoBackup:openFolder', async () => {
+    const dir = getResolvedBackupDirectory()
+    await shell.openPath(dir)
+    return { ok: true, path: dir }
+  })
+
+  ipcMain.handle('autoBackup:restore', async (_, filePath: string) => {
+    return await restoreAutoBackup(filePath)
+  })
+
+  ipcMain.handle('autoBackup:delete', async (_, filePath: string) => {
+    return await deleteAutoBackup(filePath)
   })
 
   // ─── Sound File Picker ───────────────────────────────────────────────────

@@ -85,6 +85,24 @@ export interface AppSettings {
   userName: string
   showWelcomeGreeting: boolean
   filters: FilterSettings
+  autoBackup: AutoBackupSettings
+}
+
+export type AutoBackupFrequency = 'onStartup' | 'daily' | 'weekly' | 'monthly'
+
+export interface AutoBackupSettings {
+  enabled: boolean
+  frequency: AutoBackupFrequency
+  maxBackups: number
+  customPath: string
+  lastBackupTime: number | null
+}
+
+export interface AutoBackupFileInfo {
+  filename: string
+  filePath: string
+  timestamp: number
+  sizeBytes: number
 }
 
 export interface FilterSettings {
@@ -243,5 +261,12 @@ export const DEFAULT_SETTINGS: AppSettings = {
     priorityKeywords: [],
     muteKeywords: [],
     muteAction: 'hide'
+  },
+  autoBackup: {
+    enabled: true,
+    frequency: 'daily',
+    maxBackups: 3,
+    customPath: '',
+    lastBackupTime: null
   }
 }

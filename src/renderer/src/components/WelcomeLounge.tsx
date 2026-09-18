@@ -1,17 +1,20 @@
-import { memo, useMemo } from 'react'
+import { memo, useCallback, useMemo } from 'react'
 import {
   Sun,
-  Sunrise,
   Moon,
+  Coffee,
   Sparkles,
   CheckCircle2,
   Keyboard,
-  Rss
+  Rss,
+  ArrowRight
 } from 'lucide-react'
+import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useSettingsStore } from '../store/settings.store'
 import { useUIStore } from '../store/ui.store'
 import { useFeedsStore } from '../store/feeds.store'
+import { useArticlesStore } from '../store/articles.store'
 import {
   getTimeOfDay,
   getEffectiveUserName,
@@ -23,8 +26,15 @@ import logoPng from '../../../../resources/icon.png'
 const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   const { t, language } = useTranslation()
   const { settings } = useSettingsStore()
-  const { detectedUserName } = useUIStore()
+  const {
+    detectedUserName,
+    openUserNameSettings,
+    openSettingsTab,
+    selectFeed,
+    selectArticle
+  } = useUIStore()
   const { unreadCounts, feeds } = useFeedsStore()
+  const { markRead } = useArticlesStore()
 
   const timeOfDay = useMemo(() => getTimeOfDay(), [])
   const effectiveName = useMemo(
@@ -35,6 +45,11 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   const greeting = useMemo(
     () => getGreetingText(timeOfDay, effectiveName, t.welcome),
     [timeOfDay, effectiveName, t.welcome]
+  )
+
+  const greetingPrefix = useMemo(
+    () => getGreetingText(timeOfDay, '', t.welcome),
+    [timeOfDay, t.welcome]
   )
 
   const formattedDate = useMemo(
@@ -49,9 +64,23 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   }, [unreadCounts])
 
   const totalFeeds = feeds.length
+  const formattedUnreadTotal = useMemo(
+    () => new Intl.NumberFormat(language === 'es' ? 'es-ES' : 'en-US').format(totalUnread),
+    [language, totalUnread]
+  )
+
+  const openFirstUnreadArticle = useCallback(async (): Promise<void> => {
+    const articles = await window.api.getArticles({ unreadOnly: true, limit: 1, offset: 0 }) as Article[]
+    const firstUnread = articles[0]
+    if (!firstUnread) return
+
+    selectFeed(null, { unreadOnly: true })
+    selectArticle(firstUnread.id)
+    void markRead(firstUnread.id, true)
+  }, [markRead, selectArticle, selectFeed])
 
   const TimeIcon = useMemo(() => {
-    if (timeOfDay === 'morning') return Sunrise
+    if (timeOfDay === 'morning') return Coffee
     if (timeOfDay === 'afternoon') return Sun
     return Moon
   }, [timeOfDay])
@@ -71,7 +100,21 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
           <span className={`welcome-time-icon ${timeOfDay}`}>
             <TimeIcon size={16} />
           </span>
-          <span className="welcome-greeting-text">{greeting}</span>
+          <span className="welcome-greeting-text">
+            {greetingPrefix}
+            {effectiveName && ', '}
+          </span>
+          {effectiveName && (
+            <button
+              type="button"
+              className="welcome-greeting-name"
+              onClick={openUserNameSettings}
+              aria-label={t.welcome.editName}
+              title={t.welcome.editName}
+            >
+              {effectiveName}
+            </button>
+          )}
         </div>
 
         {/* Date and Welcoming titles */}
@@ -99,11 +142,16 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
             </div>
             <div className="welcome-card-body">
               {totalUnread > 0 ? (
-                <p className="welcome-card-main-text">
-                  {totalUnread === 1
-                    ? t.welcome.oneUnreadArticle
-                    : t.welcome.unreadArticlesCount.replace('{count}', String(totalUnread))}
-                </p>
+                <>
+                  <div className="welcome-unread-summary">
+                    <span className="welcome-unread-count">{formattedUnreadTotal}</span>
+                    <span className="welcome-unread-label">
+                      {totalUnread === 1
+                        ? t.welcome.unreadArticleLabel
+                        : t.welcome.unreadArticlesLabel}
+                    </span>
+                  </div>
+                </>
               ) : (
                 <p className="welcome-card-main-text caught-up-text">
                   {t.welcome.allCaughtUpDesc}
@@ -114,6 +162,16 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
                   <Rss size={12} />
                   {t.welcome.activeFeeds.replace('{count}', String(totalFeeds))}
                 </span>
+              )}
+              {totalUnread > 0 && (
+                <button
+                  type="button"
+                  className="btn btn-secondary welcome-open-unread"
+                  onClick={() => void openFirstUnreadArticle()}
+                >
+                  {t.welcome.openFirstUnread}
+                  <ArrowRight size={14} />
+                </button>
               )}
             </div>
           </div>
@@ -130,27 +188,39 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
               <div className="welcome-shortcuts-list">
                 <div className="welcome-shortcut-item">
                   <div className="welcome-key-group">
+                    <kbd className="welcome-kbd" aria-label={t.welcome.previousArticle}>↑</kbd>
+                    <span className="welcome-kbd-sep">/</span>
+                    <kbd className="welcome-kbd" aria-label={t.welcome.nextArticle}>↓</kbd>
+                    <span className="welcome-kbd-sep">·</span>
                     <kbd className="welcome-kbd">J</kbd>
                     <span className="welcome-kbd-sep">/</span>
                     <kbd className="welcome-kbd">K</kbd>
                   </div>
                   <span className="welcome-shortcut-desc">
-                    {language === 'es' ? 'Navegar artículos' : 'Navigate articles'}
+                    {t.welcome.navigateArticles}
                   </span>
                 </div>
                 <div className="welcome-shortcut-item">
                   <kbd className="welcome-kbd">Enter</kbd>
                   <span className="welcome-shortcut-desc">
-                    {language === 'es' ? 'Abrir lectura' : 'Open & read'}
+                    {t.welcome.openAndRead}
                   </span>
                 </div>
                 <div className="welcome-shortcut-item">
                   <kbd className="welcome-kbd">M</kbd>
                   <span className="welcome-shortcut-desc">
-                    {language === 'es' ? 'Marcar leído' : 'Mark as read'}
+                    {t.welcome.markAsRead}
                   </span>
                 </div>
               </div>
+              <button
+                type="button"
+                className="welcome-shortcuts-link"
+                onClick={() => openSettingsTab('keyboard')}
+              >
+                {t.welcome.manageShortcuts}
+                <ArrowRight size={13} />
+              </button>
             </div>
           </div>
         </div>

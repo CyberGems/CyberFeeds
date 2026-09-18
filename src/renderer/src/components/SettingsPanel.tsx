@@ -4,7 +4,7 @@ import {
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
   Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles,
-  Filter, Ban, Star, Plus
+  Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive
 } from 'lucide-react'
 import { formatDisplayName } from '@shared/welcome'
 import { useUIStore } from '../store/ui.store'
@@ -14,16 +14,27 @@ import { useAlert } from '../hooks/useAlert'
 import ConfirmDialog from './ConfirmDialog'
 import AlertDialog from './AlertDialog'
 import Tooltip from './Tooltip'
-import { DEFAULT_SETTINGS, type AppSettings, type KeyboardShortcuts } from '../types'
+import {
+  DEFAULT_SETTINGS,
+  type AppSettings,
+  type KeyboardShortcuts,
+  type AutoBackupFileInfo,
+  type AutoBackupFrequency
+} from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useFeedsStore } from '../store/feeds.store'
 import { FeedFavicon } from './ArticleList'
+import logoPng from '../../../../resources/icon.png'
 
 interface DisplayInfo {
   id: number
   label: string
   bounds: { x: number; y: number; width: number; height: number }
   isPrimary?: boolean
+}
+
+interface AppVersionInfo {
+  app: string
 }
 
 type ActiveTab = 'general' | 'appearance' | 'filters' | 'notifications' | 'keyboard' | 'backupMaintenance'
@@ -246,11 +257,32 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [displays, setDisplays] = useState<DisplayInfo[]>([])
   const [testing, setTesting] = useState(false)
   const initialTab = useUIStore((s) => s.settingsInitialTab) as ActiveTab | null
+  const settingsFocusField = useUIStore((s) => s.settingsFocusField)
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab || 'general')
+  const panelRef = useRef<HTMLDivElement>(null)
+  const userNameInputRef = useRef<HTMLInputElement>(null)
+  const closeAfterNameConfirmRef = useRef(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [newPriorityInput, setNewPriorityInput] = useState('')
   const [newMuteInput, setNewMuteInput] = useState('')
+  const [autoBackupsList, setAutoBackupsList] = useState<AutoBackupFileInfo[]>([])
+  const [loadingAutoBackups, setLoadingAutoBackups] = useState(false)
+  const [runningAutoBackup, setRunningAutoBackup] = useState(false)
+  const [actionFile, setActionFile] = useState<string | null>(null)
+  const [appVersion, setAppVersion] = useState('')
   const { t } = useTranslation()
+
+  const fetchAutoBackups = useCallback(async () => {
+    setLoadingAutoBackups(true)
+    try {
+      const list = await window.api.listAutoBackups()
+      setAutoBackupsList(list)
+    } catch {
+      setAutoBackupsList([])
+    } finally {
+      setLoadingAutoBackups(false)
+    }
+  }, [])
 
   useEffect(() => {
     if (initialTab) {
@@ -258,6 +290,25 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       useUIStore.setState({ settingsInitialTab: null })
     }
   }, [initialTab])
+
+  useEffect(() => {
+    if (settingsFocusField !== 'userName') return
+
+    setActiveTab('general')
+    const frame = window.requestAnimationFrame(() => {
+      userNameInputRef.current?.focus()
+      userNameInputRef.current?.select()
+      useUIStore.setState({ settingsFocusField: null })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [settingsFocusField])
+
+  useEffect(() => {
+    if (activeTab === 'backupMaintenance') {
+      void fetchAutoBackups()
+    }
+  }, [activeTab, fetchAutoBackups])
 
   const localRef = useRef(local)
   const saveGen = useRef(0)
@@ -334,6 +385,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     }
   }, [])
 
+  useEffect(() => {
+    window.api.getVersions()
+      .then((versions) => setAppVersion((versions as AppVersionInfo).app))
+      .catch(() => setAppVersion(''))
+  }, [])
+
   const persist = useCallback((next: AppSettings, debounceMs = 0) => {
     setLocal(next)
     localRef.current = next
@@ -380,6 +437,28 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
   const update = (partial: Partial<AppSettings>, debounceMs = 0): void => {
     persist({ ...localRef.current, ...partial }, debounceMs)
+  }
+
+  const handleUserNameKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key !== 'Enter') return
+
+    e.preventDefault()
+    update({ userName: e.currentTarget.value.trim() })
+    closeAfterNameConfirmRef.current = true
+    window.requestAnimationFrame(() => panelRef.current?.focus())
+  }
+
+  const handlePanelKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
+    if (e.key !== 'Enter' || e.defaultPrevented || !closeAfterNameConfirmRef.current) return
+
+    e.preventDefault()
+    closeAfterNameConfirmRef.current = false
+    closePanel()
+  }
+
+  const handleOpenAbout = (): void => {
+    closePanel()
+    window.setTimeout(() => openPanel('about'), 220)
   }
 
   const updateNotif = (partial: Partial<AppSettings['notifications']>, debounceMs = 0): void => {
@@ -500,6 +579,124 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
         variant: 'error'
       })
     }
+  }
+
+  const handleRunAutoBackup = async (): Promise<void> => {
+    setRunningAutoBackup(true)
+    try {
+      const result = await window.api.runAutoBackup()
+      if (result.ok) {
+        await alert({
+          title: t.settings.autoBackup.dialogs.runSuccessTitle,
+          message: t.settings.autoBackup.dialogs.runSuccessMsg,
+          variant: 'success'
+        })
+        const updated = await window.api.getSettings()
+        setLocal(updated)
+        localRef.current = updated
+        await fetchAutoBackups()
+      } else {
+        await alert({
+          title: t.settings.autoBackup.dialogs.runFailTitle,
+          message: t.settings.autoBackup.dialogs.runFailMsg.replace('{error}', result.error || 'Unknown error'),
+          variant: 'error'
+        })
+      }
+    } finally {
+      setRunningAutoBackup(false)
+    }
+  }
+
+  const handlePickBackupFolder = async (): Promise<void> => {
+    const folder = await window.api.pickBackupFolder()
+    if (folder) {
+      const nextBackup = { ...(local.autoBackup || DEFAULT_SETTINGS.autoBackup), customPath: folder }
+      update({ autoBackup: nextBackup })
+      setTimeout(() => void fetchAutoBackups(), 100)
+    }
+  }
+
+  const handleResetBackupFolder = (): void => {
+    const nextBackup = { ...(local.autoBackup || DEFAULT_SETTINGS.autoBackup), customPath: '' }
+    update({ autoBackup: nextBackup })
+    setTimeout(() => void fetchAutoBackups(), 100)
+  }
+
+  const handleOpenBackupFolder = async (): Promise<void> => {
+    await window.api.openBackupFolder()
+  }
+
+  const handleRestoreAutoBackup = async (item: AutoBackupFileInfo): Promise<void> => {
+    const confirmed = await confirm({
+      title: t.settings.autoBackup.dialogs.restoreConfirmTitle,
+      message: t.settings.autoBackup.dialogs.restoreConfirmMsg.replace('{file}', item.filename),
+      confirmText: t.settings.autoBackup.restoreBtn,
+      cancelText: t.sidebar.cancel,
+      variant: 'warning'
+    })
+    if (!confirmed) return
+
+    setActionFile(item.filePath)
+    const result = await window.api.restoreAutoBackup(item.filePath)
+    setActionFile(null)
+
+    if (result.ok) {
+      await alert({
+        title: t.settings.autoBackup.dialogs.restoreSuccessTitle,
+        message: t.settings.autoBackup.dialogs.restoreSuccessMsg,
+        variant: 'success'
+      })
+      window.location.reload()
+    } else {
+      await alert({
+        title: t.settings.autoBackup.dialogs.restoreFailTitle,
+        message: t.settings.autoBackup.dialogs.restoreFailMsg.replace('{error}', result.error || 'Unknown error'),
+        variant: 'error'
+      })
+    }
+  }
+
+  const handleDeleteAutoBackup = async (item: AutoBackupFileInfo): Promise<void> => {
+    const confirmed = await confirm({
+      title: t.settings.autoBackup.dialogs.deleteConfirmTitle,
+      message: t.settings.autoBackup.dialogs.deleteConfirmMsg.replace('{file}', item.filename),
+      confirmText: t.settings.autoBackup.deleteBtn,
+      cancelText: t.sidebar.cancel,
+      variant: 'danger'
+    })
+    if (!confirmed) return
+
+    setActionFile(item.filePath)
+    const result = await window.api.deleteAutoBackup(item.filePath)
+    setActionFile(null)
+
+    if (result.ok) {
+      await fetchAutoBackups()
+    } else {
+      await alert({
+        title: t.settings.autoBackup.dialogs.deleteFailTitle,
+        message: t.settings.autoBackup.dialogs.deleteFailMsg.replace('{error}', result.error || 'Unknown error'),
+        variant: 'error'
+      })
+    }
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  }
+
+  const formatBackupTime = (timestamp: number | null | undefined): string => {
+    if (!timestamp) return t.settings.autoBackup.status.never
+    const d = new Date(timestamp)
+    return d.toLocaleString(local.language === 'es' ? 'es-ES' : 'en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
   const handleImportOpml = async (): Promise<void> => {
@@ -653,7 +850,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     saveStatus === 'error' ? t.settings.saveError : ''
 
   return (
-    <div className="panel settings-panel">
+    <div
+      ref={panelRef}
+      className="panel settings-panel"
+      tabIndex={-1}
+      onKeyDown={handlePanelKeyDown}
+    >
       <div className="settings-layout">
         <aside className="settings-nav">
           <div className="settings-nav-title">
@@ -718,6 +920,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     )}
                   </div>
                   <input
+                    ref={userNameInputRef}
                     className="form-input"
                     type="text"
                     maxLength={40}
@@ -728,6 +931,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     }
                     value={local.userName ?? ''}
                     onChange={(e) => update({ userName: e.target.value }, 300)}
+                    onKeyDown={handleUserNameKeyDown}
                   />
                   <div className="form-hint" style={{ marginTop: 4 }}>
                     {t.settings.general.userNameHint}
@@ -1718,6 +1922,193 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
+                <CardTitle icon={ShieldCheck} accent={TAB_META.backupMaintenance.accent}>
+                  {t.settings.autoBackup.title}
+                </CardTitle>
+                <p className="settings-card-hint">{t.settings.autoBackup.explanation}</p>
+
+                <label className="toggle" style={{ marginBottom: 14 }}>
+                  <div
+                    className={`toggle-track ${(local.autoBackup || DEFAULT_SETTINGS.autoBackup).enabled ? 'on' : ''}`}
+                    onClick={() => {
+                      const cur = local.autoBackup || DEFAULT_SETTINGS.autoBackup
+                      update({ autoBackup: { ...cur, enabled: !cur.enabled } })
+                    }}
+                  >
+                    <div className="toggle-thumb" />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 600 }}>
+                    {t.settings.autoBackup.enabled}
+                  </span>
+                </label>
+
+                {(local.autoBackup || DEFAULT_SETTINGS.autoBackup).enabled && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">{t.settings.autoBackup.frequency}</label>
+                      <select
+                        className="form-select"
+                        value={(local.autoBackup || DEFAULT_SETTINGS.autoBackup).frequency}
+                        onChange={(e) => {
+                          const cur = local.autoBackup || DEFAULT_SETTINGS.autoBackup
+                          update({ autoBackup: { ...cur, frequency: e.target.value as AutoBackupFrequency } })
+                        }}
+                      >
+                        <option value="onStartup">{t.settings.autoBackup.frequencies.onStartup}</option>
+                        <option value="daily">{t.settings.autoBackup.frequencies.daily}</option>
+                        <option value="weekly">{t.settings.autoBackup.frequencies.weekly}</option>
+                        <option value="monthly">{t.settings.autoBackup.frequencies.monthly}</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">{t.settings.autoBackup.maxBackups}</label>
+                      <input
+                        className="form-input"
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={(local.autoBackup || DEFAULT_SETTINGS.autoBackup).maxBackups}
+                        onChange={(e) => {
+                          const cur = local.autoBackup || DEFAULT_SETTINGS.autoBackup
+                          update({ autoBackup: { ...cur, maxBackups: Math.max(1, Number(e.target.value) || 3) } }, 300)
+                        }}
+                      />
+                      <span style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, display: 'block' }}>
+                        {t.settings.autoBackup.maxBackupsHint}
+                      </span>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">{t.settings.autoBackup.backupLocation}</label>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                        <input
+                          className="form-input"
+                          type="text"
+                          readOnly
+                          value={(local.autoBackup || DEFAULT_SETTINGS.autoBackup).customPath || t.settings.autoBackup.defaultLocation}
+                          style={{ flex: 1, opacity: 0.85, cursor: 'default' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button type="button" className="btn btn-secondary" style={{ fontSize: 12 }} onClick={handlePickBackupFolder}>
+                          <FolderOpen size={13} />
+                          {t.settings.autoBackup.browseFolder}
+                        </button>
+                        <button type="button" className="btn btn-secondary" style={{ fontSize: 12 }} onClick={handleOpenBackupFolder}>
+                          <HardDrive size={13} />
+                          {t.settings.autoBackup.openFolder}
+                        </button>
+                        {!!(local.autoBackup || DEFAULT_SETTINGS.autoBackup).customPath && (
+                          <button type="button" className="btn btn-secondary" style={{ fontSize: 12 }} onClick={handleResetBackupFolder}>
+                            <RotateCcw size={13} />
+                            {t.settings.autoBackup.resetLocation}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      background: 'var(--bg-1)',
+                      border: '1px solid var(--border-muted)',
+                      borderRadius: 'var(--radius)',
+                      padding: '10px 12px',
+                      marginTop: 4
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                          {t.settings.autoBackup.status.lastBackup.replace(
+                            '{time}',
+                            formatBackupTime((local.autoBackup || DEFAULT_SETTINGS.autoBackup).lastBackupTime)
+                          )}
+                        </span>
+                        {autoBackupsList.length > 0 && (
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {t.settings.autoBackup.status.backupCount
+                              .replace('{count}', String(autoBackupsList.length))
+                              .replace('{size}', formatFileSize(autoBackupsList.reduce((acc, f) => acc + f.sizeBytes, 0)))}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ fontSize: 12 }}
+                        onClick={handleRunAutoBackup}
+                        disabled={runningAutoBackup}
+                      >
+                        {runningAutoBackup ? <div className="spinner" style={{ width: 13, height: 13 }} /> : <Save size={13} />}
+                        {runningAutoBackup ? t.settings.autoBackup.runningBackup : t.settings.autoBackup.runNowBtn}
+                      </button>
+                    </div>
+
+                    {/* Available Automatic Backups List */}
+                    <div style={{ marginTop: 8 }}>
+                      <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <History size={13} />
+                        {t.settings.autoBackup.recentBackups}
+                      </label>
+
+                      {loadingAutoBackups ? (
+                        <div style={{ padding: '12px 0', textAlign: 'center' }}>
+                          <div className="spinner" style={{ width: 16, height: 16, margin: '0 auto' }} />
+                        </div>
+                      ) : autoBackupsList.length === 0 ? (
+                        <p className="settings-card-hint" style={{ margin: 0, fontStyle: 'italic' }}>
+                          {t.settings.autoBackup.status.noBackups}
+                        </p>
+                      ) : (
+                        <div className="auto-backups-list">
+                          {autoBackupsList.map((item) => (
+                            <div key={item.filePath} className="auto-backup-item">
+                              <div className="auto-backup-info">
+                                <div className="auto-backup-filename" title={item.filename}>
+                                  {item.filename}
+                                </div>
+                                <div className="auto-backup-meta">
+                                  <span>{formatBackupTime(item.timestamp)}</span>
+                                  <span className="auto-backup-badge">{formatFileSize(item.sizeBytes)}</span>
+                                </div>
+                              </div>
+                              <div className="auto-backup-actions">
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  style={{ fontSize: 11, padding: '4px 8px', height: 26 }}
+                                  onClick={() => handleRestoreAutoBackup(item)}
+                                  disabled={actionFile === item.filePath}
+                                >
+                                  {actionFile === item.filePath ? (
+                                    <div className="spinner" style={{ width: 11, height: 11 }} />
+                                  ) : (
+                                    <Download size={12} />
+                                  )}
+                                  {t.settings.autoBackup.restoreBtn}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-secondary"
+                                  style={{ fontSize: 11, padding: '4px 6px', height: 26, color: 'var(--red)' }}
+                                  onClick={() => handleDeleteAutoBackup(item)}
+                                  disabled={actionFile === item.filePath}
+                                  title={t.settings.autoBackup.deleteBtn}
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="settings-card">
                 <CardTitle icon={Save} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.backupData.backupsSection}
                 </CardTitle>
@@ -1861,6 +2252,21 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           )}
         </div>
       </div>
+      <footer className="settings-app-footer">
+        <Tooltip label={t.topBar.about} placement="top">
+          <button
+            type="button"
+            className="settings-footer-brand"
+            onClick={handleOpenAbout}
+          >
+            <span className="settings-footer-brand-line">
+              <img src={logoPng} alt="" aria-hidden="true" draggable={false} />
+              <span>CyberFeeds <span className="settings-footer-version">v{appVersion || '1.20.0'}</span></span>
+            </span>
+            <span className="settings-footer-copyright">© 2026 CyberGems</span>
+          </button>
+        </Tooltip>
+      </footer>
 
       <ConfirmDialog
         isOpen={confirmState.isOpen}

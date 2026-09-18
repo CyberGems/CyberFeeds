@@ -860,7 +860,9 @@ export function getSettings(): AppSettings {
       ...DEFAULT_SETTINGS,
       ...parsed,
       notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications },
-      shortcuts: { ...DEFAULT_SETTINGS.shortcuts, ...parsed.shortcuts }
+      shortcuts: { ...DEFAULT_SETTINGS.shortcuts, ...parsed.shortcuts },
+      filters: { ...DEFAULT_SETTINGS.filters, ...parsed.filters },
+      autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup }
     }
   } catch {
     return DEFAULT_SETTINGS

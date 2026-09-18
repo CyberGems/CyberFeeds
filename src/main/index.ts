@@ -16,6 +16,7 @@ import { initUpdater } from './updater'
 import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './notifications'
 import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
+import { initAutoBackup } from './auto-backup'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
 
@@ -447,6 +448,9 @@ app.whenReady().then(() => {
 
   // Auto-start
   setAutoStart(settings.autoStart, settings.startMinimized)
+
+  // Auto-backup scheduler
+  initAutoBackup()
 
   // Auto-update (electron-updater). No-op in dev / unpacked builds.
   initUpdater(settings)
