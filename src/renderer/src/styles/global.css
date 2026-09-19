@@ -4191,8 +4191,9 @@ mark.reader-search-match.reader-search-active {
 .update-notification-btn {
   white-space: nowrap !important;
   font-size: 11.5px !important;
-  height: 28px !important;
-  padding: 4px 10px !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 7px 12px !important;
   display: inline-flex;
   align-items: center;
   gap: 4px;

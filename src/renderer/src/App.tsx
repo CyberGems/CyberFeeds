@@ -278,9 +278,9 @@ export default function App(): JSX.Element {
   // Listen for real-time notifications to update unseen badge count
   useEffect(() => {
     const unsubBatch = window.api.onNewNotificationBatch
-      ? window.api.onNewNotificationBatch((items) => {
+      ? window.api.onNewNotificationBatch((payload) => {
           useUIStore.setState((s) => ({
-            unseenNotificationsCount: s.unseenNotificationsCount + items.length
+            unseenNotificationsCount: s.unseenNotificationsCount + payload.totalCount
           }))
         })
       : undefined

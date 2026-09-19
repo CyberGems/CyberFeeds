@@ -29,6 +29,7 @@ function formatAbsoluteTime(ts: number, locale: string): string {
 
 // ── Batch size for incremental rendering ────────────────────────────────────
 const RENDER_BATCH = 50
+const MAX_PENDING_NOTIFICATIONS = 200
 
 // ── Memoized notification card to avoid re-rendering all items on state change
 interface NotifCardProps {
@@ -245,7 +246,8 @@ export default function NotificationHistoryPanel(): JSX.Element {
 
   // ── Throttled incoming notification listener ────────────────────────────
   // Batches incoming notifications to avoid per-item re-renders
-  // when a feed poll returns many new articles at once, and caps state to historyLimit.
+  // when a feed poll returns many new articles at once, and caps transient
+  // state before it reaches the configured history limit.
   useEffect(() => {
     let pending: NotificationHistoryItem[] = []
     let timer: ReturnType<typeof setTimeout> | null = null
@@ -265,8 +267,11 @@ export default function NotificationHistoryPanel(): JSX.Element {
     }
 
     const unsubBatch = window.api.onNewNotificationBatch
-      ? window.api.onNewNotificationBatch((items: NotificationHistoryItem[]) => {
-          pending.push(...items)
+      ? window.api.onNewNotificationBatch((payload) => {
+          pending.push(...payload.items)
+          if (pending.length > MAX_PENDING_NOTIFICATIONS) {
+            pending = pending.slice(-MAX_PENDING_NOTIFICATIONS)
+          }
           if (!timer) timer = setTimeout(flush, 300)
         })
       : undefined

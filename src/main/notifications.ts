@@ -24,7 +24,10 @@ const THUMB_H = 105 // 100px img + gap
 const CARD_GAP = 6
 const CLEAR_BAR_H = 34
 const WIN_PAD = 16
+// Safety cap for transient notification queues and popup rendering. The full
+// history is still persisted according to the configured history limit.
 const HARD_CAP = 50
+const RENDERER_BATCH_CAP = HARD_CAP
 const DEFAULT_MAX_HEIGHT_PERCENT = 65
 const MIN_MAX_HEIGHT_PERCENT = 35
 const MAX_MAX_HEIGHT_PERCENT = 90
@@ -661,6 +664,9 @@ async function flushBatch(): Promise<void> {
 
 function queueForBatch(item: NotificationHistoryItem): void {
   incomingBatchQueue.push(item)
+  if (incomingBatchQueue.length > HARD_CAP) {
+    incomingBatchQueue.splice(0, incomingBatchQueue.length - HARD_CAP)
+  }
   setTrayActivity('batch', true)
 
   // When a full poll cycle is in progress, hold the batch until the cycle finishes
@@ -738,12 +744,22 @@ export async function showNotificationsBatch(items: NotificationHistoryItem[]): 
   db.addNotificationHistoryBatch(allowed)
   rebuildTrayMenu()
 
-  // 2. Notify renderer window efficiently via batch
+  // 2. Notify renderer window efficiently via a bounded batch. Keep the full
+  // count for the unseen badge, while limiting transient renderer memory.
+  const rendererItems = allowed.slice(-RENDERER_BATCH_CAP)
+  if (rendererItems.length < allowed.length) {
+    console.warn(
+      `[Notifier] Renderer batch capped at ${RENDERER_BATCH_CAP} item(s); ${allowed.length - rendererItems.length} item(s) remain in history only.`
+    )
+  }
   const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow && !w.isDestroyed())
   if (mainWin && !mainWin.isDestroyed()) {
-    mainWin.webContents.send('notifications:batch', allowed)
+    mainWin.webContents.send('notifications:batch', {
+      items: rendererItems,
+      totalCount: allowed.length
+    })
     // Send individual notifications:new for up to 5 items to avoid IPC flooding
-    for (const item of allowed.slice(0, 5)) {
+    for (const item of rendererItems.slice(0, 5)) {
       mainWin.webContents.send('notifications:new', item)
     }
   }
@@ -752,8 +768,12 @@ export async function showNotificationsBatch(items: NotificationHistoryItem[]): 
   if (settings.disableOnFullscreen) {
     const isFullscreen = await isAnyAppFullscreen()
     if (isFullscreen) {
-      console.log(`[Notifier] Suppressing popup: full screen detected. Queuing ${allowed.length} notification(s)`)
-      queuedNotifications.push(...allowed)
+      const forPopup = allowed.slice(-HARD_CAP)
+      console.log(`[Notifier] Suppressing popup: full screen detected. Queuing ${forPopup.length} notification(s)`)
+      queuedNotifications.push(...forPopup)
+      if (queuedNotifications.length > HARD_CAP) {
+        queuedNotifications.splice(0, queuedNotifications.length - HARD_CAP)
+      }
       startQueueChecker()
       return
     }

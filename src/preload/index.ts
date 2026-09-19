@@ -1,5 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import type { NotificationHistoryItem } from '../shared/types'
+
+type NotificationBatchPayload = {
+  items: NotificationHistoryItem[]
+  totalCount: number
+}
 
 const api = {
   // Feeds
@@ -124,8 +130,8 @@ const api = {
     ipcRenderer.on('notifications:new', handler)
     return () => { ipcRenderer.removeListener('notifications:new', handler) }
   },
-  onNewNotificationBatch: (cb: (items: any[]) => void) => {
-    const handler = (_: unknown, items: any[]) => cb(items)
+  onNewNotificationBatch: (cb: (payload: NotificationBatchPayload) => void) => {
+    const handler = (_: unknown, payload: NotificationBatchPayload) => cb(payload)
     ipcRenderer.on('notifications:batch', handler)
     return () => { ipcRenderer.removeListener('notifications:batch', handler) }
   },
