@@ -591,22 +591,24 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value
       setSearchInput(val)
-      if (settings.instantSearch !== false) {
-        clearTimeout(searchRef.current)
-        searchRef.current = setTimeout(() => setSearch(val), 300)
-      }
+      clearTimeout(searchRef.current)
+      searchRef.current = setTimeout(() => {
+        setSearch(val.trim())
+      }, 300)
     },
-    [settings.instantSearch, setSearch]
+    [setSearch]
   )
 
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault()
+        e.stopPropagation()
         clearTimeout(searchRef.current)
         setSearch(searchInput.trim())
       } else if (e.key === 'Escape') {
         e.preventDefault()
+        e.stopPropagation()
         clearTimeout(searchRef.current)
         setSearchInput('')
         setSearch('')
@@ -657,10 +659,13 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       if (useUIStore.getState().topbarMenuOpen) return
       if (confirmState.isOpen) return
 
-      const inArticleSearch =
-        e.target instanceof HTMLElement && Boolean(e.target.closest('[data-article-search="true"]'))
-      if (isEditableTarget(e.target) && !inArticleSearch) return
-      if (inArticleSearch && e.key !== 'ArrowDown' && e.key !== 'Enter') return
+      if (isEditableTarget(e.target)) {
+        if (e.key === 'ArrowDown') {
+          ;(e.target as HTMLElement).blur()
+          selectByIndex(0)
+        }
+        return
+      }
 
       if (e.key === 'Delete') {
         if (e.repeat) return
@@ -700,12 +705,6 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         e.preventDefault()
         e.stopPropagation()
 
-        if (inArticleSearch) {
-          ;(e.target as HTMLElement).blur()
-          selectByIndex(0)
-          return
-        }
-
         const selected = useUIStore.getState().selectedArticleId
         if (!selected) {
           selectByIndex(0)
@@ -730,12 +729,6 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
 
         e.preventDefault()
         e.stopPropagation()
-
-        if (inArticleSearch) {
-          ;(e.target as HTMLElement).blur()
-          selectByIndex(0)
-          return
-        }
 
         // Home → first article, End → last preloaded article
         if (e.key === 'Home') {
