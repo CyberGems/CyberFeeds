@@ -1751,6 +1751,17 @@ mark.reader-search-match.reader-search-active {
   }
 }
 
+/* Chromium measures container queries in CSS pixels. At 125% display scaling,
+   the normal breakpoint makes a maximized reader stack cards too early even
+   when there is enough physical space for two readable columns. */
+@media (min-resolution: 120dpi) {
+  @container welcome-content (min-width: 520px) {
+    .welcome-cards-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+
 .welcome-card {
   min-width: 0;
   background: var(--bg-1);
