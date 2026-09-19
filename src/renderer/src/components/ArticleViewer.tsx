@@ -143,11 +143,12 @@ function transformDynamicEmbeds(html: string): string {
   result = result.replace(
     /<(iframe|video|source|embed|img)\b([^>]*?)>/gi,
     (tag, tagName, attrs) => {
-      const hasValidSrc = /\bsrc=["'][^"'\s]+["']/i.test(attrs)
+      // Must not match -src in data-lazy-src / data-src
+      const hasValidSrc = /(?:^|\s)src=["'][^"'\s]+["']/i.test(attrs)
       if (!hasValidSrc) {
-        const lazyMatch = attrs.match(/\b(?:data-lazy-src|data-src|data-original|data-url)=["']([^"'\s]+)["']/i)
-        if (lazyMatch && lazyMatch[1]) {
-          return `<${tagName} src="${lazyMatch[1]}" ${attrs}>`
+        const newAttrs = attrs.replace(/\b(?:data-lazy-src|data-src|data-original|data-url)=/i, 'src=')
+        if (newAttrs !== attrs) {
+          return `<${tagName}${newAttrs}>`
         }
       }
       return tag

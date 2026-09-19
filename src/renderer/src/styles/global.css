@@ -537,8 +537,21 @@ body {
   opacity: 0.45;
 }
 .cyber-badge.no-brackets::before,
-.cyber-badge.no-brackets::after {
+.cyber-badge.no-brackets::after,
+.sidebar .cyber-badge::before,
+.sidebar .cyber-badge::after {
   content: none !important;
+}
+.sidebar .cyber-badge {
+  padding: 1.5px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+.sidebar .cyber-badge.folder-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  font-weight: 700;
+  border-radius: 6px;
 }
 .article-filter-badge {
   transition:
