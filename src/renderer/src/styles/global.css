@@ -1739,6 +1739,18 @@ mark.reader-search-match.reader-search-active {
   }
 }
 
+/* When stacked, keep each card compact instead of stretching it across the
+   entire reader column. The grid itself remains fluid for narrow panes. */
+@container welcome-content (max-width: 619px) {
+  .welcome-cards-grid {
+    justify-items: center;
+  }
+
+  .welcome-card {
+    width: min(100%, 560px);
+  }
+}
+
 .welcome-card {
   min-width: 0;
   background: var(--bg-1);
