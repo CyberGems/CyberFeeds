@@ -80,6 +80,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 🎨 Customization
 - **6 Themes**: CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)
+- **Interface Scale**: Quickly adjust the overall interface scale from the welcome panel, with detailed independent interface and reader controls in Settings
 - **Reading Preferences**: Font size, line height, max width, reading theme (Default, Sepia, Dark), and in-app YouTube playback toggle
 - **Bilingual UI**: Full English and Spanish interface
 
