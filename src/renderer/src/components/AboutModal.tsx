@@ -304,17 +304,15 @@ export default function AboutModal(): JSX.Element {
                 <span>{t.about.openFolder}</span>
               </button>
 
-              <Tooltip label={diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics} placement="bottom">
-                <button
-                  type="button"
-                  className={`btn btn-secondary about-action-btn about-diag-btn${diagCopied ? ' is-copied' : ''}`}
-                  onClick={handleCopyDiagnostics}
-                  disabled={!versions}
-                >
-                  {diagCopied ? <Check size={14} /> : <ClipboardCopy size={14} />}
-                  <span>{diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics}</span>
-                </button>
-              </Tooltip>
+              <button
+                type="button"
+                className={`btn btn-secondary about-action-btn about-diag-btn${diagCopied ? ' is-copied' : ''}`}
+                onClick={handleCopyDiagnostics}
+                disabled={!versions}
+              >
+                {diagCopied ? <Check size={14} /> : <ClipboardCopy size={14} />}
+                <span>{diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics}</span>
+              </button>
 
               <label className="toggle about-auto-update">
                 <div
