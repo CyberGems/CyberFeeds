@@ -322,11 +322,9 @@ const VIDEO_LINK_PATTERNS = [
 
 const VIDEO_CONTENT_PATTERNS = [
   '%<video%',
-  '%<iframe%',
   '%youtube.com/embed%',
   '%youtube-nocookie.com/embed%',
   '%wp-block-embed-youtube%',
-  '%wp-block-embed%',
   '%player.vimeo.com%',
   '%rumble.com/embed%',
   '%rumble_%',

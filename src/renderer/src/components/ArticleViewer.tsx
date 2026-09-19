@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import DOMPurify from 'dompurify'
-import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X, Search, ChevronUp, ChevronDown, PictureInPicture2 } from 'lucide-react'
+import { ExternalLink, Star, FileText, Share2, Check, ArrowUp, BookOpen, Play, X, Search, ChevronUp, ChevronDown, PictureInPicture2, Copy, Link2, Image as ImageIcon } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useArticlesStore } from '../store/articles.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -12,6 +12,7 @@ import type { Article } from '../types'
 import type { PipVideoPayload } from '@shared/types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
+import { copyArticleImage } from '../lib/copyImage'
 
 function formatFullDate(ts: number, lang: string): string {
   return new Date(ts).toLocaleString(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -146,7 +147,7 @@ function transformDynamicEmbeds(html: string): string {
       // Must not match -src in data-lazy-src / data-src
       const hasValidSrc = /(?:^|\s)src=["'][^"'\s]+["']/i.test(attrs)
       if (!hasValidSrc) {
-        const newAttrs = attrs.replace(/\b(?:data-lazy-src|data-src|data-original|data-url)=/i, 'src=')
+        const newAttrs = attrs.replace(/\b(?:data-lazy-src|data-src|data-original|data-url)=["']([^"'\s]+)["']/i, 'src="$1"')
         if (newAttrs !== attrs) {
           return `<${tagName}${newAttrs}>`
         }
@@ -282,6 +283,21 @@ function stripUnplayableMedia(html: string): string {
       !(wrapper.textContent || '').trim()
     ) {
       wrapper.remove()
+    }
+  }
+
+  for (const iframe of Array.from(document.querySelectorAll('iframe'))) {
+    const src = (iframe.getAttribute('src') || '').trim()
+    if (!src || !isHttpUrl(src)) {
+      const wrapper = iframe.parentElement
+      iframe.remove()
+      if (
+        wrapper &&
+        !wrapper.querySelector('img, video, iframe, a, p, li') &&
+        !(wrapper.textContent || '').trim()
+      ) {
+        wrapper.remove()
+      }
     }
   }
 
@@ -485,6 +501,27 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }, [])
 
   const [showStickyTitle, setShowStickyTitle] = useState(false)
+  const [ctx, setCtx] = useState<{
+    x: number
+    y: number
+    linkUrl?: string
+    selectedText?: string
+    imageUrl?: string
+    isTitle?: boolean
+  } | null>(null)
+
+  useEffect(() => {
+    const handleUp = (): void => setCtx(null)
+    const handleOtherMenu = (e: Event): void => {
+      if ((e as CustomEvent<string>).detail !== 'viewer') setCtx(null)
+    }
+    window.addEventListener('click', handleUp)
+    window.addEventListener('cyberfeeds:close-context-menus', handleOtherMenu)
+    return () => {
+      window.removeEventListener('click', handleUp)
+      window.removeEventListener('cyberfeeds:close-context-menus', handleOtherMenu)
+    }
+  }, [])
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [matchCount, setMatchCount] = useState(0)
@@ -507,6 +544,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   // Load article when selection changes
   useEffect(() => {
     setShowStickyTitle(false)
+    setCtx(null)
     setSearchOpen(false)
     setSearchQuery('')
     setMatchCount(0)
@@ -844,6 +882,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }, [article?.id, fullHtml, article?.content])
 
   const handleContentScroll = useCallback(() => {
+    setCtx((prev) => (prev ? null : prev))
     if (scrollRaf.current != null) return
     scrollRaf.current = requestAnimationFrame(() => {
       scrollRaf.current = undefined
@@ -1338,6 +1377,20 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                 scrollToTop()
               }
             }}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              window.dispatchEvent(
+                new CustomEvent('cyberfeeds:close-context-menus', { detail: 'viewer' })
+              )
+              setCtx({
+                x: e.clientX,
+                y: e.clientY,
+                linkUrl: article.link,
+                isTitle: true,
+                selectedText: window.getSelection()?.toString() || ''
+              })
+            }}
           >
             {(article.feedIcon || article.feedTitle) && (
               <FeedFavicon icon={article.feedIcon} title="" size={15} />
@@ -1396,9 +1449,16 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           }
           // Detect right-click on title
           const titleEl = target.closest('.reader-title')
-          const titleText = titleEl ? article.title : ''
+          const isTitle = Boolean(titleEl)
           const selectedText = window.getSelection()?.toString() ?? ''
-          window.api.showReadOnlyContextMenu(linkUrl, selectedText, imageUrl, titleText)
+          setCtx({
+            x: e.clientX,
+            y: e.clientY,
+            linkUrl: isTitle ? article.link : linkUrl,
+            imageUrl,
+            isTitle,
+            selectedText
+          })
         }}
       >
         <div className="reader-wrap" style={{ maxWidth: settings.readingMaxWidth || 720 }}>
@@ -1807,6 +1867,121 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
 
       {settings.selectionToolbarEnabled !== false && (
         <SelectionFlyout containerRef={contentRef} />
+      )}
+
+      {ctx && article && (
+        <div
+          className="ctx-menu"
+          style={{
+            left: Math.max(10, Math.min(ctx.x, window.innerWidth - 220)),
+            top: Math.max(10, Math.min(ctx.y, window.innerHeight - 240))
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {ctx.isTitle && (
+            <div
+              className="ctx-item"
+              onClick={() => {
+                navigator.clipboard.writeText(article.title)
+                setCtx(null)
+              }}
+            >
+              <Copy size={14} />
+              {t.mainProcess.webviewCtx.copyTitle}
+            </div>
+          )}
+
+          {ctx.linkUrl && (
+            <>
+              {ctx.isTitle && <div className="ctx-divider" />}
+              <div
+                className="ctx-item"
+                onClick={() => {
+                  window.api.openExternal(ctx.linkUrl!)
+                  setCtx(null)
+                }}
+              >
+                <ExternalLink size={14} />
+                {t.mainProcess.webviewCtx.openLink}
+              </div>
+              <div
+                className="ctx-item"
+                onClick={() => {
+                  navigator.clipboard.writeText(ctx.linkUrl!)
+                  setCtx(null)
+                }}
+              >
+                <Link2 size={14} />
+                {t.mainProcess.webviewCtx.copyLinkAddress}
+              </div>
+            </>
+          )}
+
+          {ctx.selectedText && ctx.selectedText.trim().length > 0 && (
+            <>
+              {(ctx.linkUrl || ctx.isTitle) && <div className="ctx-divider" />}
+              <div
+                className="ctx-item"
+                onClick={() => {
+                  navigator.clipboard.writeText(ctx.selectedText!)
+                  setCtx(null)
+                }}
+              >
+                <Copy size={14} />
+                {t.mainProcess.webviewCtx.copy}
+              </div>
+              <div
+                className="ctx-item"
+                onClick={() => {
+                  const q = encodeURIComponent(ctx.selectedText!.trim().slice(0, 500))
+                  window.api.openExternal(`https://www.google.com/search?q=${q}`)
+                  setCtx(null)
+                }}
+              >
+                <Search size={14} />
+                {t.mainProcess.webviewCtx.searchGoogle}
+              </div>
+            </>
+          )}
+
+          {ctx.imageUrl && (
+            <>
+              {(ctx.linkUrl || ctx.isTitle || (ctx.selectedText && ctx.selectedText.trim().length > 0)) && (
+                <div className="ctx-divider" />
+              )}
+              <div
+                className="ctx-item"
+                onClick={() => {
+                  const url = ctx.imageUrl
+                  setCtx(null)
+                  void copyArticleImage({ url })
+                }}
+              >
+                <ImageIcon size={14} />
+                {t.mainProcess.webviewCtx.copyImage}
+              </div>
+            </>
+          )}
+
+          {!ctx.isTitle && !ctx.linkUrl && !ctx.imageUrl && (!ctx.selectedText || ctx.selectedText.trim().length === 0) && (
+            <div
+              className="ctx-item"
+              onClick={() => {
+                const selection = window.getSelection()
+                const range = document.createRange()
+                if (contentRef.current) {
+                  range.selectNodeContents(contentRef.current)
+                  selection?.removeAllRanges()
+                  selection?.addRange(range)
+                }
+                setCtx(null)
+              }}
+            >
+              <FileText size={14} />
+              {t.mainProcess.webviewCtx.selectAll}
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
