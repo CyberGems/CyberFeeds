@@ -98,6 +98,7 @@ export interface AppSettings {
   autoPlayYouTube: boolean
   userName: string
   showWelcomeGreeting: boolean
+  showSuitePromo: boolean
   filters: FilterSettings
   autoBackup: AutoBackupSettings
 }
@@ -273,6 +274,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoPlayYouTube: false,
   userName: '',
   showWelcomeGreeting: true,
+  showSuitePromo: true,
   filters: {
     priorityKeywords: [],
     muteKeywords: [],

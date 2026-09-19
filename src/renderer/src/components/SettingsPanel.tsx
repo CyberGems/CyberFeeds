@@ -964,6 +964,26 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     </div>
                   </label>
                 </div>
+
+                <div style={{ borderTop: '1px solid var(--border-muted)', paddingTop: 12 }}>
+                  <label
+                    className="toggle"
+                    style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => update({ showSuitePromo: local.showSuitePromo === false })}
+                  >
+                    <div className={`toggle-track ${local.showSuitePromo !== false ? 'on' : ''}`}>
+                      <div className="toggle-thumb" />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)', display: 'block' }}>
+                        {t.settings.general.showSuitePromo}
+                      </span>
+                      <span className="form-hint" style={{ marginTop: 2, display: 'block' }}>
+                        {t.settings.general.showSuitePromoHint}
+                      </span>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div className="settings-card">

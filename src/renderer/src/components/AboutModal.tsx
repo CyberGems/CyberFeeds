@@ -11,10 +11,27 @@ import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
 import Tooltip from './Tooltip'
 
 import logoPng from '../../../../resources/icon.png'
+import suiteNotesPng from '../../../../resources/suite/cybernotes.png'
+import suitePastePng from '../../../../resources/suite/cyberpaste.png'
+import suiteSnapPng from '../../../../resources/suite/cybersnap.png'
+import suiteViewerPng from '../../../../resources/suite/cyberviewer.png'
 
 const REPO_URL = 'https://github.com/CyberGems/CyberFeeds'
 const HOMEPAGE_URL = 'https://cybergems.org'
 const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
+const SITE_URL = 'https://cybergems.org'
+const SUITE_URL = `${SITE_URL}/#apps`
+
+// Tira "Suite": iconos en copias LOCALES (resources/suite/) porque la app es
+// offline y no descarga nada en runtime. Si una hermana actualiza su icono,
+// copiarlo de nuevo desde su repo y reconstruir; lo peor de no hacerlo es un
+// icono desactualizado, los links siguen válidos.
+const SUITE_APPS = [
+  { slug: 'cybernotes', icon: suiteNotesPng },
+  { slug: 'cyberpaste', icon: suitePastePng },
+  { slug: 'cybersnap', icon: suiteSnapPng },
+  { slug: 'cyberviewer', icon: suiteViewerPng }
+] as const
 
 function GithubIcon({ size = 15 }: { size?: number }): JSX.Element {
   return (
@@ -71,6 +88,13 @@ export default function AboutModal(): JSX.Element {
   const { t, language } = useTranslation()
 
   const appVersion = versions?.app || ''
+
+  const suitePitches: Record<string, string> = {
+    cybernotes: t.about.suiteNotes,
+    cyberpaste: t.about.suitePaste,
+    cybersnap: t.about.suiteSnap,
+    cyberviewer: t.about.suiteViewer
+  }
 
   const handleCheck = useCallback(async (): Promise<void> => {
     setStatus({ state: 'checking' })
@@ -303,6 +327,46 @@ export default function AboutModal(): JSX.Element {
               </label>
             </div>
           </div>
+
+          {settings.showSuitePromo !== false && (
+            <div style={{ textAlign: 'left', marginTop: 10 }}>
+              <div style={{
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)',
+                marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8
+              }}>
+                <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
+                {t.about.suiteTitle}
+                <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                {SUITE_APPS.map((app) => (
+                  <Tooltip key={app.slug} label={suitePitches[app.slug]} placement="top">
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-icon"
+                      style={{ width: 40, height: 40, borderRadius: 10 }}
+                      onClick={() => window.api.openExternal(`${SITE_URL}/apps/${app.slug}/`)}
+                      aria-label={suitePitches[app.slug]}
+                    >
+                      <img src={app.icon} alt="" style={{ width: 26, height: 26, borderRadius: 6, display: 'block' }} />
+                    </button>
+                  </Tooltip>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ padding: '3px 10px', fontSize: 11, height: 26 }}
+                  onClick={() => window.api.openExternal(SUITE_URL)}
+                >
+                  {t.about.suiteMore} →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="about-modal-footer">

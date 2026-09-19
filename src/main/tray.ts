@@ -1,4 +1,5 @@
 import { Tray, Menu, app, BrowserWindow, nativeImage, globalShortcut, screen, shell, net } from 'electron'
+import fs from 'fs'
 import path from 'path'
 import { pollFeeds } from './polling'
 import { restoreMainWindow } from './index'
@@ -20,6 +21,64 @@ const cachedFrames: Electron.NativeImage[] = []
 
 const trayFaviconCache = new Map<string, Electron.NativeImage>()
 let menuRebuildTimer: NodeJS.Timeout | null = null
+
+// Submenú "Más de CyberGems": lista canónica en resources/suite/suite.json
+// (copia local generada con _Website/scripts/build-suite-json.mjs; sin red).
+// Si el archivo falta, respaldo con las 4 hermanas principales.
+type SuiteEntry = { slug: string; name: string; site: string }
+interface SuiteJsonEntry {
+  slug?: unknown
+  name?: unknown
+  site?: unknown
+}
+let suiteAppsCache: SuiteEntry[] | null = null
+function loadSuiteApps(): SuiteEntry[] {
+  if (suiteAppsCache) return suiteAppsCache
+  const fallback: SuiteEntry[] = [
+    { slug: 'cybernotes', name: 'CyberNotes', site: 'https://cybergems.org/apps/cybernotes/' },
+    { slug: 'cyberpaste', name: 'CyberPaste', site: 'https://cybergems.org/apps/cyberpaste/' },
+    { slug: 'cybersnap', name: 'CyberSnap', site: 'https://cybergems.org/apps/cybersnap/' },
+    { slug: 'cyberviewer', name: 'CyberViewer', site: 'https://cybergems.org/apps/cyberviewer/' }
+  ]
+  try {
+    const resourcesDir = path.join(__dirname, '../../resources')
+    const raw = fs.readFileSync(path.join(resourcesDir, 'suite', 'suite.json'), 'utf8')
+    const parsed = JSON.parse(raw) as { apps?: SuiteJsonEntry[] }
+    if (Array.isArray(parsed?.apps) && parsed.apps.length > 0) {
+      const list: SuiteEntry[] = parsed.apps
+        .filter((a) => a && typeof a.slug === 'string' && typeof a.name === 'string')
+        .map((a) => ({
+          slug: a.slug as string,
+          name: String(a.name),
+          site: typeof a.site === 'string' && a.site ? a.site : `https://cybergems.org/apps/${a.slug}/`
+        }))
+      suiteAppsCache = list
+      return list
+    }
+  } catch {
+    /* respaldo */
+  }
+  suiteAppsCache = fallback
+  return suiteAppsCache
+}
+
+const suiteIconCache = new Map<string, Electron.NativeImage>()
+function loadSuiteIcon(slug: string): Electron.NativeImage | undefined {
+  const cached = suiteIconCache.get(slug)
+  if (cached) return cached.isEmpty() ? undefined : cached
+  try {
+    const resourcesDir = path.join(__dirname, '../../resources')
+    const img = nativeImage.createFromPath(path.join(resourcesDir, 'suite', `${slug}.png`))
+    if (!img.isEmpty()) {
+      const resized = img.resize({ width: 16, height: 16, quality: 'best' })
+      suiteIconCache.set(slug, resized)
+      return resized
+    }
+  } catch {
+    /* sin icono */
+  }
+  return undefined
+}
 
 function scheduleMenuRebuild(): void {
   if (menuRebuildTimer) clearTimeout(menuRebuildTimer)
@@ -399,6 +458,10 @@ function buildMenu(): void {
   const iconDonate = nativeImage.createFromPath(path.join(iconsDir, 'donate.png'))
   const iconAbout = nativeImage.createFromPath(path.join(iconsDir, 'about.png'))
   const iconUpdate = nativeImage.createFromPath(path.join(iconsDir, 'update.png'))
+  const suitePng = nativeImage.createFromPath(path.join(iconsDir, 'suite.png'))
+  const iconSuite = suitePng.isEmpty()
+    ? nativeImage.createFromPath(path.join(iconsDir, 'brand.png'))
+    : suitePng.resize({ width: 16, height: 16, quality: 'best' })
 
   const brandIcon = nativeImage.createFromPath(path.join(iconsDir, 'brand.png'))
   const iconBrand = brandIcon.isEmpty()
@@ -575,6 +638,30 @@ function buildMenu(): void {
         }
       ]
     },
+    ...(settings.showSuitePromo !== false
+      ? [
+          {
+            label: t.suite,
+            icon: iconSuite,
+            submenu: [
+              ...loadSuiteApps().map((a) => ({
+                label: a.name,
+                icon: loadSuiteIcon(a.slug),
+                click: () => {
+                  void shell.openExternal(a.site)
+                }
+              })),
+              { type: 'separator' as const },
+              {
+                label: t.viewAllApps,
+                click: () => {
+                  void shell.openExternal('https://cybergems.org/#apps')
+                }
+              }
+            ]
+          }
+        ]
+      : []),
     { type: 'separator' },
     {
       label: t.quit,

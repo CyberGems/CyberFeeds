@@ -311,7 +311,9 @@ export const translations = {
         userNamePlaceholder: 'e.g. Carlos',
         userNameHint: 'Displayed in welcoming greetings across the app. Leave blank to use detected system name.',
         showWelcomeGreeting: 'Show welcoming greetings',
-        showWelcomeGreetingHint: 'Displays a friendly greeting in the titlebar and when opening the reader.'
+        showWelcomeGreetingHint: 'Displays a friendly greeting in the titlebar and when opening the reader.',
+        showSuitePromo: 'Show suite recommendations',
+        showSuitePromoHint: 'Shows the More from CyberGems strip in About and the suite entry in the tray menu.'
       },
       filters: {
         title: 'Filters & Rules',
@@ -585,7 +587,13 @@ export const translations = {
       moreInFullNotes: '+{count} more in full release notes',
       dismiss: 'Dismiss',
       portableBadge: 'Portable',
-      downloadPortableUpdate: 'Download portable release'
+      downloadPortableUpdate: 'Download portable release',
+      suiteTitle: 'More from CyberGems',
+      suiteMore: 'View all',
+      suiteNotes: 'CyberNotes: privacy-focused notes',
+      suitePaste: 'CyberPaste: clipboard history',
+      suiteSnap: 'CyberSnap: screenshots and annotations',
+      suiteViewer: 'CyberViewer: image viewer'
     },
     doctor: {
       title: 'Feeds Doctor',
@@ -713,7 +721,9 @@ export const translations = {
         donate: 'Donate',
         about: 'About...',
         checkUpdates: 'Check for Update...',
-        quit: 'Exit'
+        quit: 'Exit',
+        suite: 'More from CyberGems',
+        viewAllApps: 'View all apps...'
       },
       webviewCtx: {
         copyTitle: 'Copy title',
@@ -1074,7 +1084,9 @@ export const translations = {
         userNamePlaceholder: 'ej. Carlos',
         userNameHint: 'Se muestra en los saludos de bienvenida en la app. Déjalo en blanco para usar el nombre detectado del sistema.',
         showWelcomeGreeting: 'Mostrar saludos de bienvenida',
-        showWelcomeGreetingHint: 'Muestra un saludo amigable en la barra superior y al abrir el lector.'
+        showWelcomeGreetingHint: 'Muestra un saludo amigable en la barra superior y al abrir el lector.',
+        showSuitePromo: 'Mostrar recomendaciones de la suite',
+        showSuitePromoHint: 'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.'
       },
       filters: {
         title: 'Filtros y reglas',
@@ -1351,7 +1363,13 @@ export const translations = {
       moreInFullNotes: '+{count} más en las notas completas',
       dismiss: 'Descartar',
       portableBadge: 'Portable',
-      downloadPortableUpdate: 'Descargar versión portable'
+      downloadPortableUpdate: 'Descargar versión portable',
+      suiteTitle: 'Más de CyberGems',
+      suiteMore: 'Ver todas',
+      suiteNotes: 'CyberNotes: notas privadas',
+      suitePaste: 'CyberPaste: historial del portapapeles',
+      suiteSnap: 'CyberSnap: capturas y anotaciones',
+      suiteViewer: 'CyberViewer: visor de imágenes'
     },
     doctor: {
       title: 'Doctor de feeds',
@@ -1480,7 +1498,9 @@ export const translations = {
         donate: 'Donar',
         about: 'Acerca de...',
         checkUpdates: 'Buscar actualizaciones...',
-        quit: 'Salir'
+        quit: 'Salir',
+        suite: 'Más de CyberGems',
+        viewAllApps: 'Ver todas las apps...'
       },
       webviewCtx: {
         copyTitle: 'Copiar título',
