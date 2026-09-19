@@ -60,6 +60,25 @@ interface SuiteJsonEntry {
   name?: unknown
   site?: unknown
 }
+
+// Same short, bilingual descriptions used by the CyberNotes suite menu.
+const SUITE_SHORT_DESCRIPTIONS: Record<string, { es: string; en: string }> = {
+  cyberclock: { es: 'Reloj de escritorio', en: 'Desktop Clock' },
+  cyberfeeds: { es: 'Lector RSS', en: 'RSS Reader' },
+  cyberlauncher: { es: 'Lanzador de apps', en: 'App Launcher' },
+  cybermanager: { es: 'Administrador de tareas', en: 'Task Manager' },
+  cybernotes: { es: 'Notas', en: 'Note Taking' },
+  cyberpaste: { es: 'Portapapeles', en: 'Clipboard Manager' },
+  cybersnap: { es: 'Captura de pantalla', en: 'Screen Capture' },
+  cybertray: { es: 'Accesos directos', en: 'Shortcut Manager' },
+  cyberviewer: { es: 'Visor de imágenes', en: 'Image Viewer' },
+  cyberwall: { es: 'Firewall', en: 'Firewall' }
+}
+
+function getSuiteShortDescription(slug: string, language: 'en' | 'es'): string {
+  return SUITE_SHORT_DESCRIPTIONS[slug]?.[language] ?? ''
+}
+
 let suiteAppsCache: SuiteEntry[] | null = null
 function loadSuiteApps(): SuiteEntry[] {
   if (suiteAppsCache) return suiteAppsCache
@@ -455,6 +474,7 @@ function buildMenu(): void {
   const version = app.getVersion()
   const settings = db.getSettings()
   const lang = settings.language || 'en'
+  const suiteLanguage = lang === 'es' ? 'es' : 'en'
   const t = translations[lang].mainProcess.tray
   const shortcuts = settings.shortcuts as KeyboardShortcuts
 
@@ -664,13 +684,18 @@ function buildMenu(): void {
             label: t.suite,
             icon: iconSuite,
             submenu: [
-              ...loadSuiteApps().map((a) => ({
-                label: a.name,
-                icon: loadSuiteIcon(a.slug),
-                click: () => {
-                  void shell.openExternal(a.site)
-                }
-              })),
+              ...loadSuiteApps()
+                .filter((a) => a.slug !== 'cyberfeeds')
+                .map((a) => {
+                  const description = getSuiteShortDescription(a.slug, suiteLanguage)
+                  return {
+                    label: description ? `${a.name}: ${description}` : a.name,
+                    icon: loadSuiteIcon(a.slug),
+                    click: () => {
+                      void shell.openExternal(a.site)
+                    }
+                  }
+                }),
               { type: 'separator' as const },
               {
                 label: t.viewAllApps,

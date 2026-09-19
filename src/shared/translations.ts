@@ -723,7 +723,7 @@ export const translations = {
         checkUpdates: 'Check for Update...',
         quit: 'Exit',
         suite: 'More from CyberGems',
-        viewAllApps: 'View all apps...'
+        viewAllApps: 'More details online...'
       },
       webviewCtx: {
         copyTitle: 'Copy title',
@@ -1500,7 +1500,7 @@ export const translations = {
         checkUpdates: 'Buscar actualizaciones...',
         quit: 'Salir',
         suite: 'Más de CyberGems',
-        viewAllApps: 'Ver todas las apps...'
+        viewAllApps: 'Más detalles online...'
       },
       webviewCtx: {
         copyTitle: 'Copiar título',
