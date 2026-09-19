@@ -1,0 +1,208 @@
+"""Generate the high-DPI, unified icon family used by the Windows tray menu."""
+
+from pathlib import Path
+
+from PIL import Image, ImageDraw
+
+
+ROOT = Path(__file__).resolve().parent.parent
+OUTPUT_DIR = ROOT / 'resources' / 'menu-icons'
+LOGICAL_SIZE = 64
+SCALE = 4
+CANVAS_SIZE = LOGICAL_SIZE * SCALE
+STROKE = 5
+
+NEUTRAL = (190, 203, 217, 255)
+DANGER = (242, 113, 103, 255)
+
+
+def point(x: float, y: float) -> tuple[int, int]:
+    return round(x * SCALE), round(y * SCALE)
+
+
+def bounds(values: tuple[float, float, float, float]) -> tuple[int, int, int, int]:
+    return tuple(round(value * SCALE) for value in values)  # type: ignore[return-value]
+
+
+def line(draw: ImageDraw.ImageDraw, points: list[tuple[float, float]], color=NEUTRAL, width=STROKE) -> None:
+    draw.line([point(x, y) for x, y in points], fill=color, width=width * SCALE, joint='curve')
+
+
+def rounded_rect(draw: ImageDraw.ImageDraw, rect, radius: float, *, color=NEUTRAL, fill=None, width=STROKE) -> None:
+    draw.rounded_rectangle(
+        bounds(rect),
+        radius=round(radius * SCALE),
+        outline=color if fill is None else None,
+        fill=fill,
+        width=width * SCALE,
+    )
+
+
+def ellipse(draw: ImageDraw.ImageDraw, rect, *, color=NEUTRAL, fill=None, width=STROKE) -> None:
+    draw.ellipse(bounds(rect), outline=color if fill is None else None, fill=fill, width=width * SCALE)
+
+
+def arc(draw: ImageDraw.ImageDraw, rect, start: float, end: float, *, color=NEUTRAL, width=STROKE) -> None:
+    draw.arc(bounds(rect), start=start, end=end, fill=color, width=width * SCALE)
+
+
+def polygon(draw: ImageDraw.ImageDraw, points: list[tuple[float, float]], *, color=NEUTRAL) -> None:
+    draw.polygon([point(x, y) for x, y in points], fill=color)
+
+
+def canvas() -> tuple[Image.Image, ImageDraw.ImageDraw]:
+    image = Image.new('RGBA', (CANVAS_SIZE, CANVAS_SIZE), (0, 0, 0, 0))
+    return image, ImageDraw.Draw(image)
+
+
+def save(image: Image.Image, filename: str) -> None:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    image.resize((LOGICAL_SIZE, LOGICAL_SIZE), Image.Resampling.LANCZOS).save(OUTPUT_DIR / filename, 'PNG')
+
+
+def draw_show_hide() -> None:
+    image, draw = canvas()
+    rounded_rect(draw, (10, 12, 54, 52), 5)
+    line(draw, [(10, 23), (54, 23)])
+    save(image, 'show-hide.png')
+
+
+def draw_refresh() -> None:
+    image, draw = canvas()
+    arc(draw, (10, 10, 54, 54), 30, 280)
+    line(draw, [(47, 11), (54, 11), (54, 20)])
+    polygon(draw, [(54, 11), (42, 11), (54, 23)])
+    save(image, 'refresh.png')
+
+
+def draw_pause() -> None:
+    image, draw = canvas()
+    rounded_rect(draw, (19, 12, 28, 52), 3, fill=NEUTRAL)
+    rounded_rect(draw, (36, 12, 45, 52), 3, fill=NEUTRAL)
+    save(image, 'pause.png')
+
+
+def draw_play() -> None:
+    image, draw = canvas()
+    polygon(draw, [(22, 13), (50, 32), (22, 51)])
+    save(image, 'play-green.png')
+
+
+def draw_recent_articles() -> None:
+    image, draw = canvas()
+    rounded_rect(draw, (10, 10, 54, 54), 5)
+    line(draw, [(10, 22), (54, 22)])
+    line(draw, [(20, 32), (45, 32)])
+    line(draw, [(20, 42), (39, 42)])
+    save(image, 'recent-articles.png')
+
+
+def draw_notifications() -> None:
+    image, draw = canvas()
+    arc(draw, (18, 11, 46, 39), 180, 360)
+    line(draw, [(18, 25), (18, 38), (12, 47), (52, 47), (46, 38), (46, 25)])
+    arc(draw, (26, 43, 38, 55), 20, 160)
+    save(image, 'notifications.png')
+
+
+def draw_settings() -> None:
+    image, draw = canvas()
+    ellipse(draw, (25, 25, 39, 39))
+    for start, end in [
+        ((32, 8), (32, 18)), ((32, 46), (32, 56)), ((8, 32), (18, 32)), ((46, 32), (56, 32)),
+        ((15, 15), (22, 22)), ((42, 42), (49, 49)), ((15, 49), (22, 42)), ((42, 22), (49, 15)),
+    ]:
+        line(draw, [start, end])
+    save(image, 'settings.png')
+
+
+def draw_help() -> None:
+    image, draw = canvas()
+    ellipse(draw, (9, 9, 55, 55))
+    arc(draw, (22, 18, 42, 38), 205, 40)
+    line(draw, [(42, 28), (35, 35), (35, 40)])
+    ellipse(draw, (32, 45, 38, 51), fill=NEUTRAL)
+    save(image, 'help.png')
+
+
+def draw_faq() -> None:
+    image, draw = canvas()
+    rounded_rect(draw, (9, 11, 55, 46), 5)
+    polygon(draw, [(20, 46), (20, 55), (30, 46)])
+    arc(draw, (23, 19, 42, 37), 205, 40)
+    line(draw, [(42, 28), (35, 34), (35, 38)])
+    ellipse(draw, (32, 41, 38, 47), fill=NEUTRAL)
+    save(image, 'faq.png')
+
+
+def draw_changelog() -> None:
+    image, draw = canvas()
+    rounded_rect(draw, (15, 8, 48, 56), 4)
+    line(draw, [(36, 8), (48, 20), (36, 20), (36, 8)])
+    line(draw, [(23, 30), (41, 30)])
+    line(draw, [(23, 41), (41, 41)])
+    save(image, 'changelog.png')
+
+
+def draw_homepage() -> None:
+    image, draw = canvas()
+    line(draw, [(9, 30), (32, 11), (55, 30), (55, 53), (9, 53), (9, 30)])
+    line(draw, [(25, 53), (25, 39), (39, 39), (39, 53)])
+    save(image, 'homepage.png')
+
+
+def draw_donate() -> None:
+    image, draw = canvas()
+    arc(draw, (11, 12, 33, 35), 180, 360)
+    arc(draw, (31, 12, 53, 35), 180, 360)
+    line(draw, [(11, 24), (32, 52), (53, 24)])
+    save(image, 'donate.png')
+
+
+def draw_about() -> None:
+    image, draw = canvas()
+    ellipse(draw, (9, 9, 55, 55))
+    line(draw, [(32, 29), (32, 44)])
+    ellipse(draw, (29, 18, 35, 24), fill=NEUTRAL)
+    save(image, 'about.png')
+
+
+def draw_update() -> None:
+    image, draw = canvas()
+    line(draw, [(32, 10), (32, 40)])
+    line(draw, [(21, 29), (32, 40), (43, 29)])
+    line(draw, [(13, 53), (51, 53)])
+    save(image, 'update.png')
+
+
+def draw_suite() -> None:
+    image, draw = canvas()
+    for left, top in [(11, 11), (35, 11), (11, 35), (35, 35)]:
+        rounded_rect(draw, (left, top, left + 18, top + 18), 3)
+    save(image, 'suite.png')
+
+
+def draw_quit() -> None:
+    image, draw = canvas()
+    line(draw, [(32, 9), (32, 32)], color=DANGER)
+    arc(draw, (13, 13, 51, 55), 35, 325, color=DANGER)
+    save(image, 'quit.png')
+
+
+if __name__ == '__main__':
+    draw_show_hide()
+    draw_refresh()
+    draw_pause()
+    draw_play()
+    draw_recent_articles()
+    draw_notifications()
+    draw_settings()
+    draw_help()
+    draw_faq()
+    draw_changelog()
+    draw_homepage()
+    draw_donate()
+    draw_about()
+    draw_update()
+    draw_suite()
+    draw_quit()
