@@ -1603,12 +1603,11 @@ mark.reader-search-match.reader-search-active {
 .welcome-lounge-content {
   position: relative;
   z-index: 1;
-  max-width: 680px;
+  max-width: 540px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  container: welcome-content / inline-size;
   animation: welcomeFadeIn 0.35s ease-out forwards;
 }
 
@@ -1725,45 +1724,13 @@ mark.reader-search-match.reader-search-active {
 
 .welcome-cards-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
   width: 100%;
   text-align: left;
 }
 
-/* Keep each dashboard card readable on narrow reader columns, regardless of
-   the monitor's resolution or per-display scaling. */
-@container welcome-content (min-width: 620px) {
-  .welcome-cards-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* When stacked, keep each card compact instead of stretching it across the
-   entire reader column. The grid itself remains fluid for narrow panes. */
-@container welcome-content (max-width: 619px) {
-  .welcome-cards-grid {
-    justify-items: center;
-  }
-
-  .welcome-card {
-    width: min(100%, 420px);
-  }
-}
-
-/* Chromium measures container queries in CSS pixels. At 125% display scaling,
-   the normal breakpoint makes a maximized reader stack cards too early even
-   when there is enough physical space for two readable columns. */
-@media (min-resolution: 120dpi) {
-  @container welcome-content (min-width: 520px) {
-    .welcome-cards-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-}
-
 .welcome-card {
-  min-width: 0;
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: var(--radius);

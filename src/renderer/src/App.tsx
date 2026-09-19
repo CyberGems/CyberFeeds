@@ -32,6 +32,10 @@ export type UpdateStatus =
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
 
+const ARTICLE_LIST_MIN_WIDTH = 180
+const ARTICLE_VIEWER_MIN_WIDTH = 250
+const RESIZE_HANDLE_WIDTH = 4
+
 export default function App(): JSX.Element {
   const { loadAll, refreshUnreadCounts } = useFeedsStore()
   const { load, refresh } = useArticlesStore()
@@ -71,7 +75,22 @@ export default function App(): JSX.Element {
   const [listDragging, setListDragging] = useState(false)
   const [listRowDragging, setListRowDragging] = useState(false)
   const { startDrag: startSidebarDrag } = useColumnResize('sidebar', 220, 260, 480)
-  const { startDrag: startListDrag } = useColumnResize('articleList', 320, 180, 620)
+  // Do not cap the article list at a fixed width. On wide or high-DPI displays
+  // that leaves the reader wider than its real minimum size.
+  const getArticleListMaxWidth = useCallback(() => {
+    const mainArea = document.querySelector<HTMLElement>('.main-area')
+    const availableWidth = mainArea?.clientWidth ?? window.innerWidth
+    return Math.max(
+      ARTICLE_LIST_MIN_WIDTH,
+      availableWidth - ARTICLE_VIEWER_MIN_WIDTH - RESIZE_HANDLE_WIDTH
+    )
+  }, [])
+  const { startDrag: startListDrag } = useColumnResize(
+    'articleList',
+    320,
+    ARTICLE_LIST_MIN_WIDTH,
+    getArticleListMaxWidth
+  )
   const { startDrag: startListRowDrag } = useRowResize('articleList', 320, 160, 600)
 
   // Bootstrap
