@@ -359,6 +359,18 @@ export default function App(): JSX.Element {
   // Keyboard shortcuts
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
+        if (activePanel) return
+        e.preventDefault()
+        e.stopPropagation()
+        const searchInput = document.querySelector<HTMLInputElement>('input[data-article-search="true"]')
+        if (searchInput) {
+          searchInput.focus()
+          searchInput.select()
+        }
+        return
+      }
+
       if (e.key === 'Escape') {
         if (activePanel) {
           if (activePanel === 'settings') {
@@ -377,8 +389,8 @@ export default function App(): JSX.Element {
   )
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    window.addEventListener('keydown', handleKey, true)
+    return () => window.removeEventListener('keydown', handleKey, true)
   }, [handleKey])
 
   // Drag handlers (track active state for .active class on handle)
