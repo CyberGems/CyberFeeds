@@ -186,7 +186,7 @@ export default function AboutModal(): JSX.Element {
         className="modal about-modal"
         style={{
           width: 440,
-          maxHeight: 'min(90vh, 640px)',
+          maxHeight: 'min(90vh, 648px)',
           background: 'linear-gradient(160deg, var(--bg-1), var(--bg-0))',
           border: '1px solid var(--accent-subtle)',
           overflow: 'hidden'

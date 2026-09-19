@@ -13,6 +13,15 @@ CANVAS_SIZE = LOGICAL_SIZE * SCALE
 STROKE = 5
 
 NEUTRAL = (190, 203, 217, 255)
+DANGER = (242, 113, 103, 255)
+
+# The reference glyphs have different native proportions. These scales keep their
+# visible strokes aligned with the rest of the 16 logical-pixel menu icon family.
+REFERENCE_ICON_STYLE = {
+    'refresh.png': (NEUTRAL, 0.75),
+    'settings.png': (NEUTRAL, 1.0),
+    'quit.png': (DANGER, 0.8),
+}
 
 
 def point(x: float, y: float) -> tuple[int, int]:
@@ -59,14 +68,19 @@ def save(image: Image.Image, filename: str) -> None:
     image.resize((LOGICAL_SIZE, LOGICAL_SIZE), Image.Resampling.LANCZOS).save(OUTPUT_DIR / filename, 'PNG')
 
 
-def normalize_reference_icon(filename: str) -> None:
-    """Keep the original glyph while matching the shared neutral menu tint."""
+def normalize_reference_icon(filename: str, color: tuple[int, int, int, int], scale: float) -> None:
+    """Keep a reference glyph's silhouette while fitting it to the shared icon grid."""
     path = OUTPUT_DIR / filename
     source = Image.open(path).convert('RGBA')
-    image = Image.new('RGBA', source.size, NEUTRAL)
+    if source.size != (LOGICAL_SIZE, LOGICAL_SIZE):
+        scaled_size = round(LOGICAL_SIZE * scale)
+        source = source.resize((scaled_size, scaled_size), Image.Resampling.LANCZOS)
+        canvas_image = Image.new('RGBA', (LOGICAL_SIZE, LOGICAL_SIZE), (0, 0, 0, 0))
+        offset = (LOGICAL_SIZE - scaled_size) // 2
+        canvas_image.alpha_composite(source, (offset, offset))
+        source = canvas_image
+    image = Image.new('RGBA', source.size, color)
     image.putalpha(source.getchannel('A'))
-    if image.size != (LOGICAL_SIZE, LOGICAL_SIZE):
-        image = image.resize((LOGICAL_SIZE, LOGICAL_SIZE), Image.Resampling.LANCZOS)
     image.save(path, 'PNG')
 
 
@@ -174,8 +188,8 @@ def draw_suite() -> None:
 
 
 if __name__ == '__main__':
-    for reference_icon in ('refresh.png', 'settings.png', 'quit.png'):
-        normalize_reference_icon(reference_icon)
+    for reference_icon, (color, scale) in REFERENCE_ICON_STYLE.items():
+        normalize_reference_icon(reference_icon, color, scale)
     draw_show_hide()
     draw_pause()
     draw_play()
