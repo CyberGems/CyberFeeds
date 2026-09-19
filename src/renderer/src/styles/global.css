@@ -4344,7 +4344,7 @@ mark.reader-search-match.reader-search-active {
 
 .reader-pip-overlay-btn {
   position: absolute;
-  top: 50%;
+  top: calc(50% - 44px);
   right: 12px;
   transform: translateY(-50%);
   z-index: 25;

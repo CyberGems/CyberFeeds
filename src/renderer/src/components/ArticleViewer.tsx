@@ -139,6 +139,21 @@ function transformDynamicEmbeds(html: string): string {
   if (!html) return html
   let result = html
 
+  // 0. Promote lazy-load attributes (data-lazy-src, data-src, etc.) to src for media elements when src is missing or empty
+  result = result.replace(
+    /<(iframe|video|source|embed|img)\b([^>]*?)>/gi,
+    (tag, tagName, attrs) => {
+      const hasValidSrc = /\bsrc=["'][^"'\s]+["']/i.test(attrs)
+      if (!hasValidSrc) {
+        const lazyMatch = attrs.match(/\b(?:data-lazy-src|data-src|data-original|data-url)=["']([^"'\s]+)["']/i)
+        if (lazyMatch && lazyMatch[1]) {
+          return `<${tagName} src="${lazyMatch[1]}" ${attrs}>`
+        }
+      }
+      return tag
+    }
+  )
+
   // 1. Normalize protocol-relative URLs on media (e.g. src="//www.youtube.com/embed/..." -> src="https://www.youtube.com/embed/...")
   result = result.replace(
     /(<(?:iframe|video|embed|source)\b[^>]*\bsrc=["'])\/\/([^"']+)(["'][^>]*>)/gi,
@@ -190,7 +205,7 @@ function transformDynamicEmbeds(html: string): string {
     }
   )
 
-  // 5. Ensure YouTube and video iframes have proper permissions and referrerpolicy
+  // 5. Ensure YouTube and video iframes have proper permissions, referrerpolicy, and styling classes
   result = result.replace(
     /<iframe\b([^>]*\bsrc=["']https:\/\/(?:[a-zA-Z0-9-]+\.)?(?:youtube\.com|youtube-nocookie\.com)\/embed\/[^"']+["'][^>]*)>/gi,
     (m) => {
@@ -203,6 +218,11 @@ function transformDynamicEmbeds(html: string): string {
       }
       if (!tag.includes('referrerpolicy=')) {
         tag = tag.replace('<iframe', '<iframe referrerpolicy="strict-origin-when-cross-origin"')
+      }
+      if (!tag.includes('class=')) {
+        tag = tag.replace('<iframe', '<iframe class="reader-embed-player reader-youtube-player"')
+      } else if (!tag.includes('reader-embed-player')) {
+        tag = tag.replace(/class=["']([^"']*)["']/, 'class="$1 reader-embed-player reader-youtube-player"')
       }
       return tag
     }

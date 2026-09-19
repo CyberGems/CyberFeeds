@@ -884,16 +884,43 @@ export function registerIpc(): void {
   }
 
   // ─── Native Context Menu ─────────────────────────────────────────────────
+  const menuIconCache = new Map<string, Electron.NativeImage>()
+
+  function getMenuIcon(name: string): Electron.NativeImage | undefined {
+    if (menuIconCache.has(name)) return menuIconCache.get(name)
+    const filename = name.endsWith('.png') ? name : `${name}.png`
+    const candidates = [
+      path.join(__dirname, '../../resources/menu-icons', filename),
+      path.join(app.getAppPath(), 'resources/menu-icons', filename),
+      path.join(process.resourcesPath, 'resources/menu-icons', filename),
+      path.join(process.resourcesPath, 'app.asar.unpacked/resources/menu-icons', filename)
+    ]
+    for (const candidate of candidates) {
+      try {
+        if (fs.existsSync(candidate)) {
+          const img = nativeImage.createFromPath(candidate)
+          if (!img.isEmpty()) {
+            menuIconCache.set(name, img)
+            return img
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    return undefined
+  }
+
   ipcMain.handle('showInputContextMenu', () => {
     const lang = db.getSettings().language || 'en'
     const t = translations[lang].mainProcess.webviewCtx
     const template: MenuItemConstructorOptions[] = [
-      { role: 'cut', label: t.cut },
-      { role: 'copy', label: t.copy },
-      { role: 'paste', label: t.paste },
-      { role: 'delete', label: t.delete },
+      { role: 'cut', label: t.cut, icon: getMenuIcon('cut') },
+      { role: 'copy', label: t.copy, icon: getMenuIcon('copy') },
+      { role: 'paste', label: t.paste, icon: getMenuIcon('paste') },
+      { role: 'delete', label: t.delete, icon: getMenuIcon('delete') },
       { type: 'separator' },
-      { role: 'selectAll', label: t.selectAll }
+      { role: 'selectAll', label: t.selectAll, icon: getMenuIcon('select-all') }
     ]
     const menu = Menu.buildFromTemplate(template)
     menu.popup()
@@ -911,6 +938,7 @@ export function registerIpc(): void {
     if (title) {
       template.push({
         label: t.copyTitle,
+        icon: getMenuIcon('copy-title'),
         click: () => {
           clipboard.writeText(title)
         }
@@ -922,10 +950,12 @@ export function registerIpc(): void {
       template.push(
         {
           label: t.openLink,
+          icon: getMenuIcon('open-link'),
           click: () => openInConfiguredBrowser(linkUrl)
         },
         {
           label: t.copyLinkAddress,
+          icon: getMenuIcon('copy-link'),
           click: () => {
             clipboard.writeText(linkUrl)
           }
@@ -935,16 +965,17 @@ export function registerIpc(): void {
       if (hasSelection) {
         template.push(
           { type: 'separator' },
-          { role: 'copy', label: t.copy }
+          { role: 'copy', label: t.copy, icon: getMenuIcon('copy') }
         )
       }
     } else if (hasSelection) {
-      template.push({ role: 'copy', label: t.copy })
+      template.push({ role: 'copy', label: t.copy, icon: getMenuIcon('copy') })
     }
 
     if (hasSelection) {
       template.push({
         label: t.searchGoogle,
+        icon: getMenuIcon('search-google'),
         click: () => {
           const q = encodeURIComponent(query.slice(0, 500))
           openInConfiguredBrowser(`https://www.google.com/search?q=${q}`)
@@ -957,6 +988,7 @@ export function registerIpc(): void {
       if (template.length > 0) template.push({ type: 'separator' })
       template.push({
         label: t.copyImage,
+        icon: getMenuIcon('copy-image'),
         click: () => {
           copyImageFromPage(wc, imageUrl, '.viewer-content').catch((err) =>
             console.error('[CopyImage] Failed:', err)
@@ -970,7 +1002,7 @@ export function registerIpc(): void {
     }
 
     template.push(
-      { role: 'selectAll', label: t.selectAll }
+      { role: 'selectAll', label: t.selectAll, icon: getMenuIcon('select-all') }
     )
     const menu = Menu.buildFromTemplate(template)
     menu.popup()
