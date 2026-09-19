@@ -710,7 +710,7 @@ export const translations = {
         viewAllNotifications: 'View all articles...',
         notifications: 'Notifications panel...',
         settings: 'Configuration...',
-        updateFeeds: 'Update feeds',
+        updateFeeds: 'Refresh feeds',
         pauseFeeds: 'Pause feeds',
         resumeFeeds: 'Resume feeds',
         loadingFeeds: 'Loading feeds...',

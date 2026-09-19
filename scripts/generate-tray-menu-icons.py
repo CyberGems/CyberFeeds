@@ -1,4 +1,4 @@
-"""Generate the high-DPI, unified icon family used by the Windows tray menu."""
+"""Generate the high-DPI icon family used by the Windows tray menu."""
 
 from pathlib import Path
 
@@ -13,7 +13,6 @@ CANVAS_SIZE = LOGICAL_SIZE * SCALE
 STROKE = 5
 
 NEUTRAL = (190, 203, 217, 255)
-DANGER = (242, 113, 103, 255)
 
 
 def point(x: float, y: float) -> tuple[int, int]:
@@ -67,14 +66,6 @@ def draw_show_hide() -> None:
     save(image, 'show-hide.png')
 
 
-def draw_refresh() -> None:
-    image, draw = canvas()
-    arc(draw, (10, 10, 54, 54), 30, 280)
-    line(draw, [(47, 11), (54, 11), (54, 20)])
-    polygon(draw, [(54, 11), (42, 11), (54, 23)])
-    save(image, 'refresh.png')
-
-
 def draw_pause() -> None:
     image, draw = canvas()
     rounded_rect(draw, (19, 12, 28, 52), 3, fill=NEUTRAL)
@@ -103,17 +94,6 @@ def draw_notifications() -> None:
     line(draw, [(18, 25), (18, 38), (12, 47), (52, 47), (46, 38), (46, 25)])
     arc(draw, (26, 43, 38, 55), 20, 160)
     save(image, 'notifications.png')
-
-
-def draw_settings() -> None:
-    image, draw = canvas()
-    ellipse(draw, (25, 25, 39, 39))
-    for start, end in [
-        ((32, 8), (32, 18)), ((32, 46), (32, 56)), ((8, 32), (18, 32)), ((46, 32), (56, 32)),
-        ((15, 15), (22, 22)), ((42, 42), (49, 49)), ((15, 49), (22, 42)), ((42, 22), (49, 15)),
-    ]:
-        line(draw, [start, end])
-    save(image, 'settings.png')
 
 
 def draw_help() -> None:
@@ -182,21 +162,12 @@ def draw_suite() -> None:
     save(image, 'suite.png')
 
 
-def draw_quit() -> None:
-    image, draw = canvas()
-    line(draw, [(32, 9), (32, 32)], color=DANGER)
-    arc(draw, (13, 13, 51, 55), 35, 325, color=DANGER)
-    save(image, 'quit.png')
-
-
 if __name__ == '__main__':
     draw_show_hide()
-    draw_refresh()
     draw_pause()
     draw_play()
     draw_recent_articles()
     draw_notifications()
-    draw_settings()
     draw_help()
     draw_faq()
     draw_changelog()
@@ -205,4 +176,3 @@ if __name__ == '__main__':
     draw_about()
     draw_update()
     draw_suite()
-    draw_quit()
