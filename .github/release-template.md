@@ -6,26 +6,26 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ### ⚡ Feature & Stability Highlights
 
-- 🔍 **In-Article Text Search with Dynamic Highlighting**:
-  - Fast in-article text search accessible via `Ctrl+F` or the dedicated reader toolbar button.
-  - Non-destructive DOM `TreeWalker` text marking (`<mark class="reader-search-match">`) with zero interruption or reloading of active media.
-  - Live match counter, Next / Previous navigation (`Enter` / `Shift+Enter`), smooth centering into view, and `Escape` to close.
-  - Isolated reader body rendering via `React.memo` to eliminate DOM resets during search navigation.
-  - Fully bilingual (English and Spanish).
+- 🔍 **Faster Article Search**:
+  - Global `Ctrl+F` focuses the article search bar from anywhere in the application.
+  - Instant and Enter-to-search modes, multi-token matching, live results, and recent search history.
+  - Reader text search retains match navigation and highlighting without interrupting active media.
 
-- 📌 **Sticky Header Bar on Scroll**:
-  - Full-width reader header bar that smoothly slides down below the toolbar when scrolling past the main article title.
-  - Displays the source feed icon and article title with native tooltip metadata and quick "Back to top" action.
-  - Smoothly hides when returning to the top of the article.
+- 🎬 **Picture-in-Picture Video Player**:
+  - Continue watching supported videos in a floating desktop window while browsing the feed.
+  - Improved YouTube, JW Player, and embedded video extraction with more accurate provider detection.
+  - Reduced false positives from polls, comment boxes, social widgets, and other non-video iframes.
 
-- 🎬 **Refined Video Filter & Detection Accuracy**:
-  - Eliminated false-positive video classifications caused by generic non-video `<iframe>` elements (such as polls, comment boxes, WordPress embed cards, and social widgets).
-  - Targeted SQL filtering for verified video providers: YouTube, Vimeo, Rumble, Dailymotion, JW Player, Facebook Video, TikTok, Twitch, BitChute, Streamable, Odysee, and native `<video>` elements.
+- 💾 **Automated Backup & Restore**:
+  - Schedule automatic backups for feeds, folders, starred articles, and settings.
+  - Configure the backup folder and retention limit, restore a selected backup, or remove old backups.
 
-- ⚡ **Media Player Reliability & Playback Stability**:
-  - Protocol-relative `//` embed normalization to `https://`.
-  - YouTube player parameters and sandbox policy enhancements.
-  - Prevented background article scraping from tearing down active media playback.
+- 🖱️ **Reader and Context Menu Refinements**:
+  - Added native icons and consistent actions for copying links, titles, images, and searching selected text.
+  - Preserved active media during article updates and improved lazy-loaded iframe handling.
+
+- 🌐 **Bilingual Experience**:
+  - Search, video playback, backup management, and keyboard shortcut settings are available in English and Spanish.
 
 ---
 
