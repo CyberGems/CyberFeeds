@@ -6,26 +6,24 @@ Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high
 
 ### ⚡ Feature & Stability Highlights
 
-- 🔍 **Faster Article Search**:
-  - Global `Ctrl+F` focuses the article search bar from anywhere in the application.
-  - Instant and Enter-to-search modes, multi-token matching, live results, and recent search history.
-  - Reader text search retains match navigation and highlighting without interrupting active media.
+- 🖥️ **Responsive multi-monitor reading**:
+  - The article pane and welcome cards now use the available width correctly across different display scales.
+  - Cards stack cleanly in narrow reader panes without stretching on wide layouts.
 
-- 🎬 **Picture-in-Picture Video Player**:
-  - Continue watching supported videos in a floating desktop window while browsing the feed.
-  - Improved YouTube, JW Player, and embedded video extraction with more accurate provider detection.
-  - Reduced false positives from polls, comment boxes, social widgets, and other non-video iframes.
+- 🔎 **Fast interface-scale controls**:
+  - Adjust the overall interface scale from the welcome panel, while retaining separate controls in Settings.
+  - Reader scale changes now provide a meaningful live preview.
 
-- 💾 **Automated Backup & Restore**:
-  - Schedule automatic backups for feeds, folders, starred articles, and settings.
-  - Configure the backup folder and retention limit, restore a selected backup, or remove old backups.
+- 🛡️ **Safer background loading and updates**:
+  - Notification delivery is bounded to protect the system when a large feed library resumes after downtime.
+  - Update notices render release notes safely and use clearer, more accessible actions.
 
-- 🖱️ **Reader and Context Menu Refinements**:
-  - Added native icons and consistent actions for copying links, titles, images, and searching selected text.
-  - Preserved active media during article updates and improved lazy-loaded iframe handling.
+- 🎨 **Refined system tray menu**:
+  - Unified high-DPI tray icons, cleaner CyberGems shortcuts, and localized menu labels.
+  - Improved icon proportions and a simplified one-line app list.
 
-- 🌐 **Bilingual Experience**:
-  - Search, video playback, backup management, and keyboard shortcut settings are available in English and Spanish.
+- ✨ **Polished About panel**:
+  - Removed redundant diagnostics help text and eliminated unnecessary scrolling at the default size.
 
 ---
 
