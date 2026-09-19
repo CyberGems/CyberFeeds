@@ -1,6 +1,8 @@
 // Shared types — used by both main process and renderer
 // This file intentionally has no Electron/Node imports
 
+import { DEFAULT_INTERFACE_SCALE } from './interface-scale'
+
 export interface Folder {
   id: string
   name: string
@@ -80,6 +82,7 @@ export interface AppSettings {
   readingLineHeight: number
   readingMaxWidth: number
   readingTheme: 'default' | 'sepia' | 'dark'
+  interfaceScale: number
   sidebarFontSize: number   // px — controls sidebar items font size
   listFontSize: number       // px — controls article list font size
   notifications: NotificationSettings
@@ -219,6 +222,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   readingLineHeight: 1.7,
   readingMaxWidth: 720,
   readingTheme: 'default',
+  interfaceScale: DEFAULT_INTERFACE_SCALE,
   sidebarFontSize: 13,
   listFontSize: 13,
   notifications: {

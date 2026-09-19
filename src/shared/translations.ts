@@ -388,10 +388,15 @@ export const translations = {
         mutedCountOne: '1 muted'
       },
       fontSizes: {
-        title: 'Column Font Sizes',
+        title: 'Individual Text Sizes',
+        interfaceScaleTitle: 'Interface Scale',
+        interfaceScale: 'Interface scale: {size}%',
+        interfaceScaleHint: 'Scales the whole app. Fine-tune each text area below.',
         sidebar: 'Sidebar: {size}px',
         articleList: 'Article List: {size}px',
-        explanation: 'Column widths can be adjusted by dragging the dividers in the main layout.'
+        reader: 'Reader: {size}px',
+        readerPreview: 'This is how article text will look.',
+        explanation: 'Fine-tune the sidebar, article list, and reader independently.'
       },
       backupData: {
         explanation: 'Manage backups, feed lists, maintenance, and local data.',
@@ -748,7 +753,10 @@ export const translations = {
       openAndRead: 'Open and read',
       markAsRead: 'Mark as read',
       openFirstUnread: 'Open first unread article',
-      manageShortcuts: 'Manage keyboard shortcuts'
+      manageShortcuts: 'Manage keyboard shortcuts',
+      interfaceScale: 'Interface scale',
+      decreaseInterfaceScale: 'Decrease interface scale',
+      increaseInterfaceScale: 'Increase interface scale'
     }
   },
   es: {
@@ -1143,11 +1151,16 @@ export const translations = {
         mutedCountOne: '1 silenciado'
       },
       fontSizes: {
-        title: 'Tamaños de letra de las columnas',
-        sidebar: 'Sidebar: {size}px',
+        title: 'Tamaños de texto individuales',
+        interfaceScaleTitle: 'Escala de interfaz',
+        interfaceScale: 'Escala de interfaz: {size}%',
+        interfaceScaleHint: 'Escala toda la aplicación. Ajuste cada área de texto por separado abajo.',
+        sidebar: 'Barra lateral: {size}px',
         articleList: 'Lista de artículos: {size}px',
+        reader: 'Lector: {size}px',
+        readerPreview: 'Así se verá el texto de los artículos.',
         explanation:
-          'El ancho de las columnas se puede ajustar arrastrando los divisores en el diseño principal.'
+          'Ajuste por separado la barra lateral, la lista de artículos y el lector.'
       },
       backupData: {
         explanation: 'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.',
@@ -1507,7 +1520,10 @@ export const translations = {
       openAndRead: 'Abrir y leer',
       markAsRead: 'Marcar como leído',
       openFirstUnread: 'Abrir el primer artículo sin leer',
-      manageShortcuts: 'Administrar atajos de teclado'
+      manageShortcuts: 'Administrar atajos de teclado',
+      interfaceScale: 'Escala de interfaz',
+      decreaseInterfaceScale: 'Reducir escala de interfaz',
+      increaseInterfaceScale: 'Aumentar escala de interfaz'
     }
   }
 }

@@ -23,6 +23,7 @@ import AboutModal from './components/AboutModal'
 import DoctorPanel from './components/DoctorPanel'
 import Tooltip from './components/Tooltip'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
+import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
 
 export type UpdateStatus =
   | { state: 'checking' }
@@ -152,6 +153,10 @@ export default function App(): JSX.Element {
   }, [pendingFeedId])
 
   // Apply layout + font sizes from saved settings as CSS vars
+  useEffect(() => {
+    window.api.setZoomFactor(interfaceScaleToZoomFactor(settings.interfaceScale))
+  }, [settings.interfaceScale])
+
   useEffect(() => {
     if (settings.layout) useUIStore.setState({ layout: settings.layout })
     if (settings.unreadOnly) useUIStore.setState({ unreadOnly: settings.unreadOnly })

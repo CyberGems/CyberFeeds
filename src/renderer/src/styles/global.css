@@ -1722,6 +1722,72 @@ mark.reader-search-match.reader-search-active {
   max-width: 460px;
 }
 
+.welcome-interface-scale {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 20px 0 0;
+  padding: 4px 5px 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+  border-radius: 999px;
+  background: var(--bg-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.welcome-interface-scale-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.welcome-interface-scale-value {
+  min-width: 38px;
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.welcome-interface-scale-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.welcome-interface-scale-btn:hover:not(:disabled) {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.welcome-interface-scale-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.welcome-interface-scale-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.reader-font-preview {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text-secondary);
+}
+
 .welcome-cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

@@ -24,6 +24,13 @@ import {
 import { useTranslation } from '../hooks/useTranslation'
 import { useFeedsStore } from '../store/feeds.store'
 import { FeedFavicon } from './ArticleList'
+import {
+  INTERFACE_SCALE_MAX,
+  INTERFACE_SCALE_MIN,
+  INTERFACE_SCALE_STEP,
+  interfaceScaleToZoomFactor,
+  normalizeInterfaceScale
+} from '@shared/interface-scale'
 import logoPng from '../../../../resources/icon.png'
 
 interface DisplayInfo {
@@ -1227,6 +1234,47 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
+                <CardTitle icon={Monitor} accent={TAB_META.appearance.accent}>{t.settings.fontSizes.interfaceScaleTitle}</CardTitle>
+                <div className="form-group" style={{ marginBottom: 8 }}>
+                  <label className="form-label">
+                    {t.settings.fontSizes.interfaceScale.replace('{size}', String(normalizeInterfaceScale(local.interfaceScale)))}
+                  </label>
+                  <input
+                    type="range"
+                    min={INTERFACE_SCALE_MIN}
+                    max={INTERFACE_SCALE_MAX}
+                    step={INTERFACE_SCALE_STEP}
+                    value={normalizeInterfaceScale(local.interfaceScale)}
+                    onPointerDown={e => startPeeking(e.currentTarget)}
+                    onMouseDown={e => startPeeking(e.currentTarget)}
+                    onTouchStart={e => startPeeking(e.currentTarget)}
+                    onInput={e => startPeeking(e.currentTarget)}
+                    onKeyDown={e => {
+                      if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+                        startPeeking(e.currentTarget)
+                      }
+                    }}
+                    onBlur={e => {
+                      const overlay = e.currentTarget.closest('.panel-overlay')
+                      if (overlay) {
+                        if (peekTimer.current) clearTimeout(peekTimer.current)
+                        overlay.classList.remove('is-peeking')
+                      }
+                    }}
+                    onChange={e => {
+                      const scale = normalizeInterfaceScale(e.target.value)
+                      window.api.setZoomFactor(interfaceScaleToZoomFactor(scale))
+                      update({ interfaceScale: scale }, 400)
+                    }}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <p className="settings-card-hint" style={{ marginBottom: 0 }}>
+                  {t.settings.fontSizes.interfaceScaleHint}
+                </p>
+              </div>
+
+              <div className="settings-card">
                 <CardTitle icon={Type} accent={TAB_META.appearance.accent}>{t.settings.fontSizes.title}</CardTitle>
                 <p className="settings-card-hint">{t.settings.fontSizes.explanation}</p>
                 <div className="form-group">
@@ -1296,6 +1344,35 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     }}
                     style={{ width: '100%' }}
                   />
+                </div>
+                <div className="form-group" style={{ marginTop: 14, marginBottom: 0 }}>
+                  <label className="form-label">
+                    {t.settings.fontSizes.reader.replace('{size}', String(local.readingFontSize ?? 16))}
+                  </label>
+                  <input
+                    type="range"
+                    min={12}
+                    max={24}
+                    step={1}
+                    value={local.readingFontSize ?? 16}
+                    onChange={e => {
+                      const size = Number(e.target.value)
+                      useSettingsStore.setState((state) => ({
+                        settings: { ...state.settings, readingFontSize: size }
+                      }))
+                      update({ readingFontSize: size }, 400)
+                    }}
+                    style={{ width: '100%' }}
+                  />
+                  <p
+                    className="reader-font-preview"
+                    style={{
+                      fontSize: `${local.readingFontSize ?? 16}px`,
+                      lineHeight: local.readingLineHeight ?? 1.7
+                    }}
+                  >
+                    {t.settings.fontSizes.readerPreview}
+                  </p>
                 </div>
               </div>
             </>

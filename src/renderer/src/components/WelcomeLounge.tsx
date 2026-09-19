@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   Keyboard,
   Rss,
-  ArrowRight
+  ArrowRight,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
@@ -21,11 +23,17 @@ import {
   getGreetingText,
   formatWelcomeDate
 } from '@shared/welcome'
+import {
+  INTERFACE_SCALE_MAX,
+  INTERFACE_SCALE_MIN,
+  INTERFACE_SCALE_STEP,
+  normalizeInterfaceScale
+} from '@shared/interface-scale'
 import logoPng from '../../../../resources/icon.png'
 
 const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   const { t, language } = useTranslation()
-  const { settings } = useSettingsStore()
+  const { settings, update } = useSettingsStore()
   const {
     detectedUserName,
     openUserNameSettings,
@@ -84,6 +92,11 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
     if (timeOfDay === 'afternoon') return Sun
     return Moon
   }, [timeOfDay])
+
+  const interfaceScale = normalizeInterfaceScale(settings.interfaceScale)
+  const adjustInterfaceScale = useCallback((amount: number): void => {
+    update({ interfaceScale: normalizeInterfaceScale(interfaceScale + amount) })
+  }, [interfaceScale, update])
 
   return (
     <div className="welcome-lounge" role="region" aria-label={greeting}>
@@ -223,6 +236,31 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="welcome-interface-scale" role="group" aria-label={t.welcome.interfaceScale}>
+          <span className="welcome-interface-scale-label">{t.welcome.interfaceScale}</span>
+          <button
+            type="button"
+            className="welcome-interface-scale-btn"
+            onClick={() => adjustInterfaceScale(-INTERFACE_SCALE_STEP)}
+            disabled={interfaceScale <= INTERFACE_SCALE_MIN}
+            aria-label={t.welcome.decreaseInterfaceScale}
+            title={t.welcome.decreaseInterfaceScale}
+          >
+            <ZoomOut size={13} />
+          </button>
+          <output className="welcome-interface-scale-value">{interfaceScale}%</output>
+          <button
+            type="button"
+            className="welcome-interface-scale-btn"
+            onClick={() => adjustInterfaceScale(INTERFACE_SCALE_STEP)}
+            disabled={interfaceScale >= INTERFACE_SCALE_MAX}
+            aria-label={t.welcome.increaseInterfaceScale}
+            title={t.welcome.increaseInterfaceScale}
+          >
+            <ZoomIn size={13} />
+          </button>
         </div>
       </div>
     </div>

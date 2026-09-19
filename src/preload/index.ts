@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webFrame } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { NotificationHistoryItem } from '../shared/types'
 
@@ -8,6 +8,11 @@ type NotificationBatchPayload = {
 }
 
 const api = {
+  setZoomFactor: (factor: number) => {
+    const safeFactor = Number.isFinite(factor) ? Math.min(1.25, Math.max(0.8, factor)) : 1
+    webFrame.setZoomFactor(safeFactor)
+  },
+
   // Feeds
   getFeeds: () => ipcRenderer.invoke('feeds:getAll'),
   addFeed: (url: string, folderId: string, customTitle?: string) => ipcRenderer.invoke('feeds:add', url, folderId, customTitle),
