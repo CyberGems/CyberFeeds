@@ -22,6 +22,73 @@ const cachedFrames: Electron.NativeImage[] = []
 const trayFaviconCache = new Map<string, Electron.NativeImage>()
 let menuRebuildTimer: NodeJS.Timeout | null = null
 
+type TrayMenuIcon =
+  | 'showHide'
+  | 'refresh'
+  | 'pause'
+  | 'play'
+  | 'recentArticles'
+  | 'notifications'
+  | 'settings'
+  | 'help'
+  | 'faq'
+  | 'changelog'
+  | 'homepage'
+  | 'donate'
+  | 'about'
+  | 'update'
+  | 'suite'
+  | 'quit'
+
+type TrayMenuIconTone = 'neutral' | 'danger'
+
+const trayMenuIconCache = new Map<string, Electron.NativeImage>()
+
+// Native Windows menus render these at a DPI-dependent physical size. Keeping
+// the source vector-based gives every command the same rounded, 1.8px stroke.
+const TRAY_MENU_ICON_PATHS: Record<TrayMenuIcon, string> = {
+  showHide: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 9h16"/>',
+  refresh: '<path d="M20 8V4h-4"/><path d="M20 4a9 9 0 1 0 1.8 9.4"/>',
+  pause: '<path d="M9 5v14M15 5v14"/>',
+  play: '<path d="m8 5 11 7-11 7z"/>',
+  recentArticles: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 9h16M8 13h8M8 16h5"/>',
+  notifications: '<path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9 7 7M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.7 1.2c-.8 1.1-2.3 1.4-2.3 3"/><path d="M12 17h.01"/>',
+  faq: '<path d="M5 5h14v11H9l-4 3z"/><path d="M9.5 9.5a2.5 2.5 0 1 1 4.5 1.5c-.8.8-2 1-2 2.2M12 14.5h.01"/>',
+  changelog: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v5h4M10 12h5M10 16h5"/>',
+  homepage: '<path d="m3 11 9-7 9 7v9H3z"/><path d="M9 20v-5h6v5"/>',
+  donate: '<path d="M20.8 8.1a5.1 5.1 0 0 0-8.8-3.5 5.1 5.1 0 0 0-8.8 3.5C3.2 14.5 12 20 12 20s8.8-5.5 8.8-11.9z"/>',
+  about: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  update: '<path d="M12 3v11M8 10l4 4 4-4M5 20h14"/>',
+  suite: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
+  quit: '<path d="M12 3v9M7.1 5.6a8 8 0 1 0 9.8 0"/>'
+}
+
+function getTrayMenuIcon(name: TrayMenuIcon, tone: TrayMenuIconTone = 'neutral'): Electron.NativeImage {
+  let scale = screen.getPrimaryDisplay().scaleFactor
+  try {
+    if (tray && !tray.isDestroyed()) {
+      const bounds = tray.getBounds()
+      scale = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y }).scaleFactor
+    }
+  } catch {
+    // Keep the primary display scale as a safe fallback.
+  }
+  const size = Math.max(16, Math.round(16 * scale))
+  const cacheKey = `${name}:${tone}:${size}`
+  const cached = trayMenuIconCache.get(cacheKey)
+  if (cached) return cached
+
+  const color = tone === 'danger' ? '#F07167' : '#B8C5D3'
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${TRAY_MENU_ICON_PATHS[name]}</svg>`
+  const image = nativeImage
+    .createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`)
+    .resize({ width: size, height: size, quality: 'best' })
+  trayMenuIconCache.set(cacheKey, image)
+  return image
+}
+
 // Submenú "Más de CyberGems": lista canónica en resources/suite/suite.json
 // (copia local generada con _Website/scripts/build-suite-json.mjs; sin red).
 // Si el archivo falta, respaldo con las 4 hermanas principales.
@@ -437,31 +504,22 @@ function buildMenu(): void {
 
   const resourcesDir = path.join(__dirname, '../../resources')
   const iconsDir = path.join(resourcesDir, 'menu-icons')
-  const iconShowHide = nativeImage.createFromPath(path.join(iconsDir, 'show-hide.png'))
-  const iconNotifications = nativeImage.createFromPath(path.join(iconsDir, 'notifications.png'))
-  const iconSettings = nativeImage.createFromPath(path.join(iconsDir, 'settings.png'))
-  const refreshIcon = nativeImage.createFromPath(path.join(iconsDir, 'refresh.png'))
-  const iconFetch = refreshIcon.isEmpty()
-    ? nativeImage.createFromPath(path.join(iconsDir, 'fetch.png'))
-    : refreshIcon
-  const neutralPause = nativeImage.createFromPath(path.join(iconsDir, 'pause.png'))
-  const iconPause = neutralPause.isEmpty()
-    ? nativeImage.createFromPath(path.join(iconsDir, 'pause-blue.png'))
-    : neutralPause
-  const iconPlay = nativeImage.createFromPath(path.join(iconsDir, 'play-green.png'))
-  const iconQuit = nativeImage.createFromPath(path.join(iconsDir, 'quit.png'))
-
-  const iconHelp = nativeImage.createFromPath(path.join(iconsDir, 'help.png'))
-  const iconFaq = nativeImage.createFromPath(path.join(iconsDir, 'faq.png'))
-  const iconChangelog = nativeImage.createFromPath(path.join(iconsDir, 'changelog.png'))
-  const iconHome = nativeImage.createFromPath(path.join(iconsDir, 'homepage.png'))
-  const iconDonate = nativeImage.createFromPath(path.join(iconsDir, 'donate.png'))
-  const iconAbout = nativeImage.createFromPath(path.join(iconsDir, 'about.png'))
-  const iconUpdate = nativeImage.createFromPath(path.join(iconsDir, 'update.png'))
-  const suitePng = nativeImage.createFromPath(path.join(iconsDir, 'suite.png'))
-  const iconSuite = suitePng.isEmpty()
-    ? nativeImage.createFromPath(path.join(iconsDir, 'brand.png'))
-    : suitePng.resize({ width: 16, height: 16, quality: 'best' })
+  const iconShowHide = getTrayMenuIcon('showHide')
+  const iconFetch = getTrayMenuIcon('refresh')
+  const iconPause = getTrayMenuIcon('pause')
+  const iconPlay = getTrayMenuIcon('play')
+  const iconRecentArticles = getTrayMenuIcon('recentArticles')
+  const iconNotifications = getTrayMenuIcon('notifications')
+  const iconSettings = getTrayMenuIcon('settings')
+  const iconHelp = getTrayMenuIcon('help')
+  const iconFaq = getTrayMenuIcon('faq')
+  const iconChangelog = getTrayMenuIcon('changelog')
+  const iconHome = getTrayMenuIcon('homepage')
+  const iconDonate = getTrayMenuIcon('donate')
+  const iconAbout = getTrayMenuIcon('about')
+  const iconUpdate = getTrayMenuIcon('update')
+  const iconSuite = getTrayMenuIcon('suite')
+  const iconQuit = getTrayMenuIcon('quit', 'danger')
 
   const brandIcon = nativeImage.createFromPath(path.join(iconsDir, 'brand.png'))
   const iconBrand = brandIcon.isEmpty()
@@ -521,7 +579,7 @@ function buildMenu(): void {
     },
     {
       label: recentLabel,
-      icon: iconNotifications,
+      icon: iconRecentArticles,
       submenu:
         recentArticles.length === 0
           ? [
@@ -551,7 +609,7 @@ function buildMenu(): void {
               { type: 'separator' as const },
               {
                 label: t.viewAllArticles,
-                icon: iconShowHide,
+                icon: iconRecentArticles,
                 click: () => {
                   const win = _mainWindow
                   if (!win || win.isDestroyed()) return
