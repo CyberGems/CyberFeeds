@@ -262,7 +262,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     fetch: { enabled: false, accelerator: '', global: false }
   },
   autoFetchFullContent: true,
-  instantSearch: false,
+  instantSearch: true,
   selectionToolbarEnabled: true,
   autoPlayYouTube: false,
   userName: '',

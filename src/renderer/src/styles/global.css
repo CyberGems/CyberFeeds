@@ -543,15 +543,15 @@ body {
   content: none !important;
 }
 .sidebar .cyber-badge {
-  padding: 1.5px 6px;
-  border-radius: 6px;
+  padding: 2px 9px !important;
+  border-radius: 8px;
   letter-spacing: 0.02em;
 }
 .sidebar .cyber-badge.folder-badge {
   font-size: 10px;
-  padding: 2px 7px;
+  padding: 2.5px 10px !important;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 .article-filter-badge {
   transition:

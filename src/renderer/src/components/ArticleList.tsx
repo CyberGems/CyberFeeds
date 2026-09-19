@@ -591,7 +591,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value
       setSearchInput(val)
-      if (settings.instantSearch) {
+      if (settings.instantSearch !== false) {
         clearTimeout(searchRef.current)
         searchRef.current = setTimeout(() => setSearch(val), 300)
       }
@@ -870,7 +870,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
               width: '100%'
             }}
             placeholder={
-              !settings.instantSearch && isSearchFocused
+              settings.instantSearch === false && isSearchFocused
                 ? t.articleList.searchFocusedPlaceholder
                 : t.articleList.searchPlaceholder
             }

@@ -284,7 +284,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           <span className="item-label">{t.sidebar.unreadArticles}</span>
           {totalUnread > 0 && (
             <Tooltip label={formatCountBreakdown(totalUnread, totalAll, t)} placement="right">
-              <div className="cyber-badge" style={{ fontSize: 9, padding: '1px 4px' }}>
+              <div className="cyber-badge" style={{ fontSize: 9 }}>
                 {formatNum(totalUnread)}
               </div>
             </Tooltip>
@@ -300,7 +300,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           <span className="item-label">{t.sidebar.readArticles}</span>
           {totalRead > 0 && (
             <Tooltip label={formatCountBreakdown(0, totalRead, t)} placement="right">
-              <div className="cyber-badge" style={{ fontSize: 9, padding: '1px 4px' }}>
+              <div className="cyber-badge" style={{ fontSize: 9 }}>
                 {formatNum(totalRead)}
               </div>
             </Tooltip>
@@ -315,7 +315,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           <Star size={15} className="smart-nav-icon star-icon" />
           <span className="item-label">{t.sidebar.favorites}</span>
           {totalStarred > 0 && (
-            <div className="cyber-badge" style={{ fontSize: 9, padding: '1px 4px' }}>
+            <div className="cyber-badge" style={{ fontSize: 9 }}>
               {formatNum(totalStarred)}
             </div>
           )}
@@ -335,7 +335,7 @@ const Sidebar = memo(function Sidebar(): JSX.Element {
           <Trash2 size={15} className="smart-nav-icon" />
           <span className="item-label">{t.sidebar.trash}</span>
           {trashCount > 0 && (
-            <div className="cyber-badge trash-badge" style={{ fontSize: 9, padding: '1px 4px' }}>
+            <div className="cyber-badge trash-badge" style={{ fontSize: 9 }}>
               {formatNum(trashCount)}
             </div>
           )}
@@ -959,7 +959,7 @@ const FeedItem = memo(function FeedItem({
           <Tooltip label={formatCountBreakdown(unread, total, t)} placement="right">
             <div
               className="cyber-badge"
-              style={{ fontSize: 9, padding: '1px 4px', opacity: feed.disabled ? 0.5 : 1 }}
+              style={{ fontSize: 9, opacity: feed.disabled ? 0.5 : 1 }}
             >
               {formatNum(unread)}
             </div>

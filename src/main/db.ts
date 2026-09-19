@@ -367,6 +367,35 @@ function buildVideoClause(): { sql: string; params: string[] } {
   }
 }
 
+function buildSearchClause(search: string): { sql: string; params: string[] } {
+  const trimmed = search.trim()
+  if (!trimmed) return { sql: '', params: [] }
+
+  const tokens: string[] = []
+  const regex = /"([^"]+)"|(\S+)/g
+  let match: RegExpExecArray | null
+  while ((match = regex.exec(trimmed)) !== null) {
+    const token = (match[1] || match[2]).trim()
+    if (token) tokens.push(token)
+  }
+
+  if (tokens.length === 0) return { sql: '', params: [] }
+
+  const clauses: string[] = []
+  const params: string[] = []
+
+  for (const token of tokens) {
+    clauses.push('(a.title LIKE ? OR a.snippet LIKE ? OR a.content LIKE ? OR a.author LIKE ? OR f.title LIKE ?)')
+    const term = `%${token}%`
+    params.push(term, term, term, term, term)
+  }
+
+  return {
+    sql: ` AND (${clauses.join(' AND ')})`,
+    params
+  }
+}
+
 export function getArticles(query: ArticleQuery = {}): Article[] {
   const {
     feedId,
@@ -396,9 +425,9 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
   if (readOnly) { sql += ' AND a.read = 1' }
   if (starredOnly) { sql += ' AND a.starred = 1' }
   if (search) {
-    sql += ' AND (a.title LIKE ? OR a.snippet LIKE ? OR a.author LIKE ?)'
-    const term = `%${search}%`
-    params.push(term, term, term)
+    const searchClause = buildSearchClause(search)
+    sql += searchClause.sql
+    params.push(...searchClause.params)
   }
 
   if (timeRange === 'today') {
@@ -462,7 +491,7 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
     priorityKeywords,
     muteKeywords
   } = query
-  let sql = 'SELECT COUNT(*) as c FROM articles a WHERE 1=1'
+  let sql = 'SELECT COUNT(*) as c FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1'
   const params: (string | number)[] = []
   sql += trashOnly ? ' AND a.deletedAt IS NOT NULL' : ' AND a.deletedAt IS NULL'
   if (feedId) { sql += ' AND a.feedId = ?'; params.push(feedId) }
@@ -470,9 +499,9 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
   if (readOnly) { sql += ' AND a.read = 1' }
   if (starredOnly) { sql += ' AND a.starred = 1' }
   if (search) {
-    sql += ' AND (a.title LIKE ? OR a.snippet LIKE ? OR a.author LIKE ?)'
-    const term = `%${search}%`
-    params.push(term, term, term)
+    const searchClause = buildSearchClause(search)
+    sql += searchClause.sql
+    params.push(...searchClause.params)
   }
 
   if (timeRange === 'today') {
@@ -686,9 +715,9 @@ export function deleteAllFilteredArticles(query: ArticleQuery = {}): void {
   if (readOnly) sql += ' AND read = 1'
   if (starredOnly) sql += ' AND starred = 1'
   if (search) {
-    sql += ' AND (title LIKE ? OR snippet LIKE ? OR author LIKE ?)'
-    const term = `%${search}%`
-    params.push(term, term, term)
+    const searchClause = buildSearchClause(search)
+    sql += ` AND id IN (SELECT a.id FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1 ${searchClause.sql})`
+    params.push(...searchClause.params)
   }
 
   db.prepare(sql).run(...params)
