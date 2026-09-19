@@ -59,6 +59,17 @@ def save(image: Image.Image, filename: str) -> None:
     image.resize((LOGICAL_SIZE, LOGICAL_SIZE), Image.Resampling.LANCZOS).save(OUTPUT_DIR / filename, 'PNG')
 
 
+def normalize_reference_icon(filename: str) -> None:
+    """Keep the original glyph while matching the shared neutral menu tint."""
+    path = OUTPUT_DIR / filename
+    source = Image.open(path).convert('RGBA')
+    image = Image.new('RGBA', source.size, NEUTRAL)
+    image.putalpha(source.getchannel('A'))
+    if image.size != (LOGICAL_SIZE, LOGICAL_SIZE):
+        image = image.resize((LOGICAL_SIZE, LOGICAL_SIZE), Image.Resampling.LANCZOS)
+    image.save(path, 'PNG')
+
+
 def draw_show_hide() -> None:
     image, draw = canvas()
     rounded_rect(draw, (10, 12, 54, 52), 5)
@@ -163,6 +174,8 @@ def draw_suite() -> None:
 
 
 if __name__ == '__main__':
+    for reference_icon in ('refresh.png', 'settings.png', 'quit.png'):
+        normalize_reference_icon(reference_icon)
     draw_show_hide()
     draw_pause()
     draw_play()

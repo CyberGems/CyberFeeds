@@ -689,9 +689,7 @@ function buildMenu(): void {
                 .map((a) => {
                   const description = getSuiteShortDescription(a.slug, suiteLanguage)
                   return {
-                    label: a.name,
-                    // Windows renders a sublabel as secondary text where the native menu supports it.
-                    sublabel: description ? `— ${description}` : undefined,
+                    label: description ? `${a.name} — ${description}` : a.name,
                     icon: loadSuiteIcon(a.slug),
                     click: () => {
                       void shell.openExternal(a.site)
