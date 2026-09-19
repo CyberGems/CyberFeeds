@@ -1747,7 +1747,7 @@ mark.reader-search-match.reader-search-active {
   }
 
   .welcome-card {
-    width: min(100%, 560px);
+    width: min(100%, 420px);
   }
 }
 
