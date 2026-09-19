@@ -880,7 +880,8 @@ export function getSettings(): AppSettings {
       notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications },
       shortcuts: { ...DEFAULT_SETTINGS.shortcuts, ...parsed.shortcuts },
       filters: { ...DEFAULT_SETTINGS.filters, ...parsed.filters },
-      autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup }
+      autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup },
+      recentSearches: Array.isArray(parsed.recentSearches) ? parsed.recentSearches : []
     }
   } catch {
     return DEFAULT_SETTINGS

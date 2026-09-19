@@ -1039,9 +1039,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <label
                   className="toggle"
                   style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
-                  onClick={() => update({ instantSearch: !local.instantSearch })}
+                  onClick={() => update({ instantSearch: local.instantSearch === false ? true : false })}
                 >
-                  <div className={`toggle-track ${local.instantSearch ? 'on' : ''}`}>
+                  <div className={`toggle-track ${local.instantSearch !== false ? 'on' : ''}`}>
                     <div className="toggle-thumb" />
                   </div>
                   <span style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.3 }}>

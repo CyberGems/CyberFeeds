@@ -21,7 +21,8 @@ import {
   X,
   Plus,
   Download,
-  Clock
+  Clock,
+  History
 } from 'lucide-react'
 import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
@@ -186,6 +187,20 @@ const FeedFavicon = memo(function FeedFavicon({
 
 const formatNum = (val: number): string => String(val).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
 
+function recordRecentSearch(current: string[] | undefined, query: string, limit = 10): string[] {
+  const trimmed = query.trim()
+  if (!trimmed) return current || []
+  const list = current ? [...current] : []
+  const filtered = list.filter((item) => item.toLowerCase() !== trimmed.toLowerCase())
+  filtered.unshift(trimmed)
+  return filtered.slice(0, limit)
+}
+
+function removeRecentSearch(current: string[] | undefined, query: string): string[] {
+  const trimmed = query.trim().toLowerCase()
+  return (current || []).filter((item) => item.toLowerCase() !== trimmed)
+}
+
 const ArticleList = memo(function ArticleList(): JSX.Element {
   const {
     articles,
@@ -233,14 +248,15 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     fetchFeed,
     fetchFolder
   } = useFeedsStore()
-  const { settings, togglePolling } = useSettingsStore()
+  const { settings, togglePolling, update } = useSettingsStore()
   const { t } = useTranslation()
   const [searchInput, setSearchInput] = useState(search)
-  const [isSearchFocused, setIsSearchFocused] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [importingOpml, setImportingOpml] = useState(false)
   const [opmlMessage, setOpmlMessage] = useState('')
   const parentRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const historyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const prevSelectedId = useRef<string | null>(null)
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm()
 
@@ -587,16 +603,47 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     }
   }, [lastVirtualIndex, articles.length, loadingMore, totalCount, loadMore])
 
+  const commitSearchHistory = useCallback(
+    (query: string) => {
+      if (historyTimerRef.current) clearTimeout(historyTimerRef.current)
+      const trimmed = query.trim()
+      if (!trimmed) return
+      const current = settings.recentSearches || []
+      const updated = recordRecentSearch(current, trimmed)
+      update({ recentSearches: updated })
+    },
+    [settings.recentSearches, update]
+  )
+
+  const scheduleSearchHistory = useCallback(
+    (query: string) => {
+      if (historyTimerRef.current) clearTimeout(historyTimerRef.current)
+      const trimmed = query.trim()
+      if (trimmed.length >= 2) {
+        historyTimerRef.current = setTimeout(() => {
+          commitSearchHistory(trimmed)
+        }, 750)
+      }
+    },
+    [commitSearchHistory]
+  )
+
   const handleSearch = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value
       setSearchInput(val)
       clearTimeout(searchRef.current)
-      searchRef.current = setTimeout(() => {
-        setSearch(val.trim())
-      }, 300)
+      if (settings.instantSearch !== false) {
+        searchRef.current = setTimeout(() => {
+          setSearch(val.trim())
+          scheduleSearchHistory(val)
+        }, 300)
+      } else if (val === '') {
+        // Clearing resets search even when instantSearch is disabled
+        setSearch('')
+      }
     },
-    [setSearch]
+    [setSearch, settings.instantSearch, scheduleSearchHistory]
   )
 
   const handleSearchKeyDown = useCallback(
@@ -606,28 +653,48 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         e.stopPropagation()
         clearTimeout(searchRef.current)
         setSearch(searchInput.trim())
+        commitSearchHistory(searchInput)
+        setHistoryOpen(false)
       } else if (e.key === 'Escape') {
         e.preventDefault()
         e.stopPropagation()
+        if (historyOpen) {
+          setHistoryOpen(false)
+          return
+        }
         clearTimeout(searchRef.current)
+        if (historyTimerRef.current) clearTimeout(historyTimerRef.current)
         setSearchInput('')
         setSearch('')
         e.currentTarget.blur()
+      } else if (e.key === 'ArrowDown' && !historyOpen) {
+        if ((settings.recentSearches || []).length > 0) {
+          e.preventDefault()
+          setHistoryOpen(true)
+        }
       }
     },
-    [searchInput, setSearch]
+    [searchInput, setSearch, commitSearchHistory, historyOpen, settings.recentSearches]
   )
 
   const handleClearSearch = useCallback(() => {
     clearTimeout(searchRef.current)
+    if (historyTimerRef.current) clearTimeout(historyTimerRef.current)
     setSearchInput('')
     setSearch('')
+    setHistoryOpen(false)
   }, [setSearch])
 
   useEffect(() => {
-    const handleUp = () => setCtx(null)
+    const handleUp = () => {
+      setCtx(null)
+      setHistoryOpen(false)
+    }
     const handleOtherMenu = (e: Event): void => {
-      if ((e as CustomEvent<string>).detail !== 'articleList') setCtx(null)
+      if ((e as CustomEvent<string>).detail !== 'articleList') {
+        setCtx(null)
+        setHistoryOpen(false)
+      }
     }
     window.addEventListener('click', handleUp)
     window.addEventListener('cyberfeeds:close-context-menus', handleOtherMenu)
@@ -859,48 +926,215 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
             data-article-search="true"
             style={{
               paddingLeft: 28,
-              paddingRight: searchInput ? 26 : 10,
+              paddingRight: searchInput ? 48 : 28,
               width: '100%'
             }}
             placeholder={
-              settings.instantSearch === false && isSearchFocused
-                ? t.articleList.searchFocusedPlaceholder
+              settings.instantSearch === false
+                ? t.articleList.searchPlaceholderEnter
                 : t.articleList.searchPlaceholder
             }
             value={searchInput}
             onChange={handleSearch}
             onKeyDown={handleSearchKeyDown}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
           />
-          {searchInput ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={handleClearSearch}
+          <div
+            style={{
+              position: 'absolute',
+              right: 5,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              zIndex: 3
+            }}
+          >
+            {searchInput ? (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={handleClearSearch}
+                style={{
+                  padding: 0,
+                  width: 18,
+                  height: 18,
+                  minWidth: 18,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '50%'
+                }}
+                aria-label="Clear search"
+              >
+                <X size={12} />
+              </button>
+            ) : null}
+
+            <Tooltip label={t.articleList.searchHistory} placement="bottom">
+              <button
+                type="button"
+                className={`btn btn-ghost${historyOpen ? ' is-active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  window.dispatchEvent(
+                    new CustomEvent('cyberfeeds:close-context-menus', { detail: 'articleList' })
+                  )
+                  setHistoryOpen((prev) => !prev)
+                }}
+                style={{
+                  padding: 0,
+                  width: 20,
+                  height: 20,
+                  minWidth: 20,
+                  border: 'none',
+                  background: historyOpen ? 'var(--accent-subtle)' : 'transparent',
+                  color: historyOpen ? 'var(--accent)' : 'var(--text-muted)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 4
+                }}
+                aria-label={t.articleList.searchHistory}
+              >
+                <History size={13} />
+              </button>
+            </Tooltip>
+          </div>
+
+          {historyOpen && (
+            <div
+              className="ctx-menu search-history-dropdown"
               style={{
                 position: 'absolute',
-                right: 5,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                padding: 0,
-                width: 18,
-                height: 18,
-                minWidth: 18,
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--text-muted)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: '50%'
+                top: 'calc(100% + 4px)',
+                left: 0,
+                right: 0,
+                minWidth: 220,
+                maxHeight: 280,
+                overflowY: 'auto',
+                zIndex: 1000
               }}
-              aria-label="Clear search"
+              onClick={(e) => e.stopPropagation()}
             >
-              <X size={12} />
-            </button>
-          ) : null}
+              <div
+                style={{
+                  padding: '5px 8px 3px',
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'var(--text-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  userSelect: 'none'
+                }}
+              >
+                <span>{t.articleList.recentSearches}</span>
+                {(settings.recentSearches || []).length > 0 && (
+                  <span
+                    style={{
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      fontSize: 10,
+                      fontWeight: 500,
+                      textTransform: 'none'
+                    }}
+                    onClick={() => {
+                      update({ recentSearches: [] })
+                    }}
+                    title={t.articleList.clearSearchHistory}
+                  >
+                    {t.articleList.clearSearchHistory}
+                  </span>
+                )}
+              </div>
+
+              {(settings.recentSearches || []).length === 0 ? (
+                <div
+                  style={{
+                    padding: '10px 8px',
+                    fontSize: 12,
+                    color: 'var(--text-muted)',
+                    textAlign: 'center',
+                    userSelect: 'none'
+                  }}
+                >
+                  {t.articleList.noRecentSearches}
+                </div>
+              ) : (
+                (settings.recentSearches || []).map((query) => (
+                  <div
+                    key={query}
+                    className="ctx-item"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0 8px',
+                      minHeight: 28
+                    }}
+                    onClick={() => {
+                      setSearchInput(query)
+                      setSearch(query)
+                      commitSearchHistory(query)
+                      setHistoryOpen(false)
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flex: 1
+                      }}
+                    >
+                      <History size={12} style={{ flexShrink: 0 }} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {query}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      style={{
+                        padding: 0,
+                        height: 18,
+                        width: 18,
+                        minWidth: 18,
+                        opacity: 0.6,
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: 3
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const updated = removeRecentSearch(settings.recentSearches, query)
+                        update({ recentSearches: updated })
+                      }}
+                      title={t.articleList.deleteSearchHistoryItem}
+                      aria-label={t.articleList.deleteSearchHistoryItem}
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         <Tooltip

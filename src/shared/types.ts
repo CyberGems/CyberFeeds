@@ -90,6 +90,7 @@ export interface AppSettings {
   shortcuts: KeyboardShortcuts
   autoFetchFullContent: boolean
   instantSearch: boolean
+  recentSearches: string[]
   selectionToolbarEnabled: boolean
   autoPlayYouTube: boolean
   userName: string
@@ -263,6 +264,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   autoFetchFullContent: true,
   instantSearch: true,
+  recentSearches: [],
   selectionToolbarEnabled: true,
   autoPlayYouTube: false,
   userName: '',
