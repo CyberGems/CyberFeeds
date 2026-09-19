@@ -4344,8 +4344,9 @@ mark.reader-search-match.reader-search-active {
 
 .reader-pip-overlay-btn {
   position: absolute;
-  top: 12px;
+  top: 50%;
   right: 12px;
+  transform: translateY(-50%);
   z-index: 25;
   display: inline-flex;
   align-items: center;
@@ -4371,7 +4372,7 @@ mark.reader-search-match.reader-search-active {
   background: rgba(0, 216, 241, 0.25);
   border-color: rgba(0, 216, 241, 0.6);
   color: #ffffff;
-  transform: translateY(-1px) scale(1.03);
+  transform: translateY(calc(-50% - 1px)) scale(1.03);
   box-shadow: 0 6px 18px rgba(0, 216, 241, 0.3), 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 

@@ -118,7 +118,9 @@ function isContentAlreadyFull(content: string | undefined | null, _snippet?: str
 
   // If the content references video platforms/players but lacks an embedded player,
   // do not consider it full so auto-scraping can fetch the real embedded player.
-  const hasVideoReference = /(?:youtube\.com\/(?:watch|embed|shorts|live)|youtube-nocookie\.com\/embed|youtu\.be\/|jwplayer|jwplatform|player\.vimeo\.com|vimeo\.com\/video|rumble\.com\/embed|dailymotion\.com\/(?:video|embed)|player\.twitch\.tv|twitch\.tv\/videos|clips\.twitch\.tv|bitchute\.com\/(?:video|embed)|streamable\.com\/[eo]\/|tiktok\.com\/@[^/]+\/video)/i.test(trimmed)
+  const hasVideoReference =
+    /(?:youtube\.com\/embed|youtube-nocookie\.com\/embed|player\.vimeo\.com|rumble\.com\/embed|dailymotion\.com\/embed|player\.twitch\.tv|bitchute\.com\/embed|streamable\.com\/[eo]\/|tiktok\.com\/embed|jwplayer|jwplatform|wp-block-embed|Rumble\s*\(|rumble_[a-zA-Z0-9]+)/i.test(trimmed) ||
+    /<p\b[^>]*>\s*<a\b[^>]*\bhref=["'](?:https?:)?\/\/(?:www\.)?(?:youtube\.com\/watch|youtu\.be\/)/i.test(trimmed)
   if (hasVideoReference) {
     return false
   }
