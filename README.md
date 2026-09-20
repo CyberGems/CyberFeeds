@@ -5,12 +5,12 @@
 <h1 align="center">CyberFeeds: RSS Reader</h1>
 
 <p align="center">
-  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=Download%20CyberFeeds%20v&style=flat-square&label=&labelColor=1F2428&color=0369A1" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_64--bit-0078D4?style=flat-square" alt="Windows 64-bit" /></a>
-  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-Changelog-2B3137?style=flat-square&logo=github&logoColor=white" alt="All Releases" /></a>
+  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Download%20CyberFeeds%20v&suffix=%20&style=flat-square&label=&labelColor=0369A1&color=0369A1" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_64--bit-0078D4?style=flat-square" alt="Windows 64-bit" /></a>
+  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-2B3137?style=flat-square&logo=github&logoColor=white" alt="All Releases" /><img src="https://img.shields.io/badge/Changelog-3B444B?style=flat-square" alt="Changelog" /></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/License-GPL--3.0-1F2428.svg?style=flat-square&logo=opensourceinitiative&logoColor=white&color=0369A1" alt="License" />&nbsp;
+  <img src="https://img.shields.io/badge/License-GPL--3.0-1F2428.svg?style=flat-square&logo=textmetrics&logoColor=white&color=0369A1" alt="License" />&nbsp;
   <img src="https://img.shields.io/badge/Platform-Windows-1F2428.svg?style=flat-square&color=0078D4" alt="Platform" />&nbsp;
   <img src="https://img.shields.io/badge/Electron-34-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=47848F" alt="Electron" />&nbsp;
   <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=0369A1" alt="Wiki" /></a>
