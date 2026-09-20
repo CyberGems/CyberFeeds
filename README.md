@@ -16,7 +16,11 @@
   <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=0369A1" alt="Wiki" /></a>
 </p>
 
-A performance-first, full-featured **RSS/Atom feed reader**. Subscribe to feeds, read articles with full-content extraction, manage your reading flow with star/read/unread/trash, and receive smart notifications when new articles are published. Built with **Electron + React + TypeScript**.
+---
+
+## What is CyberFeeds?
+
+CyberFeeds is a performance-first, local **RSS and Atom reader** for Windows. Subscribe to websites, YouTube channels, playlists, and Reddit feeds; extract complete articles; search large libraries; and organize your reading with folders, stars, read states, and trash. Worker-based fetching keeps the interface responsive, while smart notifications, floating video, automatic backups, and a local SQLite database help you stay current without an account or cloud service. Built with **Electron + React + TypeScript**.
 
 *Free and open source (GPLv3): no ads, no tracking, and no data collection. Just enjoy it.*
 
