@@ -5,8 +5,8 @@
 <h1 align="center">CyberFeeds: RSS Reader</h1>
 
 <p align="center">
-  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Download%20CyberFeeds%20v&suffix=%20&style=flat-square&label=&labelColor=0369A1&color=0369A1" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_64--bit-0078D4?style=flat-square" alt="Windows 64-bit" /></a>
-  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-2B3137?style=flat-square&logo=github&logoColor=white" alt="All Releases" /><img src="https://img.shields.io/badge/Changelog-3B444B?style=flat-square" alt="Changelog" /></a>
+  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Download%20CyberFeeds%20v&suffix=%20&style=for-the-badge&label=&labelColor=0369A1&color=0369A1" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_64--bit-0078D4?style=for-the-badge" alt="Windows 64-bit" /></a>
+  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-2B3137?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" /><img src="https://img.shields.io/badge/Changelog-3B444B?style=for-the-badge" alt="Changelog" /></a>
 </p>
 
 <p align="center">
