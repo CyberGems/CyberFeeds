@@ -1,6 +1,13 @@
-## 📰 CyberFeeds {{VERSION}} - Release Notes
+## 📰 CyberFeeds {{VERSION}}: Release Notes
 
-Welcome to the official **CyberFeeds {{VERSION}}** release! CyberFeeds is a high-performance, distraction-free desktop RSS/Atom and media aggregator tailored for desktop workflows on Windows.
+### 🚀 What's new in this release
+
+<!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
+<!-- changelog-summary:start -->
+Reading across monitors and display scales is smoother, interface sizing is easier to adjust, background loading is safer, and the tray and About surfaces have been refined for a cleaner daily experience.
+<!-- changelog-summary:end -->
+
+> **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
 
 ---
 
