@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/CyberGems/CyberFeeds/main/resources/icon.png" width="120" alt="CyberFeeds">
+</p>
+
 ## 📰 CyberFeeds {{VERSION}}: Release Notes
 
 ### 🚀 What's new in this release
