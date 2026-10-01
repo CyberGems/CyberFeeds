@@ -1,4 +1,8 @@
 <p align="center">
+  English · <a href="./README.es.md">Español</a>
+</p>
+
+<p align="center">
   <a href="https://cybergems.org/apps/cyberfeeds/">
     <img src="https://cybergems.org/banners/cyberfeeds.png" alt="CyberFeeds — a local-first RSS and Atom reader for fast, private, clean reading" />
   </a>
@@ -95,6 +99,41 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ---
 
+## 🚀 Getting Started
+
+### Install (Recommended)
+
+1. Download the latest installer from [Releases](https://github.com/CyberGems/CyberFeeds/releases/latest)
+2. Run the `.exe` installer and follow the setup wizard
+3. Launch CyberFeeds. No other requirements needed: you do **not** need Node.js or npm
+
+### 🛡️ Windows SmartScreen
+
+Windows may show a SmartScreen warning the first time you run the CyberFeeds installer: this is an unsigned hobby app, so Windows hasn't built reputation for the file yet. This is expected; the source is public so you can inspect exactly what it does.
+
+To continue:
+
+<details>
+<summary><strong>See how to run the installer (step by step)</strong></summary>
+
+Windows shows this warning for any installer without a paid code-signing certificate; it does not mean the file is unsafe. Do <strong>not</strong> click "Don't run":
+
+1. Run the installer. Windows may show the blue "Windows protected your PC" dialog.
+
+![Windows SmartScreen warning](https://cybergems.org/branding/smartscreen-warning.svg)
+
+2. Click the small **More info** link.
+
+![SmartScreen dialog after More info](https://cybergems.org/branding/smartscreen-runanyway.svg)
+
+3. Click **Run anyway**. The installer starts normally.
+
+You can verify the file independently: compare the SHA with the GitHub release, scan it on VirusTotal, or build from source. More details: [SmartScreen guide on the website](https://cybergems.org/download#smartscreen).
+
+</details>
+
+---
+
 ## 🛠️ Tech Stack & Architecture
 
 - **Platform:** Windows (primary target), macOS, Linux
@@ -144,16 +183,16 @@ src/
 - **Context Bridge**: Strict preload API surface with no Node integration in renderer
 - **WAL Mode SQLite**: High-performance concurrent reads with write-ahead logging
 
----
+### Building from Source (Developers)
 
-## 🚀 Getting Started
+Only needed if you want to work on CyberFeeds or build it yourself; regular users can skip this section.
 
-### Prerequisites
+#### Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
 - [npm](https://www.npmjs.com/)
 
-### Development
+#### Development
 
 ```bash
 npm install
@@ -162,7 +201,7 @@ npm run dev
 
 > **Note:** The `postinstall` script automatically rebuilds `better-sqlite3` for the current Electron version.
 
-### Build
+#### Build
 
 ```bash
 npm run build          # Production build
@@ -170,38 +209,13 @@ npm run build:win      # Windows installer
 npm run build:unpack   # Directory output (no installer)
 ```
 
-### Code Quality
+#### Code Quality
 
 ```bash
 npm run typecheck      # Type checking
 npm run lint           # Linting
 npm run format         # Formatting
 ```
-
-### 🛡️ Windows SmartScreen
-
-Windows may show a SmartScreen warning the first time you run the CyberFeeds installer: this is an unsigned hobby app, so Windows hasn't built reputation for the file yet. This is expected; the source is public so you can inspect exactly what it does.
-
-To continue:
-
-<details>
-<summary><strong>See how to run the installer (step by step)</strong></summary>
-
-Windows shows this warning for any installer without a paid code-signing certificate; it does not mean the file is unsafe. Do <strong>not</strong> click "Don't run":
-
-1. Run the installer. Windows may show the blue "Windows protected your PC" dialog.
-
-![Windows SmartScreen warning](https://cybergems.org/branding/smartscreen-warning.svg)
-
-2. Click the small **More info** link.
-
-![SmartScreen dialog after More info](https://cybergems.org/branding/smartscreen-runanyway.svg)
-
-3. Click **Run anyway**. The installer starts normally.
-
-You can verify the file independently: compare the SHA with the GitHub release, scan it on VirusTotal, or build from source. More details: [SmartScreen guide on the website](https://cybergems.org/download#smartscreen).
-
-</details>
 
 ---
 
