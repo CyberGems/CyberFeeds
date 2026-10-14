@@ -22,11 +22,14 @@ import {
   Plus,
   Download,
   Clock,
-  History
+  History,
+  BookOpen,
+  Layers
 } from 'lucide-react'
 import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
 import { useUIStore } from '../store/ui.store'
+import { useTabsStore } from '../store/tabs.store'
 import { useFeedsStore } from '../store/feeds.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useConfirm } from '../hooks/useConfirm'
@@ -302,6 +305,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       if (!confirmed) return
     }
     const nextId = selected === id ? (list[idx + 1]?.id ?? list[idx - 1]?.id ?? null) : undefined
+    useTabsStore.getState().closeTab(id)
     void (isTrash ? purgeArticle(id) : deleteArticle(id))
     if (selected === id) useUIStore.getState().selectArticle(nextId ?? null)
   }, [confirm, deleteArticle, isTrash, purgeArticle, t])
@@ -1570,6 +1574,52 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                     <ExternalLink size={14} />
                     {t.articleList.contextMenu.openInBrowser}
                   </div>
+                  {!isTrash && !article.deletedAt && (
+                    <>
+                      <div
+                        className="ctx-item"
+                        onClick={() => {
+                          useTabsStore.getState().openTab(
+                            {
+                              id: article.id,
+                              title: article.title,
+                              feedId: article.feedId,
+                              feedTitle: article.feedTitle,
+                              feedIcon: article.feedIcon,
+                              url: article.link
+                            },
+                            true
+                          )
+                          if (!article.read) markRead(article.id, true)
+                          setCtx(null)
+                        }}
+                      >
+                        <BookOpen size={14} />
+                        {t.articleList.contextMenu.openInNewTab}
+                      </div>
+                      <div
+                        className="ctx-item"
+                        onClick={() => {
+                          useTabsStore.getState().openTab(
+                            {
+                              id: article.id,
+                              title: article.title,
+                              feedId: article.feedId,
+                              feedTitle: article.feedTitle,
+                              feedIcon: article.feedIcon,
+                              url: article.link
+                            },
+                            false
+                          )
+                          if (!article.read) markRead(article.id, true)
+                          setCtx(null)
+                        }}
+                      >
+                        <Layers size={14} />
+                        {t.articleList.contextMenu.openInBackgroundTab}
+                      </div>
+                    </>
+                  )}
                 </>
               )}
               {!isTrash && <div
@@ -1673,14 +1723,69 @@ const ArticleItem = memo(
     const { settings } = useSettingsStore()
     const { t, language } = useTranslation()
 
-    const handleClick = useCallback(() => {
-      if (selected) {
-        onSelect(null)
-        return
-      }
-      onSelect(article.id)
-      if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
-    }, [article.id, article.read, isTrash, markRead, onSelect, selected])
+    const handleClick = useCallback(
+      (e: React.MouseEvent) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault()
+          e.stopPropagation()
+          useTabsStore.getState().openTab(
+            {
+              id: article.id,
+              title: article.title,
+              feedId: article.feedId,
+              feedTitle: article.feedTitle,
+              feedIcon: article.feedIcon,
+              url: article.link
+            },
+            false
+          )
+          if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
+          return
+        }
+
+        if (selected) {
+          onSelect(null)
+          useTabsStore.getState().closeTab(article.id)
+          return
+        }
+
+        useTabsStore.getState().openTab(
+          {
+            id: article.id,
+            title: article.title,
+            feedId: article.feedId,
+            feedTitle: article.feedTitle,
+            feedIcon: article.feedIcon,
+            url: article.link
+          },
+          true
+        )
+        if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
+      },
+      [article, isTrash, markRead, onSelect, selected]
+    )
+
+    const handleAuxClick = useCallback(
+      (e: React.MouseEvent) => {
+        if (e.button === 1) {
+          e.preventDefault()
+          e.stopPropagation()
+          useTabsStore.getState().openTab(
+            {
+              id: article.id,
+              title: article.title,
+              feedId: article.feedId,
+              feedTitle: article.feedTitle,
+              feedIcon: article.feedIcon,
+              url: article.link
+            },
+            false
+          )
+          if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
+        }
+      },
+      [article, isTrash, markRead]
+    )
 
     const handleStar = useCallback(
       (e: React.MouseEvent) => {
@@ -1714,6 +1819,7 @@ const ArticleItem = memo(
         className={`article-item ${selected ? 'active' : ''} ${contextActive ? 'context-active' : ''} ${article.read ? 'read' : ''} ${article.deletedAt ? 'deleted' : ''}`}
         data-article-id={article.id}
         onClick={handleClick}
+        onAuxClick={handleAuxClick}
         onContextMenu={(e) => onContextMenu(e, article.id)}
         style={style}
       >

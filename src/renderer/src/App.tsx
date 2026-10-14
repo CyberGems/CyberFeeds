@@ -12,6 +12,8 @@ import TopBar from './components/TopBar'
 import Sidebar from './components/Sidebar'
 import ArticleList from './components/ArticleList'
 import ArticleViewer from './components/ArticleViewer'
+import ArticleTabBar from './components/ArticleTabBar'
+import { useTabsStore } from './store/tabs.store'
 import SettingsPanel from './components/SettingsPanel'
 import AddFeedModal from './components/AddFeedModal'
 import EditFeedModal from './components/EditFeedModal'
@@ -96,7 +98,9 @@ export default function App(): JSX.Element {
 
   // Bootstrap
   useEffect(() => {
-    loadSettings()
+    loadSettings().then(() => {
+      void useTabsStore.getState().restoreSession()
+    })
     loadAll()
     load({ limit: 60, offset: 0 })
 
@@ -267,15 +271,31 @@ export default function App(): JSX.Element {
 
   // Listen for open article requests (e.g. from notifier click or tray menu)
   useEffect(() => {
-    const unsub = window.api.onOpenArticle((feedId, articleId) => {
+    const unsub = window.api.onOpenArticle(async (feedId, articleId) => {
       useUIStore.setState({
         selectedFeedId: !feedId || feedId === 'all' ? null : feedId,
-        selectedArticleId: articleId || null,
-        unreadOnly: false,
-        readOnly: false,
-        search: '',
         activePanel: null
       })
+      if (!articleId) return
+      const found = useArticlesStore.getState().articles.find((a) => a.id === articleId)
+      if (found) {
+        useTabsStore.getState().openTab(found, true)
+      } else {
+        try {
+          const art = await window.api.getArticleById(articleId)
+          if (art) {
+            useTabsStore.getState().openTab(art, true)
+          }
+        } catch {
+          /* ignore lookup errors */
+        }
+      }
+
+
+
+
+
+
     })
     return unsub
   }, [])
@@ -395,6 +415,36 @@ export default function App(): JSX.Element {
         return
       }
 
+      // Ctrl+W: Close active tab
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'w') {
+        if (activePanel) return
+        const { activeTabId, closeTab } = useTabsStore.getState()
+        if (activeTabId) {
+          e.preventDefault()
+          e.stopPropagation()
+          closeTab(activeTabId)
+          return
+        }
+      }
+
+      // Ctrl+Tab / Ctrl+Shift+Tab: Cycle through open tabs
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key === 'Tab') {
+        if (activePanel) return
+        const { tabs, activeTabId, setActiveTab } = useTabsStore.getState()
+        if (tabs.length > 1 && activeTabId) {
+          e.preventDefault()
+          e.stopPropagation()
+          const curIdx = tabs.findIndex((t) => t.id === activeTabId)
+          if (curIdx >= 0) {
+            const nextIdx = e.shiftKey
+              ? (curIdx - 1 + tabs.length) % tabs.length
+              : (curIdx + 1) % tabs.length
+            setActiveTab(tabs[nextIdx].id)
+          }
+          return
+        }
+      }
+
       if (e.key === 'Escape') {
         if (activePanel) {
           if (activePanel === 'settings') {
@@ -404,7 +454,10 @@ export default function App(): JSX.Element {
           }
           return
         }
-        if (selectedArticleId) {
+        const { activeTabId, closeTab } = useTabsStore.getState()
+        if (activeTabId) {
+          closeTab(activeTabId)
+        } else if (selectedArticleId) {
           selectArticle(null)
         }
       }
@@ -489,7 +542,10 @@ export default function App(): JSX.Element {
               />
             </Tooltip>
           )}
-          <ArticleViewer key={selectedArticleId} />
+          <div className="article-reader-column">
+            <ArticleTabBar />
+            <ArticleViewer key={selectedArticleId} />
+          </div>
         </div>
       </div>
 

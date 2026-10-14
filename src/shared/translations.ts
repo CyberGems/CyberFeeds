@@ -144,6 +144,8 @@ export const translations = {
         copyLink: 'Copy link',
         copyImage: 'Copy image',
         openInBrowser: 'Open in browser',
+        openInNewTab: 'Open in new tab',
+        openInBackgroundTab: 'Open in background tab',
         deleteArticle: 'Move article to trash',
         restoreArticle: 'Restore article',
         deletePermanently: 'Delete permanently',
@@ -236,6 +238,14 @@ export const translations = {
         provider: 'Google Translate'
       }
     },
+    articleTabs: {
+      closeTab: 'Close tab',
+      closeOtherTabs: 'Close other tabs',
+      closeTabsToTheRight: 'Close tabs to the right',
+      closeAllTabs: 'Close all tabs',
+      copyLink: 'Copy link',
+      openInBrowser: 'Open in browser'
+    },
     settings: {
       title: 'Settings',
       cancel: 'Cancel',
@@ -313,7 +323,12 @@ export const translations = {
         showWelcomeGreeting: 'Show welcoming greetings',
         showWelcomeGreetingHint: 'Displays a friendly greeting in the titlebar and when opening the reader.',
         showSuitePromo: 'Show suite recommendations',
-        showSuitePromoHint: 'Shows the More from CyberGems strip in About and the suite entry in the tray menu.'
+        showSuitePromoHint: 'Shows the More from CyberGems strip in About and the suite entry in the tray menu.',
+        articleTabsTitle: 'Article Tabs & Session',
+        articleTabsSession: 'On startup',
+        articleTabsSessionHint: 'Choose whether to restore previously open article tabs or start with a clean workspace.',
+        articleTabsSessionRestore: 'Restore previous session',
+        articleTabsSessionClean: 'Start clean'
       },
       filters: {
         title: 'Filters & Rules',
@@ -915,6 +930,8 @@ export const translations = {
         copyLink: 'Copiar enlace',
         copyImage: 'Copiar imagen',
         openInBrowser: 'Abrir en el navegador',
+        openInNewTab: 'Abrir en nueva pestaña',
+        openInBackgroundTab: 'Abrir en segundo plano',
         deleteArticle: 'Enviar artículo a la papelera',
         restoreArticle: 'Restaurar artículo',
         deletePermanently: 'Eliminar definitivamente',
@@ -1009,6 +1026,14 @@ export const translations = {
         provider: 'Google Translate'
       }
     },
+    articleTabs: {
+      closeTab: 'Cerrar pestaña',
+      closeOtherTabs: 'Cerrar las demás pestañas',
+      closeTabsToTheRight: 'Cerrar pestañas a la derecha',
+      closeAllTabs: 'Cerrar todas las pestañas',
+      copyLink: 'Copiar enlace',
+      openInBrowser: 'Abrir en el navegador'
+    },
     settings: {
       title: 'Configuración',
       cancel: 'Cancelar',
@@ -1086,7 +1111,12 @@ export const translations = {
         showWelcomeGreeting: 'Mostrar saludos de bienvenida',
         showWelcomeGreetingHint: 'Muestra un saludo amigable en la barra superior y al abrir el lector.',
         showSuitePromo: 'Mostrar recomendaciones de la suite',
-        showSuitePromoHint: 'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.'
+        showSuitePromoHint: 'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.',
+        articleTabsTitle: 'Pestañas de artículos y sesión',
+        articleTabsSession: 'Al iniciar',
+        articleTabsSessionHint: 'Elige si deseas restaurar las pestañas de artículos abiertas anteriormente o empezar con un espacio limpio.',
+        articleTabsSessionRestore: 'Restaurar sesión anterior',
+        articleTabsSessionClean: 'Iniciar en limpio'
       },
       filters: {
         title: 'Filtros y reglas',

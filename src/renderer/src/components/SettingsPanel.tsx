@@ -4,7 +4,7 @@ import {
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
   Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles,
-  Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive
+  Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive, Layers
 } from 'lucide-react'
 import { formatDisplayName } from '@shared/welcome'
 import { useUIStore } from '../store/ui.store'
@@ -1161,6 +1161,32 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     {local.customBrowserPath}
                   </div>
                 )}
+              </div>
+
+
+
+
+              <div className="settings-card">
+                <CardTitle icon={Layers} accent={TAB_META.general.accent}>{t.settings.general.articleTabsTitle}</CardTitle>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <div>
+                    <span style={{ fontSize: 13, color: 'var(--text-primary)', display: 'block' }}>
+                      {t.settings.general.articleTabsSession}
+                    </span>
+                    <span className="form-hint" style={{ marginTop: 2, display: 'block' }}>
+                      {t.settings.general.articleTabsSessionHint}
+                    </span>
+                  </div>
+                  <select
+                    className="form-select"
+                    value={local.articleTabsSession || 'restore'}
+                    onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
+                    style={{ width: 'auto', minWidth: 160, fontSize: 12 }}
+                  >
+                    <option value="restore">{t.settings.general.articleTabsSessionRestore}</option>
+                    <option value="clean">{t.settings.general.articleTabsSessionClean}</option>
+                  </select>
+                </div>
               </div>
 
               <div className="settings-card">

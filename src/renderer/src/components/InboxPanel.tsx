@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import { X, Inbox, Star, Check } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
+import { useTabsStore } from '../store/tabs.store'
 import { useArticlesStore } from '../store/articles.store'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
@@ -15,7 +16,7 @@ function formatTime(ts: number): string {
 const RENDER_BATCH = 80
 
 export default function InboxPanel(): JSX.Element {
-  const { closePanel, selectArticle } = useUIStore()
+  const { closePanel } = useUIStore()
   const { markRead, starArticle } = useArticlesStore()
   const [articles, setArticles] = useState<Article[]>([])
   const [loading, setLoading] = useState(true)
@@ -130,9 +131,30 @@ export default function InboxPanel(): JSX.Element {
                         <div
                           key={a.id}
                           className="digest-item"
-                          onClick={() => {
-                            selectArticle(a.id)
+                          onClick={(e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                              e.stopPropagation()
+                              useTabsStore.getState().openTab(
+                                { id: a.id, title: a.title, feedId: a.feedId, url: a.link },
+                                false
+                              )
+                              return
+                            }
+                            useTabsStore.getState().openTab(
+                              { id: a.id, title: a.title, feedId: a.feedId, url: a.link },
+                              true
+                            )
                             closePanel()
+                          }}
+                          onAuxClick={(e) => {
+                            if (e.button === 1) {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              useTabsStore.getState().openTab(
+                                { id: a.id, title: a.title, feedId: a.feedId, url: a.link },
+                                false
+                              )
+                            }
                           }}
                         >
                           {/* Unread indicator dot */}

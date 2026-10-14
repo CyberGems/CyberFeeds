@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef, memo } from 'react'
 import { X, Bell, Trash2, ExternalLink, Check, Eye, CheckCheck } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
+import { useTabsStore } from '../store/tabs.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useArticlesStore } from '../store/articles.store'
 import type { NotificationHistoryItem } from '../types'
@@ -199,12 +200,23 @@ const NotifCard = memo(function NotifCard({
 })
 
 export default function NotificationHistoryPanel(): JSX.Element {
-  const { closePanel, selectArticle, selectFeed } = useUIStore()
+  const { closePanel, selectFeed } = useUIStore()
   const { settings } = useSettingsStore()
   const { markRead } = useArticlesStore()
   const [history, setHistory] = useState<NotificationHistoryItem[]>([])
   const [lastCheckedTime, setLastCheckedTime] = useState(0)
   const { t, language } = useTranslation()
+
+  const handleSelectArticle = useCallback((id: string) => {
+    const found = useArticlesStore.getState().articles.find((a) => a.id === id)
+    if (found) {
+      useTabsStore.getState().openTab(found, true)
+    } else {
+      window.api.getArticleById(id).then((art) => {
+        if (art) useTabsStore.getState().openTab(art, true)
+      }).catch(() => {})
+    }
+  }, [])
 
   // ── Incremental rendering: only render `visibleCount` items ──────────────
   const [visibleCount, setVisibleCount] = useState(RENDER_BATCH)
@@ -433,7 +445,7 @@ export default function NotificationHistoryPanel(): JSX.Element {
                 openBehavior={openBehavior}
                 showThumbnails={showThumbnails}
                 onSelectFeed={selectFeed}
-                onSelectArticle={selectArticle}
+                onSelectArticle={handleSelectArticle}
                 onClosePanel={closePanel}
                 onMarkRead={markRead}
                 t={t}
@@ -467,7 +479,7 @@ export default function NotificationHistoryPanel(): JSX.Element {
                 openBehavior={openBehavior}
                 showThumbnails={showThumbnails}
                 onSelectFeed={selectFeed}
-                onSelectArticle={selectArticle}
+                onSelectArticle={handleSelectArticle}
                 onClosePanel={closePanel}
                 onMarkRead={markRead}
                 t={t}

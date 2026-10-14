@@ -99,6 +99,7 @@ export interface AppSettings {
   userName: string
   showWelcomeGreeting: boolean
   showSuitePromo: boolean
+  articleTabsSession: 'restore' | 'clean'
   filters: FilterSettings
   autoBackup: AutoBackupSettings
 }
@@ -275,6 +276,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   userName: '',
   showWelcomeGreeting: true,
   showSuitePromo: true,
+  articleTabsSession: 'restore',
   filters: {
     priorityKeywords: [],
     muteKeywords: [],
