@@ -246,7 +246,11 @@ export const translations = {
       copyLink: 'Copy link',
       openInBrowser: 'Open in browser',
       scrollLeft: 'Scroll tabs left',
-      scrollRight: 'Scroll tabs right'
+      scrollRight: 'Scroll tabs right',
+      tabCountTooltip: '{count} open tabs · Click to view all',
+      tabsListTitle: 'Open Tabs',
+      filterTabsPlaceholder: 'Filter tabs...',
+      noTabsFound: 'No matching tabs'
     },
     settings: {
       title: 'Settings',
@@ -1036,7 +1040,11 @@ export const translations = {
       copyLink: 'Copiar enlace',
       openInBrowser: 'Abrir en el navegador',
       scrollLeft: 'Desplazar pestañas a la izquierda',
-      scrollRight: 'Desplazar pestañas a la derecha'
+      scrollRight: 'Desplazar pestañas a la derecha',
+      tabCountTooltip: '{count} pestañas abiertas · Clic para ver todas',
+      tabsListTitle: 'Pestañas abiertas',
+      filterTabsPlaceholder: 'Filtrar pestañas...',
+      noTabsFound: 'No se encontraron pestañas'
     },
     settings: {
       title: 'Configuración',

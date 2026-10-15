@@ -1,5 +1,5 @@
-import React, { memo, useRef, useState, useEffect, useCallback } from 'react'
-import { X, ExternalLink, Link2, XSquare, ChevronLeft, ChevronRight } from 'lucide-react'
+import React, { memo, useRef, useState, useEffect, useCallback, useMemo } from 'react'
+import { X, ExternalLink, Link2, XSquare, ChevronLeft, ChevronRight, ChevronDown, Search } from 'lucide-react'
 import { useTabsStore, type ArticleTab } from '../store/tabs.store'
 import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
@@ -24,12 +24,16 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   } = useTabsStore()
   const { t } = useTranslation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const counterBtnRef = useRef<HTMLButtonElement>(null)
   const [ctxMenu, setCtxMenu] = useState<TabContextMenuState | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   const [hasOverflow, setHasOverflow] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
+  const [showTabList, setShowTabList] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; right: number } | null>(null)
+  const [filterQuery, setFilterQuery] = useState('')
 
   const updateScrollState = useCallback(() => {
     const el = scrollContainerRef.current
@@ -65,18 +69,35 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     }
   }, [updateScrollState, tabs])
 
-  // Close context menu on outside click or global close event
+  // Close menus on outside click, escape or global close event
   useEffect(() => {
-    const handleUp = (): void => setCtxMenu(null)
+    const handleUp = (): void => {
+      setCtxMenu(null)
+      setShowTabList(false)
+    }
     const handleOtherMenu = (e: Event): void => {
       if ((e as CustomEvent<string>).detail !== 'articleTabBar') {
         setCtxMenu(null)
+        setShowTabList(false)
       }
     }
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        setCtxMenu(null)
+        setShowTabList(false)
+      }
+    }
+    const handleResize = (): void => {
+      setShowTabList(false)
+    }
     window.addEventListener('click', handleUp)
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('resize', handleResize)
     window.addEventListener('cyberfeeds:close-context-menus', handleOtherMenu)
     return () => {
       window.removeEventListener('click', handleUp)
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('resize', handleResize)
       window.removeEventListener('cyberfeeds:close-context-menus', handleOtherMenu)
     }
   }, [])
@@ -107,10 +128,42 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     window.dispatchEvent(
       new CustomEvent('cyberfeeds:close-context-menus', { detail: 'articleTabBar' })
     )
+    setShowTabList(false)
     const x = Math.min(e.clientX, window.innerWidth - 200)
     const y = Math.min(e.clientY, window.innerHeight - 200)
     setCtxMenu({ x, y, tab })
   }, [])
+
+  const toggleTabList = useCallback((e: React.MouseEvent): void => {
+    e.stopPropagation()
+    if (showTabList) {
+      setShowTabList(false)
+      return
+    }
+    window.dispatchEvent(
+      new CustomEvent('cyberfeeds:close-context-menus', { detail: 'articleTabBar' })
+    )
+    setCtxMenu(null)
+    if (counterBtnRef.current) {
+      const rect = counterBtnRef.current.getBoundingClientRect()
+      setDropdownPos({
+        top: rect.bottom + 5,
+        right: Math.max(8, window.innerWidth - rect.right)
+      })
+    }
+    setFilterQuery('')
+    setShowTabList(true)
+  }, [showTabList])
+
+  const filteredTabs = useMemo(() => {
+    if (!filterQuery.trim()) return tabs
+    const q = filterQuery.toLowerCase()
+    return tabs.filter(
+      (t) =>
+        (t.title || '').toLowerCase().includes(q) ||
+        (t.feedTitle || '').toLowerCase().includes(q)
+    )
+  }, [tabs, filterQuery])
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, index: number): void => {
@@ -237,6 +290,22 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
       )}
 
       <div className="article-tab-bar-actions">
+        <Tooltip
+          label={t.articleTabs.tabCountTooltip.replace('{count}', String(tabs.length))}
+          placement="bottom"
+        >
+          <button
+            ref={counterBtnRef}
+            type="button"
+            className={`article-tab-counter-btn ${showTabList ? 'active' : ''}`}
+            onClick={toggleTabList}
+            aria-label={t.articleTabs.tabCountTooltip.replace('{count}', String(tabs.length))}
+          >
+            <span className="article-tab-counter-num">{tabs.length}</span>
+            <ChevronDown size={11} className="article-tab-counter-arrow" />
+          </button>
+        </Tooltip>
+
         <Tooltip label={t.articleTabs.closeAllTabs} placement="bottom">
           <button
             type="button"
@@ -248,6 +317,101 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
           </button>
         </Tooltip>
       </div>
+
+      {showTabList && dropdownPos && (
+        <div
+          className="article-tabs-dropdown"
+          style={{ top: dropdownPos.top, right: dropdownPos.right }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="article-tabs-dropdown-header">
+            <span>{t.articleTabs.tabsListTitle}</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums', opacity: 0.75 }}>
+              {filterQuery.trim() ? `${filteredTabs.length} / ${tabs.length}` : tabs.length}
+            </span>
+          </div>
+
+          {tabs.length > 4 && (
+            <div className="article-tabs-dropdown-filter">
+              <Search size={12} style={{ color: 'var(--text-muted)', flexShrink: 0 }} />
+              <input
+                type="text"
+                autoFocus
+                placeholder={t.articleTabs.filterTabsPlaceholder}
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setShowTabList(false)
+                  }
+                }}
+              />
+              {filterQuery && (
+                <button
+                  type="button"
+                  onClick={() => setFilterQuery('')}
+                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex' }}
+                >
+                  <X size={11} />
+                </button>
+              )}
+            </div>
+          )}
+
+          <div className="article-tabs-dropdown-list">
+            {filteredTabs.length === 0 ? (
+              <div style={{ padding: '14px 8px', textAlign: 'center', fontSize: 11.5, color: 'var(--text-muted)' }}>
+                {t.articleTabs.noTabsFound}
+              </div>
+            ) : (
+              filteredTabs.map((tab) => {
+                const isActive = tab.id === activeTabId
+                return (
+                  <div
+                    key={tab.id}
+                    className={`article-tabs-dropdown-item ${isActive ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveTab(tab.id)
+                      setShowTabList(false)
+                    }}
+                  >
+                    <FeedFavicon icon={tab.feedIcon} title={tab.feedTitle || tab.title} size={14} />
+                    <span className="article-tabs-dropdown-item-title">{tab.title}</span>
+                    <button
+                      type="button"
+                      className="article-tabs-dropdown-item-close"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        closeTab(tab.id)
+                        if (tabs.length <= 1) {
+                          setShowTabList(false)
+                        }
+                      }}
+                      aria-label={t.articleTabs.closeTab}
+                    >
+                      <X size={11} strokeWidth={2.4} />
+                    </button>
+                  </div>
+                )
+              })
+            )}
+          </div>
+
+          <div className="article-tabs-dropdown-footer">
+            <button
+              type="button"
+              className="article-tabs-dropdown-footer-btn"
+              onClick={() => {
+                closeAllTabs()
+                setShowTabList(false)
+              }}
+            >
+              <XSquare size={12} />
+              <span>{t.articleTabs.closeAllTabs}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {ctxMenu && (
         <div
