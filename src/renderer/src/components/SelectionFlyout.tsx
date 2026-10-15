@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Search, Copy, Check, Languages, Loader2 } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
@@ -15,10 +15,62 @@ interface TranslationResult {
   targetLang: string
 }
 
+interface FlyoutCoords {
+  top: number
+  left: number
+  placement: 'top' | 'bottom'
+  arrowLeft: number
+}
+
+const VIEWPORT_MARGIN = 12
+const GAP = 9
+const ESTIMATED_WIDTH = 260
+
+function clamp(value: number, min: number, max: number): number {
+  if (max < min) return min
+  return Math.max(min, Math.min(value, max))
+}
+
+function computeFlyoutCoords(
+  rect: DOMRect,
+  container: HTMLElement | null,
+  flyoutWidth: number
+): FlyoutCoords {
+  const vw = window.innerWidth
+  const flyoutHeight = 36
+  const topSpace = rect.top - flyoutHeight - GAP
+  const placement: 'top' | 'bottom' = topSpace < 48 ? 'bottom' : 'top'
+  const top = placement === 'top' ? rect.top - GAP : rect.bottom + GAP
+
+  const cx = rect.left + rect.width / 2
+
+  let leftBound = VIEWPORT_MARGIN
+  let rightBound = vw - VIEWPORT_MARGIN
+
+  if (container) {
+    const containerRect = container.getBoundingClientRect()
+    // Give breathing room from container boundaries and its scrollbar
+    const cRight = Math.min(vw - VIEWPORT_MARGIN, containerRect.right - 14)
+    const cLeft = Math.max(VIEWPORT_MARGIN, containerRect.left + VIEWPORT_MARGIN)
+    if (cRight - cLeft >= flyoutWidth) {
+      leftBound = cLeft
+      rightBound = cRight
+    }
+  }
+
+  const idealLeft = cx - flyoutWidth / 2
+  const left = clamp(idealLeft, leftBound, Math.max(leftBound, rightBound - flyoutWidth))
+  const arrowX = cx - left
+  const arrowLeft = clamp(arrowX, 16, Math.max(16, flyoutWidth - 16))
+
+  return { top, left, placement, arrowLeft }
+}
+
 export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps): JSX.Element | null {
   const { t, language } = useTranslation()
   const [selectedText, setSelectedText] = useState('')
-  const [coords, setCoords] = useState<{ top: number; left: number; placement: 'top' | 'bottom' } | null>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
+  const [coords, setCoords] = useState<FlyoutCoords | null>(null)
   const [copied, setCopied] = useState(false)
   const [transCopied, setTransCopied] = useState(false)
   const [showTranslate, setShowTranslate] = useState(false)
@@ -35,6 +87,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed) {
       setCoords(null)
+      setAnchorRect(null)
       setSelectedText('')
       setShowTranslate(false)
       return
@@ -43,6 +96,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     const text = selection.toString().trim()
     if (!text || text.length < 1 || text.length > 5000) {
       setCoords(null)
+      setAnchorRect(null)
       setSelectedText('')
       setShowTranslate(false)
       return
@@ -57,6 +111,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     if (!anchorNode || !focusNode) return
     if (!container.contains(anchorNode) || !container.contains(focusNode)) {
       setCoords(null)
+      setAnchorRect(null)
       setSelectedText('')
       setShowTranslate(false)
       return
@@ -73,21 +128,36 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       const rect = range.getBoundingClientRect()
       if (rect.width === 0 && rect.height === 0) return
 
-      const flyoutHeight = 36
-      const gap = 9
-      const topSpace = rect.top - flyoutHeight - gap
-      const placement: 'top' | 'bottom' = topSpace < 48 ? 'bottom' : 'top'
+      const measuredWidth = flyoutRef.current?.offsetWidth || ESTIMATED_WIDTH
+      const newCoords = computeFlyoutCoords(rect, containerRef.current, measuredWidth)
 
-      const top = placement === 'top' ? rect.top - gap : rect.bottom + gap
-      const left = rect.left + rect.width / 2
-
-      setCoords({ top, left, placement })
+      setAnchorRect(rect)
+      setCoords(newCoords)
       setSelectedText(text)
       setCopied(false)
     } catch {
       // Ignored if range is unavailable
     }
   }, [containerRef])
+
+  // Synchronously refine coords before paint with the exact measured flyout width
+  useLayoutEffect(() => {
+    if (!anchorRect) return
+    const measuredWidth = flyoutRef.current?.offsetWidth || ESTIMATED_WIDTH
+    const newCoords = computeFlyoutCoords(anchorRect, containerRef.current, measuredWidth)
+    setCoords((prev) => {
+      if (
+        prev &&
+        prev.top === newCoords.top &&
+        prev.left === newCoords.left &&
+        prev.placement === newCoords.placement &&
+        prev.arrowLeft === newCoords.arrowLeft
+      ) {
+        return prev
+      }
+      return newCoords
+    })
+  }, [anchorRect, selectedText, containerRef])
 
   // Listen to selection events
   useEffect(() => {
@@ -99,6 +169,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     const handleKeyUp = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') {
         setCoords(null)
+        setAnchorRect(null)
         setSelectedText('')
         setShowTranslate(false)
         return
@@ -112,6 +183,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       const selection = window.getSelection()
       if (!selection || selection.isCollapsed) {
         setCoords(null)
+        setAnchorRect(null)
         setSelectedText('')
         setShowTranslate(false)
         return
@@ -126,18 +198,23 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
         // If selection is scrolled out of container bounds
         if (rect.bottom < containerRect.top || rect.top > containerRect.bottom) {
           setCoords(null)
+          setAnchorRect(null)
           return
         }
 
-        const flyoutHeight = 36
-        const gap = 9
-        const topSpace = rect.top - flyoutHeight - gap
-        const placement: 'top' | 'bottom' = topSpace < 48 ? 'bottom' : 'top'
-        const top = placement === 'top' ? rect.top - gap : rect.bottom + gap
-        const left = rect.left + rect.width / 2
-        setCoords({ top, left, placement })
+        const measuredWidth = flyoutRef.current?.offsetWidth || ESTIMATED_WIDTH
+        setAnchorRect(rect)
+        setCoords(computeFlyoutCoords(rect, container, measuredWidth))
       } catch {
         setCoords(null)
+        setAnchorRect(null)
+      }
+    }
+
+    const handleResize = (): void => {
+      if (anchorRect) {
+        const measuredWidth = flyoutRef.current?.offsetWidth || ESTIMATED_WIDTH
+        setCoords(computeFlyoutCoords(anchorRect, containerRef.current, measuredWidth))
       }
     }
 
@@ -147,6 +224,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       }
       // If clicking outside the flyout, dismiss
       setCoords(null)
+      setAnchorRect(null)
       setShowTranslate(false)
     }
 
@@ -157,6 +235,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
     }
     document.addEventListener('keyup', handleKeyUp)
     document.addEventListener('mousedown', handleMouseDown)
+    window.addEventListener('resize', handleResize)
 
     return () => {
       if (container) {
@@ -165,8 +244,9 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       }
       document.removeEventListener('keyup', handleKeyUp)
       document.removeEventListener('mousedown', handleMouseDown)
+      window.removeEventListener('resize', handleResize)
     }
-  }, [checkSelection, containerRef, coords])
+  }, [checkSelection, containerRef, coords, anchorRect])
 
   // Translation trigger
   const triggerTranslation = useCallback(async () => {
@@ -277,7 +357,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
       onWheel={handleWheel}
     >
       {/* Little arrow pointing toward the selected text */}
-      <div className="selection-flyout-arrow" />
+      <div className="selection-flyout-arrow" style={{ left: coords.arrowLeft }} />
 
       {/* Main Buttons Bar */}
       <div className="selection-flyout-bar">
@@ -327,7 +407,7 @@ export default function SelectionFlyout({ containerRef }: SelectionFlyoutProps):
           {/* Translation Popover on Hover / Click */}
           {showTranslate && (
             <div
-              className={`selection-translate-popover ${coords.placement === 'bottom' ? 'popover-below' : 'popover-above'}`}
+              className={`selection-translate-popover ${coords.placement === 'bottom' ? 'popover-below' : 'popover-above'} ${coords.left < 80 ? 'popover-align-left' : ''}`}
               onMouseEnter={() => {
                 if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current)
               }}

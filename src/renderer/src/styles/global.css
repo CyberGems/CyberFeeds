@@ -3973,10 +3973,10 @@ mark.reader-search-match.reader-search-active {
   user-select: none;
 }
 .selection-flyout.is-top {
-  transform: translate(-50%, -100%);
+  transform: translateY(-100%);
 }
 .selection-flyout.is-bottom {
-  transform: translate(-50%, 0);
+  transform: translateY(0);
 }
 
 .selection-flyout-bar {
@@ -4089,6 +4089,11 @@ mark.reader-search-match.reader-search-active {
 .selection-translate-popover.popover-below {
   top: calc(100% + 8px);
   right: 0;
+}
+
+.selection-translate-popover.popover-align-left {
+  right: auto;
+  left: 0;
 }
 
 @keyframes popoverIn {
