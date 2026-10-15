@@ -23,6 +23,7 @@ import InboxPanel from './components/InboxPanel'
 import NotificationHistoryPanel from './components/NotificationHistoryPanel'
 import AboutModal from './components/AboutModal'
 import DoctorPanel from './components/DoctorPanel'
+import CloseDialog from './components/CloseDialog'
 import Tooltip from './components/Tooltip'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
 import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
@@ -72,6 +73,7 @@ export default function App(): JSX.Element {
 
   const [updateStatus, setUpdateStatus] = useState<ActiveUpdateStatus | null>(null)
   const [isPortable, setIsPortable] = useState(false)
+  const [showCloseDialog, setShowCloseDialog] = useState(false)
 
   // ── Resize hooks — MUST be at top level, before any conditionals ──────────
   const [sidebarDragging, setSidebarDragging] = useState(false)
@@ -378,6 +380,14 @@ export default function App(): JSX.Element {
     return unsub
   }, [])
 
+  // Window close confirmation dialog listener
+  useEffect(() => {
+    const unsub = window.api.onConfirmClose?.(() => {
+      setShowCloseDialog(true)
+    })
+    return () => unsub?.()
+  }, [])
+
   // Native text context menu for editable fields (modals, settings, search, etc.)
   useEffect(() => {
     const isEditableTextField = (target: EventTarget | null): boolean => {
@@ -601,6 +611,8 @@ export default function App(): JSX.Element {
           }}
         />
       )}
+      {/* Close Window Confirmation Dialog */}
+      <CloseDialog isOpen={showCloseDialog} onClose={() => setShowCloseDialog(false)} />
     </div>
   )
 }

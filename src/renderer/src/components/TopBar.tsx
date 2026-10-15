@@ -487,7 +487,12 @@ const TopBar = memo(function TopBar(): JSX.Element {
           </button>
         </Tooltip>
         <Tooltip
-          label={withShortcut(settings.minimizeToTray ? t.topBar.minimizeToTray : t.topBar.close, 'Ctrl+W')}
+          label={withShortcut(
+            settings.closeChoiceRemembered
+              ? (settings.minimizeToTray ? t.topBar.minimizeToTray : t.topBar.close)
+              : t.topBar.close,
+            'Ctrl+W'
+          )}
           placement="bottom"
         >
           <button className="win-btn close" onClick={() => window.api.windowClose()}>

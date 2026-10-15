@@ -306,6 +306,7 @@ export const translations = {
         startMinimized: 'Start minimized to tray',
         requiresStartWithWindows: '(requires Start with Windows)',
         minimizeToTray: 'Minimize to tray on close',
+        resetCloseChoice: 'Reset close prompt',
         showThumbnails: 'Show featured image',
         linksOpenIn: 'External links open in',
         openOptions: {
@@ -788,6 +789,17 @@ export const translations = {
       interfaceScale: 'Interface scale',
       decreaseInterfaceScale: 'Decrease interface scale',
       increaseInterfaceScale: 'Increase interface scale'
+    },
+    closeDialog: {
+      title: 'Close window',
+      description: 'What would you like to do when closing the window? Minimizing to tray keeps CyberFeeds in the background; quitting closes it completely.',
+      minimizeToTray: 'Minimize to tray',
+      minimizeToTrayDesc: 'Keeps CyberFeeds in the background',
+      quit: 'Quit',
+      quitDesc: 'Quits CyberFeeds completely',
+      rememberChoice: 'Remember my choice',
+      space: 'Space',
+      close: 'Close'
     }
   },
   es: {
@@ -1100,6 +1112,7 @@ export const translations = {
         startMinimized: 'Iniciar minimizado en la bandeja',
         requiresStartWithWindows: '(requiere Iniciar con Windows)',
         minimizeToTray: 'Minimizar en la bandeja al cerrar',
+        resetCloseChoice: 'Restablecer aviso al cerrar',
         showThumbnails: 'Mostrar imagen destacada',
         linksOpenIn: 'Los enlaces externos se abren en',
         openOptions: {
@@ -1586,6 +1599,17 @@ export const translations = {
       interfaceScale: 'Escala de interfaz',
       decreaseInterfaceScale: 'Reducir escala de interfaz',
       increaseInterfaceScale: 'Aumentar escala de interfaz'
+    },
+    closeDialog: {
+      title: 'Cerrar ventana',
+      description: '¿Qué te gustaría hacer al cerrar la ventana? Minimizar a la bandeja mantiene CyberFeeds en segundo plano; salir la cierra por completo.',
+      minimizeToTray: 'Minimizar a la bandeja',
+      minimizeToTrayDesc: 'Mantiene CyberFeeds en segundo plano',
+      quit: 'Salir',
+      quitDesc: 'Cierra CyberFeeds por completo',
+      rememberChoice: 'Recordar mi elección',
+      space: 'Espacio',
+      close: 'Cerrar'
     }
   }
 }

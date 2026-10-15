@@ -71,6 +71,7 @@ export interface AppSettings {
   startMinimized: boolean
   autoUpdate: boolean
   minimizeToTray: boolean
+  closeChoiceRemembered: boolean
   showArticleThumbnails: boolean
   customBrowserPath: string
   unreadOnly: boolean
@@ -213,6 +214,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   startMinimized: false,
   autoUpdate: true,
   minimizeToTray: true,
+  closeChoiceRemembered: false,
   showArticleThumbnails: true,
   customBrowserPath: '',
   unreadOnly: false,

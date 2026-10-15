@@ -5,6 +5,7 @@ import { is } from '@electron-toolkit/utils'
 import {
   initDb,
   getSettings,
+  saveSettings,
   getWindowState,
   saveWindowState,
   backfillFavicons,
@@ -316,14 +317,25 @@ function createMainWindow(): BrowserWindow {
     return { action: 'deny' }
   })
 
-  // Minimize to tray on close (respect setting)
+  // Close behavior (ask choice on first close, or minimize to tray)
   win.on('close', (e) => {
     // Always persist state so the last monitor is remembered
     persistMainWindowState(win)
-    if (!(app as any).isQuitting && getSettings().minimizeToTray) {
-      e.preventDefault()
-      win.hide()
-      return
+    if (!(app as any).isQuitting) {
+      const settings = getSettings()
+      if (!settings.closeChoiceRemembered) {
+        e.preventDefault()
+        if (win.isMinimized()) win.restore()
+        win.show()
+        win.focus()
+        win.webContents.send('window:confirm-close')
+        return
+      }
+      if (settings.minimizeToTray) {
+        e.preventDefault()
+        win.hide()
+        return
+      }
     }
   })
 
@@ -486,3 +498,32 @@ ipcMain.on('window:maximize', () => {
 })
 ipcMain.on('window:close', () => mainWindow?.close())
 ipcMain.handle('window:is-maximized', () => (mainWindow ? mainWindow.isMaximized() : false))
+ipcMain.handle('window:close-choice', (_e, action: string, remember: boolean) => {
+  if (action !== 'tray' && action !== 'quit') return false
+  const settings = getSettings()
+  let changed = false
+  const nextSettings = { ...settings }
+
+  if (remember) {
+    nextSettings.closeChoiceRemembered = true
+    nextSettings.minimizeToTray = action === 'tray'
+    changed = true
+  }
+
+  if (changed) {
+    saveSettings(nextSettings)
+    mainWindow?.webContents.send('settings:changed', nextSettings)
+  }
+
+  if (action === 'tray') {
+    mainWindow?.hide()
+    return true
+  }
+
+  // action === 'quit'
+  ;(app as any).isQuitting = true
+  closePipWindow()
+  destroyTray()
+  app.quit()
+  return true
+})

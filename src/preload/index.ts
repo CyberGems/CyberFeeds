@@ -211,6 +211,16 @@ const api = {
     }
   },
 
+  onConfirmClose: (cb: () => void) => {
+    const handler = (): void => cb()
+    ipcRenderer.on('window:confirm-close', handler)
+    return () => {
+      ipcRenderer.removeListener('window:confirm-close', handler)
+    }
+  },
+  respondCloseChoice: (action: 'tray' | 'quit', remember: boolean) =>
+    ipcRenderer.invoke('window:close-choice', action, remember) as Promise<boolean>,
+
   // First paint ack — main waits for this before showing (avoids white flash)
   uiReady: () => ipcRenderer.send('ui-ready'),
 

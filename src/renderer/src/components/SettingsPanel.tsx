@@ -1215,11 +1215,25 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <label className="toggle" style={{ marginBottom: 0 }}>
                   <div
                     className={`toggle-track ${local.minimizeToTray ? 'on' : ''}`}
-                    onClick={() => update({ minimizeToTray: !local.minimizeToTray })}
+                    onClick={() => update({ minimizeToTray: !local.minimizeToTray, closeChoiceRemembered: true })}
                   >
                     <div className="toggle-thumb" />
                   </div>
                   <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.settings.general.minimizeToTray}</span>
+                  {local.closeChoiceRemembered && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ marginLeft: 'auto', fontSize: 11, padding: '3px 8px' }}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        update({ closeChoiceRemembered: false })
+                      }}
+                    >
+                      {t.settings.general.resetCloseChoice}
+                    </button>
+                  )}
                 </label>
               </div>
             </>
