@@ -244,7 +244,9 @@ export const translations = {
       closeTabsToTheRight: 'Close tabs to the right',
       closeAllTabs: 'Close all tabs',
       copyLink: 'Copy link',
-      openInBrowser: 'Open in browser'
+      openInBrowser: 'Open in browser',
+      scrollLeft: 'Scroll tabs left',
+      scrollRight: 'Scroll tabs right'
     },
     settings: {
       title: 'Settings',
@@ -1032,7 +1034,9 @@ export const translations = {
       closeTabsToTheRight: 'Cerrar pestañas a la derecha',
       closeAllTabs: 'Cerrar todas las pestañas',
       copyLink: 'Copiar enlace',
-      openInBrowser: 'Abrir en el navegador'
+      openInBrowser: 'Abrir en el navegador',
+      scrollLeft: 'Desplazar pestañas a la izquierda',
+      scrollRight: 'Desplazar pestañas a la derecha'
     },
     settings: {
       title: 'Configuración',

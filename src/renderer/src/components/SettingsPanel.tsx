@@ -1168,25 +1168,21 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               <div className="settings-card">
                 <CardTitle icon={Layers} accent={TAB_META.general.accent}>{t.settings.general.articleTabsTitle}</CardTitle>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <div>
-                    <span style={{ fontSize: 13, color: 'var(--text-primary)', display: 'block' }}>
-                      {t.settings.general.articleTabsSession}
-                    </span>
-                    <span className="form-hint" style={{ marginTop: 2, display: 'block' }}>
-                      {t.settings.general.articleTabsSessionHint}
-                    </span>
-                  </div>
-                  <select
-                    className="form-select"
-                    value={local.articleTabsSession || 'restore'}
-                    onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
-                    style={{ width: 'auto', minWidth: 160, fontSize: 12 }}
-                  >
-                    <option value="restore">{t.settings.general.articleTabsSessionRestore}</option>
-                    <option value="clean">{t.settings.general.articleTabsSessionClean}</option>
-                  </select>
+                <div style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  {t.settings.general.articleTabsSession}
                 </div>
+                <div className="form-hint" style={{ marginTop: 0, marginBottom: 10, fontSize: 12, lineHeight: 1.45 }}>
+                  {t.settings.general.articleTabsSessionHint}
+                </div>
+                <select
+                  className="form-select"
+                  value={local.articleTabsSession || 'restore'}
+                  onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
+                  style={{ width: '100%', fontSize: 12 }}
+                >
+                  <option value="restore">{t.settings.general.articleTabsSessionRestore}</option>
+                  <option value="clean">{t.settings.general.articleTabsSessionClean}</option>
+                </select>
               </div>
 
               <div className="settings-card">

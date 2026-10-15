@@ -4678,6 +4678,38 @@ mark.reader-search-match.reader-search-active {
   transform: scale(1.08);
 }
 
+.article-tab-bar-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 25px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  margin: 0 1px;
+}
+
+.article-tab-bar-nav-btn:hover:not(:disabled):not(.disabled) {
+  background: var(--bg-3);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.article-tab-bar-nav-btn.disabled,
+.article-tab-bar-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
+  pointer-events: none;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
 .article-tab-bar-actions {
   display: flex;
   align-items: center;

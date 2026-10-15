@@ -1,5 +1,5 @@
 import React, { memo, useRef, useState, useEffect, useCallback } from 'react'
-import { X, ExternalLink, Link2, XSquare } from 'lucide-react'
+import { X, ExternalLink, Link2, XSquare, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTabsStore, type ArticleTab } from '../store/tabs.store'
 import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
@@ -27,6 +27,43 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   const [ctxMenu, setCtxMenu] = useState<TabContextMenuState | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [hasOverflow, setHasOverflow] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const { scrollLeft, scrollWidth, clientWidth } = el
+    const overflow = scrollWidth > clientWidth + 2
+    setHasOverflow(overflow)
+    setCanScrollLeft(overflow && scrollLeft > 2)
+    setCanScrollRight(overflow && scrollLeft + clientWidth < scrollWidth - 2)
+  }, [])
+
+  const scrollTabs = useCallback((direction: 'left' | 'right') => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const distance = Math.max(el.clientWidth * 0.65, 160)
+    el.scrollBy({
+      left: direction === 'left' ? -distance : distance,
+      behavior: 'smooth'
+    })
+  }, [])
+
+  // Check overflow on tabs count change or container resize
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    updateScrollState()
+    const ro = new ResizeObserver(() => updateScrollState())
+    ro.observe(el)
+    window.addEventListener('resize', updateScrollState)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', updateScrollState)
+    }
+  }, [updateScrollState, tabs])
 
   // Close context menu on outside click or global close event
   useEffect(() => {
@@ -53,7 +90,9 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     if (activeEl) {
       activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' })
     }
-  }, [activeTabId])
+    const timer = setTimeout(updateScrollState, 250)
+    return () => clearTimeout(timer)
+  }, [activeTabId, updateScrollState])
 
   // Mouse wheel horizontal scroll handler
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
@@ -108,9 +147,24 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
 
   return (
     <div className="article-tab-bar" onContextMenu={(e) => e.preventDefault()}>
+      {hasOverflow && (
+        <Tooltip label={canScrollLeft ? t.articleTabs.scrollLeft : ''} placement="bottom">
+          <button
+            type="button"
+            disabled={!canScrollLeft}
+            onClick={() => scrollTabs('left')}
+            aria-label={t.articleTabs.scrollLeft}
+            className={`article-tab-bar-nav-btn ${canScrollLeft ? '' : 'disabled'}`}
+          >
+            <ChevronLeft size={13} strokeWidth={2.2} />
+          </button>
+        </Tooltip>
+      )}
+
       <div
         ref={scrollContainerRef}
         className="article-tab-bar-scroll"
+        onScroll={updateScrollState}
         onWheel={handleWheel}
       >
         {tabs.map((tab, idx) => {
@@ -118,45 +172,69 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
           const isDragOver = dragOverIndex === idx && draggedIndex !== idx
 
           return (
-            <div
+            <Tooltip
               key={tab.id}
-              data-tab-id={tab.id}
-              className={`article-tab ${isActive ? 'active' : ''} ${isDragOver ? 'drag-over' : ''}`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, idx)}
-              onDragOver={(e) => handleDragOver(e, idx)}
-              onDrop={(e) => handleDrop(e, idx)}
-              onDragEnd={handleDragEnd}
-              onClick={() => setActiveTab(tab.id)}
-              onAuxClick={(e) => {
-                // Middle-click closes tab
-                if (e.button === 1) {
-                  e.preventDefault()
-                  closeTab(tab.id)
-                }
-              }}
-              onContextMenu={(e) => handleContextMenu(e, tab)}
-              title={tab.title}
+              label={
+                <div style={{ maxWidth: 360, whiteSpace: 'normal', lineHeight: 1.35, textAlign: 'center', wordBreak: 'break-word' }}>
+                  {tab.title}
+                </div>
+              }
+              placement="bottom"
             >
-              <div className="article-tab-favicon">
-                <FeedFavicon icon={tab.feedIcon} title={tab.feedTitle || tab.title} size={14} />
-              </div>
-              <span className="article-tab-title">{tab.title}</span>
-              <button
-                type="button"
-                className="article-tab-close"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  closeTab(tab.id)
+              <div
+                data-tab-id={tab.id}
+                className={`article-tab ${isActive ? 'active' : ''} ${isDragOver ? 'drag-over' : ''}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, idx)}
+                onDragOver={(e) => handleDragOver(e, idx)}
+                onDrop={(e) => handleDrop(e, idx)}
+                onDragEnd={handleDragEnd}
+                onClick={() => setActiveTab(tab.id)}
+                onAuxClick={(e) => {
+                  // Middle-click closes tab
+                  if (e.button === 1) {
+                    e.preventDefault()
+                    closeTab(tab.id)
+                  }
                 }}
-                aria-label={t.articleTabs.closeTab}
+                onContextMenu={(e) => handleContextMenu(e, tab)}
               >
-                <X size={11} strokeWidth={2.4} />
-              </button>
-            </div>
+                <div className="article-tab-favicon">
+                  <FeedFavicon icon={tab.feedIcon} title={tab.feedTitle || tab.title} size={14} />
+                </div>
+                <span className="article-tab-title">{tab.title}</span>
+                <Tooltip label={t.articleTabs.closeTab} placement="bottom">
+                  <button
+                    type="button"
+                    className="article-tab-close"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      closeTab(tab.id)
+                    }}
+                    aria-label={t.articleTabs.closeTab}
+                  >
+                    <X size={11} strokeWidth={2.4} />
+                  </button>
+                </Tooltip>
+              </div>
+            </Tooltip>
           )
         })}
       </div>
+
+      {hasOverflow && (
+        <Tooltip label={canScrollRight ? t.articleTabs.scrollRight : ''} placement="bottom">
+          <button
+            type="button"
+            disabled={!canScrollRight}
+            onClick={() => scrollTabs('right')}
+            aria-label={t.articleTabs.scrollRight}
+            className={`article-tab-bar-nav-btn ${canScrollRight ? '' : 'disabled'}`}
+          >
+            <ChevronRight size={13} strokeWidth={2.2} />
+          </button>
+        </Tooltip>
+      )}
 
       <div className="article-tab-bar-actions">
         <Tooltip label={t.articleTabs.closeAllTabs} placement="bottom">
