@@ -1361,7 +1361,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         </div>
       )}
 
-      <div className={`viewer-sticky-header ${showStickyTitle ? 'is-visible' : ''}`}>
+      <div className="viewer-body-container">
+        <div className={`viewer-sticky-header ${showStickyTitle ? 'is-visible' : ''}`}>
         <Tooltip
           label={article.feedTitle ? `${article.feedTitle} · ${article.title}` : article.title}
           placement="bottom"
@@ -1825,6 +1826,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           )}
         </div>
       </div>
+    </div>
 
       {showScrollTop && (
         <Tooltip label={t.articleViewer.backToTop} placement="bottom">
