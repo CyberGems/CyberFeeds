@@ -154,6 +154,7 @@ export default function PipApp(): React.JSX.Element {
         >
           <button
             type="button"
+            className="pip-action-btn"
             onClick={handleTogglePin}
             title={t.pipPinTooltip}
             style={{
@@ -174,6 +175,7 @@ export default function PipApp(): React.JSX.Element {
 
           <button
             type="button"
+            className="pip-action-btn"
             onClick={handleReturnToReader}
             title={t.pipReturnToReader}
             style={{
@@ -194,6 +196,7 @@ export default function PipApp(): React.JSX.Element {
 
           <button
             type="button"
+            className="pip-action-btn"
             onClick={handleClose}
             title={t.pipCloseFloating}
             style={{

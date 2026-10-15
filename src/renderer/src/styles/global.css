@@ -387,11 +387,14 @@ body {
   cursor: pointer;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  transition: background 0.15s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
   -webkit-app-region: no-drag;
 }
 .topbar-brand:hover {
   background: var(--bg-2);
+}
+.topbar-brand:active {
+  transform: scale(0.97);
 }
 .brand-feeds {
   color: #00D8F1;
@@ -418,11 +421,15 @@ body {
   justify-content: center;
   transition:
     background 0.15s,
-    color 0.15s;
+    color 0.15s,
+    transform 0.1s ease;
 }
 .win-btn:hover {
   background: var(--bg-2);
   color: var(--text-primary);
+}
+.win-btn:active {
+  transform: scale(0.90);
 }
 .win-btn.close:hover {
   background: var(--red);
@@ -485,13 +492,16 @@ body {
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.1s ease;
   user-select: none;
 }
 
 .topbar-menu-item:hover {
   background: var(--bg-2);
   color: var(--text-primary);
+}
+.topbar-menu-item:active {
+  transform: scale(0.98);
 }
 .topbar-menu-item.keyboard-active:not(:hover) {
   background: var(--bg-2);
@@ -555,12 +565,16 @@ body {
   font-size: var(--sidebar-font-size);
   transition:
     background 0.1s,
-    color 0.1s;
+    color 0.1s,
+    transform 0.08s ease;
   position: relative;
 }
 .sidebar-item:hover {
   background: var(--bg-2);
   color: var(--text-primary);
+}
+.sidebar-item:active {
+  transform: scale(0.985);
 }
 .sidebar-item.active {
   background: var(--accent-subtle);
@@ -733,7 +747,7 @@ body {
   color: var(--text-muted);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease, transform 0.1s ease;
   margin: 0;
 }
 .sidebar-add-feed {
@@ -753,6 +767,10 @@ body {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-subtle);
+  transform: translateY(-1px);
+}
+.add-feed-btn:active {
+  transform: scale(0.96);
 }
 
 /* ─── Article List ──────────────────────────────────────────────────────── */
@@ -1270,12 +1288,16 @@ body {
   font-weight: 500;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s ease;
 }
 .viewer-sticky-back-to-top:hover {
   background: var(--bg-3);
   color: var(--text-primary);
   border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.viewer-sticky-back-to-top:active {
+  transform: scale(0.95);
 }
 .viewer-search-bar {
   display: flex;
@@ -1882,13 +1904,17 @@ mark.reader-search-match.reader-search-active {
   background: var(--bg-2);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s ease;
 }
 
 .welcome-interface-scale-btn:hover:not(:disabled) {
   background: var(--accent-subtle);
   border-color: var(--accent);
   color: var(--accent);
+  transform: scale(1.08);
+}
+.welcome-interface-scale-btn:active:not(:disabled) {
+  transform: scale(0.91);
 }
 
 .welcome-interface-scale-btn:focus-visible {
@@ -1931,6 +1957,9 @@ mark.reader-search-match.reader-search-active {
   border-color: var(--border-hover);
   transform: translateY(-1.5px);
   box-shadow: var(--shadow-md);
+}
+.welcome-card:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .welcome-card-header {
@@ -2113,23 +2142,35 @@ mark.reader-search-match.reader-search-active {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s, transform 0.1s ease;
   font-family: inherit;
+  user-select: none;
+}
+.btn:not(:disabled):active {
+  transform: scale(0.97);
 }
 .btn-primary {
   background: var(--accent);
   color: #0d1117;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: var(--accent-hover);
+  transform: translateY(-0.5px);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn-secondary {
   background: var(--bg-2);
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: var(--bg-3);
+  transform: translateY(-0.5px);
+}
+.btn-secondary:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .btn-ghost {
   background: transparent;
@@ -2159,9 +2200,13 @@ mark.reader-search-match.reader-search-active {
   color: var(--red);
   border: 1px solid var(--red);
 }
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background: var(--red);
   color: #fff;
+  transform: translateY(-0.5px);
+}
+.btn-danger:not(:disabled):active {
+  transform: scale(0.97);
 }
 .btn-icon {
   width: 30px;
@@ -2169,9 +2214,13 @@ mark.reader-search-match.reader-search-active {
   padding: 0;
   justify-content: center;
 }
+.btn-icon:not(:disabled):active {
+  transform: scale(0.92);
+}
 .btn:disabled {
   opacity: 0.5;
   cursor: default;
+  transform: none !important;
 }
 
 /* ─── Panels (slide-in) ─────────────────────────────────────────────────── */
@@ -2415,11 +2464,16 @@ mark.reader-search-match.reader-search-active {
   transition:
     color 0.15s,
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    transform 0.1s ease;
 }
 .settings-nav-btn:hover {
   color: var(--text-primary);
   background: var(--bg-2);
+  transform: translateX(2px);
+}
+.settings-nav-btn:active {
+  transform: scale(0.97);
 }
 .settings-nav-btn svg {
   flex-shrink: 0;
@@ -2878,9 +2932,14 @@ mark.reader-search-match.reader-search-active {
   background: var(--accent);
   border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+  transition: background 0.15s, color 0.15s, transform 0.1s ease;
 }
 .settings-preview-btn:hover:not(:disabled) {
   background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+.settings-preview-btn:active:not(:disabled) {
+  transform: scale(0.97);
 }
 .settings-preview-btn.is-sending,
 .settings-preview-btn:disabled {
@@ -3049,7 +3108,7 @@ mark.reader-search-match.reader-search-active {
   border-radius: 10px;
   background: var(--bg-3);
   position: relative;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s ease;
   flex-shrink: 0;
 }
 .toggle-track.on {
@@ -3063,10 +3122,16 @@ mark.reader-search-match.reader-search-active {
   position: absolute;
   top: 3px;
   left: 3px;
-  transition: left 0.2s;
+  transition: left 0.2s cubic-bezier(0.2, 0, 0, 1), width 0.12s ease;
 }
 .toggle-track.on .toggle-thumb {
   left: 19px;
+}
+.toggle:active:not(.disabled) .toggle-track {
+  transform: scale(0.96);
+}
+.toggle:active:not(.disabled) .toggle-thumb {
+  width: 17px;
 }
 .toggle.disabled {
   opacity: 0.45;
@@ -3177,12 +3242,16 @@ mark.reader-search-match.reader-search-active {
   color: var(--text-secondary);
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s ease;
 }
 .add-feed-example:hover {
   border-color: var(--accent);
   background: var(--accent-subtle);
   color: var(--text-primary);
+  transform: translateY(-1px);
+}
+.add-feed-example:not(:disabled):active {
+  transform: scale(0.97);
 }
 .add-feed-example:disabled {
   cursor: wait;
@@ -3644,7 +3713,7 @@ mark.reader-search-match.reader-search-active {
   animation: slideUp 0.2s ease;
   will-change: transform, opacity;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
 }
 .notif-card.dismissing {
   animation: notifSlideOut 0.2s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
@@ -3672,6 +3741,10 @@ mark.reader-search-match.reader-search-active {
 }
 .notif-card:hover {
   border-color: var(--accent);
+  transform: translateY(-1px);
+}
+.notif-card:active {
+  transform: scale(0.985);
 }
 .notif-card.is-compact {
   padding: 8px 11px;
@@ -3724,12 +3797,17 @@ mark.reader-search-match.reader-search-active {
   transition:
     color 0.15s,
     background 0.15s,
-    border-color 0.15s;
+    border-color 0.15s,
+    transform 0.1s ease;
 }
 .notif-close:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.12);
+  transform: scale(1.08);
+}
+.notif-close:active {
+  transform: scale(0.88);
 }
 .notif-title {
   font-size: 12px;
@@ -3782,19 +3860,28 @@ mark.reader-search-match.reader-search-active {
   background: var(--bg-2);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease, transform 0.1s cubic-bezier(0.2, 0, 0, 1);
   white-space: nowrap;
   flex-shrink: 0;
+  user-select: none;
 }
 .notif-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-subtle);
+  transform: translateY(-1px);
+}
+.notif-btn:active {
+  transform: scale(0.94);
 }
 .notif-btn-compact {
   width: 36px;
   height: 26px;
   justify-content: center;
   padding: 5px 8px;
+}
+.notif-btn-compact:active {
+  transform: scale(0.90);
 }
 .notif-btn-compact .notif-action-label {
   display: none;
@@ -3833,12 +3920,16 @@ mark.reader-search-match.reader-search-active {
   letter-spacing: 0.3px;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-  transition: all 0.15s;
+  transition: all 0.15s ease, transform 0.1s ease;
 }
 .clear-all-btn:hover {
   background: var(--accent, #58a6ff);
   border-color: var(--accent, #58a6ff);
   color: #0d1117;
+  transform: translateY(-1px);
+}
+.clear-all-btn:active {
+  transform: scale(0.95);
 }
 .notif-countdown-num {
   display: inline-block;
@@ -3896,8 +3987,12 @@ mark.reader-search-match.reader-search-active {
   color: var(--text-primary);
   transition:
     background 0.1s,
-    color 0.1s;
+    color 0.1s,
+    transform 0.08s ease;
   user-select: none;
+}
+.ctx-item:active {
+  transform: scale(0.98);
 }
 .ctx-item svg {
   flex-shrink: 0;
@@ -4094,13 +4189,17 @@ mark.reader-search-match.reader-search-active {
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
   white-space: nowrap;
 }
 
 .selection-flyout-btn:hover {
   background: var(--bg-2);
   color: var(--accent);
+}
+
+.selection-flyout-btn:active {
+  transform: scale(0.95);
 }
 
 .selection-flyout-btn.is-copied {
@@ -4182,12 +4281,16 @@ mark.reader-search-match.reader-search-active {
   font-size: 11px;
   padding: 2px 5px;
   border-radius: 4px;
-  transition: color 0.12s, background 0.12s;
+  transition: color 0.12s, background 0.12s, transform 0.08s ease;
 }
 
 .selection-translate-copy-btn:hover {
   color: var(--accent);
   background: var(--bg-2);
+}
+
+.selection-translate-copy-btn:active {
+  transform: scale(0.92);
 }
 
 .selection-translate-body {
@@ -4449,7 +4552,7 @@ mark.reader-search-match.reader-search-active {
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease, transform 0.1s ease;
   line-height: 1.3;
 }
 
@@ -4457,6 +4560,11 @@ mark.reader-search-match.reader-search-active {
   background: var(--bg-3);
   color: var(--text-primary);
   border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.article-filter-chip:active {
+  transform: scale(0.94);
 }
 
 .article-filter-chip.active {
@@ -4734,7 +4842,7 @@ mark.reader-search-match.reader-search-active {
   border-bottom: none;
   font-size: 11.5px;
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.1s ease;
   position: relative;
   flex-shrink: 1;
 }
@@ -4742,6 +4850,10 @@ mark.reader-search-match.reader-search-active {
 .article-tab:hover {
   background: var(--bg-2);
   color: var(--text-primary);
+}
+
+.article-tab:active {
+  transform: scale(0.97);
 }
 
 .article-tab.active {
@@ -4797,7 +4909,7 @@ mark.reader-search-match.reader-search-active {
   padding: 0;
   flex-shrink: 0;
   opacity: 0.6;
-  transition: all 0.12s ease;
+  transition: all 0.12s ease, transform 0.1s ease;
 }
 
 .article-tab:hover .article-tab-close,
@@ -4808,7 +4920,11 @@ mark.reader-search-match.reader-search-active {
 .article-tab-close:hover {
   background: rgba(235, 87, 87, 0.18);
   color: var(--red);
-  transform: scale(1.08);
+  transform: scale(1.12);
+}
+
+.article-tab-close:active {
+  transform: scale(0.88);
 }
 
 .article-tab-bar-nav-btn {
@@ -4823,7 +4939,7 @@ mark.reader-search-match.reader-search-active {
   color: var(--text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease, transform 0.1s ease;
   margin: 0 1px;
 }
 
@@ -4831,6 +4947,11 @@ mark.reader-search-match.reader-search-active {
   background: var(--bg-3);
   color: var(--text-primary);
   border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.article-tab-bar-nav-btn:active:not(:disabled):not(.disabled) {
+  transform: scale(0.90);
 }
 
 .article-tab-bar-nav-btn.disabled,
@@ -4863,12 +4984,17 @@ mark.reader-search-match.reader-search-active {
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease, transform 0.1s ease;
 }
 
 .article-tab-bar-action-btn:hover {
   background: var(--bg-2);
   color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.article-tab-bar-action-btn:active {
+  transform: scale(0.90);
 }
 
 .article-tab-counter-btn {
@@ -4885,7 +5011,7 @@ mark.reader-search-match.reader-search-active {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.15s ease, transform 0.1s ease;
   user-select: none;
 }
 
@@ -4893,6 +5019,11 @@ mark.reader-search-match.reader-search-active {
   background: var(--bg-3);
   color: var(--text-primary);
   border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.article-tab-counter-btn:active {
+  transform: scale(0.93);
 }
 
 .article-tab-counter-btn.active {
@@ -4929,6 +5060,17 @@ mark.reader-search-match.reader-search-active {
   display: flex;
   flex-direction: column;
   animation: tooltipPop 0.14s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ─── PiP Action Buttons ─────────────────────────────────────────────────── */
+.pip-action-btn {
+  transition: all 0.15s ease, transform 0.1s ease !important;
+}
+.pip-action-btn:hover {
+  transform: scale(1.08);
+}
+.pip-action-btn:active {
+  transform: scale(0.90);
 }
 
 .article-tabs-dropdown-header {
