@@ -13,7 +13,7 @@ asarUnpack:
   - resources/**
 win:
   executableName: CyberFeeds
-  icon: build/icon.png
+  icon: build/icon.ico
   target:
     - target: nsis
       arch:
@@ -33,7 +33,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: always
   createStartMenuShortcut: true
-  menuCategory: true
+  menuCategory: false
   runAfterFinish: true
   deleteAppDataOnUninstall: false
 portable:
