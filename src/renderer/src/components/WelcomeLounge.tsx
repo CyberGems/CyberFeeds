@@ -11,6 +11,7 @@ import {
   ZoomIn,
   ZoomOut
 } from 'lucide-react'
+import Tooltip from './Tooltip'
 import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useSettingsStore } from '../store/settings.store'
@@ -118,15 +119,16 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
             {effectiveName && ', '}
           </span>
           {effectiveName && (
-            <button
-              type="button"
-              className="welcome-greeting-name"
-              onClick={openUserNameSettings}
-              aria-label={t.welcome.editName}
-              title={t.welcome.editName}
-            >
-              {effectiveName}
-            </button>
+            <Tooltip label={t.welcome.editName} placement="bottom">
+              <button
+                type="button"
+                className="welcome-greeting-name"
+                onClick={openUserNameSettings}
+                aria-label={t.welcome.editName}
+              >
+                {effectiveName}
+              </button>
+            </Tooltip>
           )}
         </div>
 
@@ -240,27 +242,29 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
 
         <div className="welcome-interface-scale" role="group" aria-label={t.welcome.interfaceScale}>
           <span className="welcome-interface-scale-label">{t.welcome.interfaceScale}</span>
-          <button
-            type="button"
-            className="welcome-interface-scale-btn"
-            onClick={() => adjustInterfaceScale(-INTERFACE_SCALE_STEP)}
-            disabled={interfaceScale <= INTERFACE_SCALE_MIN}
-            aria-label={t.welcome.decreaseInterfaceScale}
-            title={t.welcome.decreaseInterfaceScale}
-          >
-            <ZoomOut size={13} />
-          </button>
+          <Tooltip label={t.welcome.decreaseInterfaceScale} placement="top">
+            <button
+              type="button"
+              className="welcome-interface-scale-btn"
+              onClick={() => adjustInterfaceScale(-INTERFACE_SCALE_STEP)}
+              disabled={interfaceScale <= INTERFACE_SCALE_MIN}
+              aria-label={t.welcome.decreaseInterfaceScale}
+            >
+              <ZoomOut size={13} />
+            </button>
+          </Tooltip>
           <output className="welcome-interface-scale-value">{interfaceScale}%</output>
-          <button
-            type="button"
-            className="welcome-interface-scale-btn"
-            onClick={() => adjustInterfaceScale(INTERFACE_SCALE_STEP)}
-            disabled={interfaceScale >= INTERFACE_SCALE_MAX}
-            aria-label={t.welcome.increaseInterfaceScale}
-            title={t.welcome.increaseInterfaceScale}
-          >
-            <ZoomIn size={13} />
-          </button>
+          <Tooltip label={t.welcome.increaseInterfaceScale} placement="top">
+            <button
+              type="button"
+              className="welcome-interface-scale-btn"
+              onClick={() => adjustInterfaceScale(INTERFACE_SCALE_STEP)}
+              disabled={interfaceScale >= INTERFACE_SCALE_MAX}
+              aria-label={t.welcome.increaseInterfaceScale}
+            >
+              <ZoomIn size={13} />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
