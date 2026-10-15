@@ -259,11 +259,18 @@ export default function App(): JSX.Element {
       }, 300)
     }
 
-    const unsub = window.api.onArticlesUpdated((data) => {
-      if (data.feedId === useUIStore.getState().pendingFeedId) {
-        useUIStore.getState().setPendingFeedId(null)
+    const unsub = window.api.onArticlesUpdated(async (data) => {
+      const isPending = data.feedId === useUIStore.getState().pendingFeedId
+      const isEmpty = useArticlesStore.getState().articles.length === 0
+      if (isPending || isEmpty) {
+        await refresh()
+        await refreshUnreadCounts()
+        if (isPending) {
+          useUIStore.getState().setPendingFeedId(null)
+        }
+      } else {
+        scheduleArticleCheck()
       }
-      scheduleArticleCheck()
     })
     return () => {
       unsub()

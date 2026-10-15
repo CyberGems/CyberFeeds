@@ -310,9 +310,43 @@ async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
     }
 
     let feed: any
-    try {
-      feed = await parser.parseURL(targetUrl)
-    } catch (err) {
+    const isYtTarget = isYouTubeUrl(targetUrl)
+
+    if (isYtTarget) {
+      // YouTube uses Atom XML which rss-parser can time out on via standard HTTP.
+      // Use direct fetchWithTimeout + fast-xml-parser for instant parsing.
+      const resp = await fetchWithTimeout(targetUrl)
+      const text = await resp.text()
+      const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' })
+      const parsed = xmlParser.parse(text)
+      const channel = parsed.rss?.channel || parsed.feed || parsed
+      const rawItems = Array.isArray(channel.item) ? channel.item :
+                       Array.isArray(channel.entry) ? channel.entry :
+                       channel.item ? [channel.item] :
+                       channel.entry ? [channel.entry] : []
+      const items: any[] = []
+      rawItems.forEach((item: any) => {
+        const title = item.title?.['#text'] || item.title || 'Untitled'
+        const link = item.link?.['@_href'] || item.link || ''
+        const ytDesc = extractYouTubeDescription(item)
+        const content = ytDesc || item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
+        const pubDate = item.pubDate || item.published || item.updated || ''
+        const guid = getYouTubeCanonicalGuid(item) || item.guid?.['#text'] || item.guid || item.id || link
+        items.push({
+          ...item,
+          title,
+          link,
+          content,
+          contentSnippet: truncate(cleanHtml(content), 400),
+          pubDate,
+          guid
+        })
+      })
+      feed = { items }
+    } else {
+      try {
+        feed = await parser.parseURL(targetUrl)
+      } catch (err) {
       console.error(`[Worker] Standard RSS parsing failed for ${targetUrl}, trying robust fallback...`, err)
       const resp = await fetchWithTimeout(targetUrl)
       let text = await resp.text()
@@ -374,6 +408,7 @@ async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
       }
       feed = { items }
     }
+  }
 
     const articles: ParsedArticle[] = (feed.items || []).slice(0, 100).map(item => {
       const ytGuid = getYouTubeCanonicalGuid(item)

@@ -15,7 +15,16 @@ import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup
 import { translations } from '../shared/translations'
 import { DEFAULT_SETTINGS } from '../shared/types'
 import { normalizeFeedUrl } from '../shared/reddit'
-import { isYouTubeUrl, resolveYouTubeFeedUrl } from '../shared/youtube'
+import {
+  isYouTubeUrl,
+  resolveYouTubeFeedUrl,
+  getYouTubeCanonicalGuid,
+  extractYouTubeVideoId,
+  getYouTubeThumbnailUrl,
+  extractYouTubeDescription,
+  extractYouTubeViews,
+  buildYouTubeArticleContent
+} from '../shared/youtube'
 import { robustParse } from './feed-parse'
 import type { Feed, Folder } from './types'
 
@@ -182,7 +191,68 @@ export function registerIpc(): void {
       }
       db.addFeed(feed)
 
-      // Immediately fetch articles for new feed
+      // Immediately insert parsed articles if available from robustParse
+      if (Array.isArray(parsed.items) && parsed.items.length > 0) {
+        const initialArticles = parsed.items.slice(0, 100).map((item: any) => {
+          const ytGuid = getYouTubeCanonicalGuid(item)
+          const guid = ytGuid || item.guid?.['#text'] || item.guid || item.id || item.link || item.title || String(Math.random())
+          const id = crypto.createHash('sha1').update(`${feed.id}:${guid}`).digest('hex')
+          const pubDate = item.pubDate ? new Date(item.pubDate).getTime() : Date.now()
+          let content = item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
+          let snippet = item.contentSnippet || item.snippet || ''
+
+          let thumbnail: string | undefined
+          let link = item.link || ''
+          const isYt = Boolean(ytGuid || isYouTubeUrl(link) || isYouTubeUrl(feedUrl))
+
+          if (isYt) {
+            const videoId =
+              (ytGuid ? extractYouTubeVideoId(ytGuid) : null) ||
+              extractYouTubeVideoId(link) ||
+              (item.ytVideoId ? String(item.ytVideoId) : null)
+            const ytDesc = extractYouTubeDescription(item)
+            const views = extractYouTubeViews(item)
+            const authorName = typeof item.author === 'object' ? item.author?.name : (item.creator || item.author)
+
+            if (videoId) {
+              link = `https://www.youtube.com/watch?v=${videoId}`
+              thumbnail = getYouTubeThumbnailUrl(videoId)
+              content = buildYouTubeArticleContent({
+                videoId,
+                title: String(item.title || '(No title)').trim(),
+                description: ytDesc,
+                views,
+                author: authorName
+              })
+            }
+            if (ytDesc) snippet = ytDesc
+          }
+
+          if (!snippet && content) {
+            snippet = String(content).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400)
+          }
+
+          return {
+            id,
+            feedId: feed.id,
+            title: String(item.title || '(No title)').trim(),
+            link,
+            pubDate: isNaN(pubDate) ? Date.now() : pubDate,
+            content: String(content || ''),
+            snippet: String(snippet || ''),
+            author: typeof item.author === 'object' ? item.author?.name : (item.creator || item.author || undefined),
+            guid: String(guid),
+            thumbnail
+          }
+        })
+
+        const inserted = db.insertArticles(initialArticles)
+        if (inserted.length > 0) {
+          db.updateFeed({ id: feed.id, lastFetched: Date.now() })
+        }
+      }
+
+      // Trigger background poll to sync remaining or newer items
       polling.pollFeeds([feed])
 
       return { feed }

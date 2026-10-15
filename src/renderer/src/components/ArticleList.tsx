@@ -24,7 +24,11 @@ import {
   Clock,
   History,
   BookOpen,
-  Layers
+  Layers,
+  AlertTriangle,
+  Sparkles,
+  CheckCircle2,
+  Filter
 } from 'lucide-react'
 import logoPng from '../../../../resources/icon.png'
 import { useArticlesStore } from '../store/articles.store'
@@ -329,6 +333,27 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const isAllArticles = selectedFeedId === null && !unreadOnly && !readOnly
   const isUnreadArticles = selectedFeedId === null && unreadOnly
   const isReadArticles = selectedFeedId === null && readOnly
+
+  const isYouTubeFeed = Boolean(
+    selectedFeed &&
+      (selectedFeed.url.includes('youtube.com') || selectedFeed.link?.includes('youtube.com'))
+  )
+  const isRedditFeed = Boolean(
+    selectedFeed &&
+      (selectedFeed.url.includes('reddit.com') || selectedFeed.link?.includes('reddit.com'))
+  )
+  const hasFeedError = Boolean(selectedFeed && selectedFeed.errorCount > 0)
+  const hasActiveFilters = Boolean(
+    search.trim() || (quickFilter && quickFilter !== 'all') || unreadOnly || readOnly
+  )
+
+  const handleClearFilters = useCallback(() => {
+    setSearch('')
+    setSearchInput('')
+    setQuickFilter('all')
+    setUnreadOnly(false)
+    setReadOnly(false)
+  }, [setSearch, setQuickFilter, setUnreadOnly, setReadOnly])
 
   const handleImportOpml = useCallback(async (): Promise<void> => {
     setImportingOpml(true)
@@ -1422,10 +1447,120 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
             </div>
           </div>
         ) : articles.length === 0 ? (
-          <div
-            style={{ padding: 24, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}
-          >
-            {t.articleList.noArticles}
+          <div className="article-list-status-wrap">
+            {hasFeedError ? (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon issue">
+                    <AlertTriangle size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.articleList.statusCard.issueLabel}</span>
+                </div>
+                <h3 className="article-list-status-title">{t.articleList.statusCard.issueTitle}</h3>
+                <p className="article-list-status-desc">
+                  {isYouTubeFeed
+                    ? t.articleList.statusCard.issueYouTubeDesc
+                    : isRedditFeed
+                      ? t.articleList.statusCard.issueRedditDesc
+                      : t.articleList.statusCard.issueGenericDesc}
+                </p>
+                <div className="article-list-status-actions">
+                  <button className="btn btn-secondary" onClick={handleRefresh}>
+                    <RefreshCw size={13} />
+                    {t.articleList.statusCard.retryBtn}
+                  </button>
+                </div>
+              </div>
+            ) : isFetching || (Boolean(pendingFeedId) && pendingFeedId === selectedFeedId) ? (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon syncing">
+                    <Sparkles size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.articleList.statusCard.syncingLabel}</span>
+                </div>
+                <h3 className="article-list-status-title">{t.articleList.statusCard.syncingTitle}</h3>
+                <p className="article-list-status-desc">
+                  {isYouTubeFeed
+                    ? t.articleList.statusCard.syncingYouTubeDesc
+                    : isRedditFeed
+                      ? t.articleList.statusCard.syncingRedditDesc
+                      : t.articleList.statusCard.syncingDesc}
+                </p>
+                <div className="article-list-status-pulse" aria-hidden="true">
+                  <div className="article-list-status-pulse-dot" />
+                  <div className="article-list-status-pulse-bar" />
+                </div>
+              </div>
+            ) : hasActiveFilters ? (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon filter">
+                    <Filter size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.articleList.statusCard.filterLabel}</span>
+                </div>
+                <h3 className="article-list-status-title">{t.articleList.statusCard.filterTitle}</h3>
+                <p className="article-list-status-desc">{t.articleList.statusCard.filterDesc}</p>
+                <div className="article-list-status-actions">
+                  <button className="btn btn-secondary" onClick={handleClearFilters}>
+                    <X size={13} />
+                    {t.articleList.statusCard.clearFiltersBtn}
+                  </button>
+                </div>
+              </div>
+            ) : isTrash ? (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon trash">
+                    <Trash2 size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.articleList.trash}</span>
+                </div>
+                <h3 className="article-list-status-title">{t.articleList.statusCard.emptyTrashTitle}</h3>
+                <p className="article-list-status-desc">{t.articleList.statusCard.emptyTrashDesc}</p>
+              </div>
+            ) : selectedFeedId === 'starred' ? (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon starred">
+                    <Star size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.sidebar.favorites}</span>
+                </div>
+                <h3 className="article-list-status-title">{t.articleList.statusCard.emptyStarredTitle}</h3>
+                <p className="article-list-status-desc">{t.articleList.statusCard.emptyStarredDesc}</p>
+              </div>
+            ) : (
+              <div className="article-list-status-card" role="status" aria-live="polite">
+                <div className="article-list-status-header">
+                  <div className="article-list-status-icon caught-up">
+                    <CheckCircle2 size={17} />
+                  </div>
+                  <span className="article-list-status-label">{t.articleList.statusCard.allCaughtUpLabel}</span>
+                </div>
+                <h3 className="article-list-status-title">
+                  {selectedFeed
+                    ? selectedFeed.title
+                    : selectedFolder
+                      ? selectedFolder.name
+                      : t.articleList.statusCard.allCaughtUpTitle}
+                </h3>
+                <p className="article-list-status-desc">
+                  {isYouTubeFeed
+                    ? t.articleList.statusCard.emptyYouTubeDesc
+                    : isRedditFeed
+                      ? t.articleList.statusCard.emptyRedditDesc
+                      : t.articleList.statusCard.emptyDesc}
+                </p>
+                <div className="article-list-status-actions">
+                  <button className="btn btn-secondary" onClick={handleRefresh}>
+                    <RefreshCw size={13} />
+                    {t.articleList.statusCard.checkNewBtn}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="article-virtual-inner" style={{ height: rowVirtualizer.getTotalSize() }}>
