@@ -16,94 +16,143 @@ interface UpdateNotificationModalProps {
   isPortable?: boolean
 }
 
-const STARTS_WITH_EMOJI_REGEX = /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u{1F300}-\u{1FAFF}]|[\u2600-\u27BF])/u
+interface ChangelogItem {
+  text: string
+  isSubItem: boolean
+}
+
+const STARTS_WITH_EMOJI_REGEX =
+  /^(?:\p{Extended_Pictographic}|\p{Emoji_Presentation}|[\u{1F300}-\u{1FAFF}]|[\u2600-\u27BF])/u
+
+export function extractReleaseSection(markdown: string, language: string): string {
+  if (!markdown) return ''
+  if (language === 'es') {
+    const match = markdown.match(
+      /<details>[\s\S]*?<summary>[\s\S]*?(?:español|spanish|ver notas)[\s\S]*?<\/summary>([\s\S]*?)<\/details>/i
+    )
+    if (match?.[1]?.trim()) return match[1].trim()
+    const anyDetails = markdown.match(
+      /<details>[\s\S]*?<summary>[\s\S]*?<\/summary>([\s\S]*?)<\/details>/i
+    )
+    if (anyDetails?.[1]?.trim()) return anyDetails[1].trim()
+  }
+  return markdown.replace(/<details>[\s\S]*?<\/details>/gi, '').trim()
+}
+
+export function normalizeReleaseContent(content: string): string {
+  return content
+    .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, '\n### $1\n')
+    .replace(/<li[^>]*>(.*?)<\/li>/gi, '\n- $1\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+}
 
 function cleanItemText(raw: string): string {
   return raw
     .replace(/^[-*]\s+/, '')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // [text](url) -> text
-    .replace(/<[^>]+>/g, '') // strip html tags
     .replace(/\*\*([^*]+)\*\*/g, '$1') // strip bold
     .replace(/\*([^*]+)\*/g, '$1') // strip italics
     .replace(/`([^`]+)`/g, '$1') // strip code wrappers
     .replace(/~~([^~]+)~~/g, '$1') // strip strikethrough
     .replace(/:\s*$/, '') // strip trailing colons
+    .replace(/\s+/g, ' ')
     .trim()
 }
 
-function parseChangelogPeek(markdown?: string): { items: string[]; totalCount: number } {
-  if (!markdown) return { items: [], totalCount: 0 }
-  const lines = markdown.split(/\r?\n/)
-  const allHighlights: string[] = []
+export function parseChangelogPeek(
+  markdown?: string,
+  language: string = 'en'
+): ChangelogItem[] {
+  if (!markdown) return []
+  const scoped = extractReleaseSection(markdown, language)
+  const normalized = normalizeReleaseContent(scoped)
+  const lines = normalized.split(/\r?\n/)
+
+  const items: ChangelogItem[] = []
   let inHighlightsSection = false
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i]
     const line = rawLine.trim()
+    if (!line) continue
+
+    // Stop if we reach technical / checksums / download sections
+    if (
+      /^###?\s.*(?:downloads|packages|virustotal|assets|descargas|instrucciones|checksums)/i.test(
+        line
+      )
+    ) {
+      if (inHighlightsSection) break
+      continue
+    }
 
     // Match section headers
-    if (/^###?\s.*(?:highlights|features|novedades|what's new|cambios|changelog)/i.test(line)) {
+    if (
+      /^###?\s.*(?:highlights|features|novedades|what's new|cambios|destacadas|changelog)/i.test(
+        line
+      )
+    ) {
       inHighlightsSection = true
       continue
     }
 
-    // Stop if we reach downloads, virustotal, packages, or other technical sections
-    if (
-      inHighlightsSection &&
-      /^###?\s.*(?:downloads|packages|virustotal|assets|descargas|instrucciones)/i.test(line)
-    ) {
-      break
-    }
-
-    // Top-level bullet items (not indented sub-bullets)
-    if (inHighlightsSection && (rawLine.startsWith('- ') || rawLine.startsWith('* '))) {
-      const cleaned = cleanItemText(rawLine)
+    if (inHighlightsSection && (line.startsWith('- ') || line.startsWith('* '))) {
+      const isSubItem = /^\s+[-*]\s+/.test(rawLine)
+      const text = cleanItemText(line.replace(/^[-*]\s+/, ''))
       if (
-        cleaned &&
-        !cleaned.toLowerCase().includes('recommended installer') &&
-        !cleaned.toLowerCase().includes('setup installer')
+        text &&
+        !text.toLowerCase().includes('recommended installer') &&
+        !text.toLowerCase().includes('setup installer')
       ) {
-        allHighlights.push(cleaned)
+        items.push({ text, isSubItem })
       }
     }
   }
 
-  // Fallback 1: if no highlights section was found, check all bullets
-  if (allHighlights.length === 0) {
-    for (const raw of lines) {
-      const line = raw.trim()
+  // Fallback 1: if no highlights section was matched, extract any top-level bullets
+  if (items.length === 0) {
+    for (let i = 0; i < lines.length; i++) {
+      const rawLine = lines[i]
+      const line = rawLine.trim()
       if (line.startsWith('- ') || line.startsWith('* ')) {
-        const cleaned = cleanItemText(line)
+        const isSubItem = /^\s+[-*]\s+/.test(rawLine)
+        const text = cleanItemText(line.replace(/^[-*]\s+/, ''))
         if (
-          cleaned &&
-          !cleaned.toLowerCase().includes('recommended installer') &&
-          !cleaned.toLowerCase().includes('setup installer') &&
-          !cleaned.toLowerCase().includes('virustotal')
+          text &&
+          !text.toLowerCase().includes('recommended installer') &&
+          !text.toLowerCase().includes('setup installer') &&
+          !text.toLowerCase().includes('virustotal')
         ) {
-          allHighlights.push(cleaned)
+          items.push({ text, isSubItem })
         }
       }
     }
   }
 
   // Fallback 2: if no bullets exist, grab first few descriptive sentences
-  if (allHighlights.length === 0) {
+  if (items.length === 0) {
     for (const raw of lines) {
       const line = raw.trim()
       if (line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('|')) {
-        const cleaned = cleanItemText(line)
-        if (cleaned.length > 10) {
-          allHighlights.push(cleaned)
-          if (allHighlights.length >= 2) break
+        const text = cleanItemText(line)
+        if (text.length > 15) {
+          items.push({ text, isSubItem: false })
+          if (items.length >= 4) break
         }
       }
     }
   }
 
-  return {
-    items: allHighlights.slice(0, 4),
-    totalCount: allHighlights.length
-  }
+  return items
 }
 
 export function UpdateNotificationModal({
@@ -114,8 +163,9 @@ export function UpdateNotificationModal({
   onInstall,
   isPortable
 }: UpdateNotificationModalProps): JSX.Element {
-  const { t } = useTranslation()
-  const currentVersion = status.version || ''
+  const { t, language } = useTranslation()
+  const targetVersion = status.version || ''
+  const [installedVersion, setInstalledVersion] = useState<string>('')
 
   const initialNotes = status.state === 'available' ? status.releaseNotes : undefined
   const [fetchedNotes, setFetchedNotes] = useState<string | undefined>(undefined)
@@ -125,28 +175,42 @@ export function UpdateNotificationModal({
   const releaseUrl =
     status.state === 'available' && status.releaseUrl
       ? status.releaseUrl
-      : fetchedUrl || `https://github.com/CyberGems/CyberFeeds/releases/tag/v${currentVersion}`
+      : fetchedUrl || `https://github.com/CyberGems/CyberFeeds/releases/tag/v${targetVersion}`
 
+  // Fetch installed app version for side-by-side version indicator
   useEffect(() => {
-    if (status.state === 'available' && !status.releaseNotes && status.version) {
-      fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${status.version}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data?.body) setFetchedNotes(data.body)
-          if (data?.html_url) setFetchedUrl(data.html_url)
-        })
-        .catch(() => {
-          /* ignore network error */
-        })
+    window.api
+      ?.getVersions?.()
+      .then((v: any) => {
+        if (v?.app) setInstalledVersion(v.app)
+      })
+      .catch(() => {})
+  }, [])
+
+  // If initial release notes are missing or lack Spanish details when user is in ES,
+  // fetch full markdown from GitHub API
+  useEffect(() => {
+    if (status.state === 'available' && status.version) {
+      const needsFetch =
+        !status.releaseNotes ||
+        (language === 'es' && !status.releaseNotes.includes('<details>'))
+
+      if (needsFetch) {
+        fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${status.version}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data?.body) setFetchedNotes(data.body)
+            if (data?.html_url) setFetchedUrl(data.html_url)
+          })
+          .catch(() => {})
+      }
     }
-  }, [status])
+  }, [status, language])
 
-  const { items: peekItems, totalCount } = useMemo(
-    () => parseChangelogPeek(releaseNotes),
-    [releaseNotes]
+  const parsedItems = useMemo(
+    () => parseChangelogPeek(releaseNotes, language),
+    [releaseNotes, language]
   )
-
-  const remainingCount = Math.max(0, totalCount - peekItems.length)
 
   const rawTitle =
     status.state === 'available'
@@ -169,9 +233,27 @@ export function UpdateNotificationModal({
           <div>
             <div className="update-notification-title-group">
               <span className="update-notification-title">{titleText}</span>
-              {currentVersion && (
-                <span className="update-notification-badge">v{currentVersion}</span>
-              )}
+              <div className="update-notification-version-tags">
+                {installedVersion && (
+                  <span
+                    className="update-notification-badge-current"
+                    title={language === 'es' ? 'Versión instalada' : 'Installed version'}
+                  >
+                    v{installedVersion}
+                  </span>
+                )}
+                {installedVersion && targetVersion && (
+                  <span className="update-notification-version-arrow">→</span>
+                )}
+                {targetVersion && (
+                  <span
+                    className="update-notification-badge"
+                    title={language === 'es' ? 'Nueva versión disponible' : 'Available version'}
+                  >
+                    v{targetVersion}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -192,23 +274,25 @@ export function UpdateNotificationModal({
         <div className="update-changelog-box">
           <div className="update-changelog-header">{t.about.whatsNew}</div>
 
-          {peekItems.length > 0 ? (
+          {parsedItems.length > 0 ? (
             <div className="update-changelog-list">
-              {peekItems.map((item, idx) => {
-                const hasLeadEmoji = STARTS_WITH_EMOJI_REGEX.test(item)
+              {parsedItems.map((item, idx) => {
+                const hasLeadEmoji = STARTS_WITH_EMOJI_REGEX.test(item.text)
+                if (item.isSubItem) {
+                  return (
+                    <div key={idx} className="update-changelog-item update-changelog-subitem">
+                      <span className="update-changelog-bullet">•</span>
+                      <span style={{ wordBreak: 'break-word' }}>{item.text}</span>
+                    </div>
+                  )
+                }
                 return (
-                  <div key={idx} className="update-changelog-item">
+                  <div key={idx} className="update-changelog-item update-changelog-mainitem">
                     {!hasLeadEmoji && <span className="update-changelog-bullet">•</span>}
-                    <span style={{ wordBreak: 'break-word' }}>{item}</span>
+                    <span style={{ wordBreak: 'break-word', fontWeight: 600 }}>{item.text}</span>
                   </div>
                 )
               })}
-
-              {remainingCount > 0 && (
-                <div className="update-changelog-more">
-                  {t.about.moreInFullNotes.replace('{count}', String(remainingCount))}
-                </div>
-              )}
             </div>
           ) : (
             <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontStyle: 'italic' }}>
@@ -259,7 +343,7 @@ export function UpdateNotificationModal({
             <div className="update-notification-footer-actions">
               <button
                 type="button"
-                className="btn btn-ghost update-notification-btn"
+                className="btn btn-secondary update-notification-btn"
                 onClick={() => window.api.openExternal(releaseUrl)}
                 title={t.about.viewReleaseNotes}
               >
@@ -269,9 +353,8 @@ export function UpdateNotificationModal({
 
               <button
                 type="button"
-                className="btn btn-ghost update-notification-btn"
-                style={{ color: 'var(--text-muted)' }}
-                onClick={() => onSkip(currentVersion)}
+                className="btn btn-secondary update-notification-btn"
+                onClick={() => onSkip(targetVersion)}
                 title={t.about.skipUpdate}
               >
                 <SkipForward size={12} />
@@ -300,7 +383,7 @@ export function UpdateNotificationModal({
           <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             <button
               type="button"
-              className="btn btn-ghost update-notification-btn"
+              className="btn btn-secondary update-notification-btn"
               onClick={onClose}
             >
               {t.about.dismiss}
@@ -310,7 +393,7 @@ export function UpdateNotificationModal({
           <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: 6 }}>
             <button
               type="button"
-              className="btn btn-ghost update-notification-btn"
+              className="btn btn-secondary update-notification-btn"
               onClick={onClose}
             >
               {t.about.dismiss}
