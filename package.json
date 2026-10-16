@@ -17,7 +17,8 @@
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:portable": "npm run build && electron-builder --win portable"
+    "build:portable": "npm run build && electron-builder --win portable",
+    "installer-graphics": "python scripts/generate-installer-graphics.py"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
