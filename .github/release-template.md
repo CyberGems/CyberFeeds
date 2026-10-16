@@ -8,33 +8,67 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Reading across monitors and display scales is smoother, interface sizing is easier to adjust, background loading is safer, and the tray and About surfaces have been refined for a cleaner daily experience.
+Article tabs gain session restore and chevron scrolling, settings auto-detects installed browsers, status cards succeed blank feeds, buttons feature tactile haptics, and the installer adopts custom themed banners.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
 
 ---
 
-### ⚡ Feature & Stability Highlights
+### ✨ Key Features & Highlights
 
-- 🖥️ **Responsive multi-monitor reading**:
-  - The article pane and welcome cards now use the available width correctly across different display scales.
-  - Cards stack cleanly in narrow reader panes without stretching on wide layouts.
+- 🗂️ **Article tabs with session restore**:
+  - Open articles in background or foreground tabs with persistent session restore.
+  - Interactive tab counter button with a dropdown menu to switch or manage open tabs.
+  - Smooth chevron navigation buttons across tab strips and application columns without layout shift.
 
-- 🔎 **Fast interface-scale controls**:
-  - Adjust the overall interface scale from the welcome panel, while retaining separate controls in Settings.
-  - Reader scale changes now provide a meaningful live preview.
+- 🌐 **Automatic browser detection**:
+  - Settings automatically discovers installed desktop browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi).
+  - Open external links directly in your preferred detected browser or browse for custom executables.
 
-- 🛡️ **Safer background loading and updates**:
-  - Notification delivery is bounded to protect the system when a large feed library resumes after downtime.
-  - Update notices render release notes safely and use clearer, more accessible actions.
+- 🎨 **Themed installer and visual polish**:
+  - NSIS installer gains a custom themed side banner and branded header matching the suite design.
+  - Tactile micro-animations and visual haptic feedback on interactive buttons.
+  - Light theme calibrated with warm palette tones and high-contrast logos.
+  - Empty reader state upgraded with informative status cards and feed error diagnostics.
 
-- 🎨 **Refined system tray menu**:
-  - Unified high-DPI tray icons, cleaner CyberGems shortcuts, and localized menu labels.
-  - Improved icon proportions and a simplified one-line app list.
+- 🛡️ **Refined settings and dialogs**:
+  - Window close confirmation dialog lets you choose between minimizing to tray or quitting.
+  - About modal refreshed with suite-aligned layout, borderless icon badges, and system diagnostics.
+  - Clearer notification display modes with descriptive guidance and automatic limits.
 
-- ✨ **Polished About panel**:
-  - Removed redundant diagnostics help text and eliminated unnecessary scrolling at the default size.
+<details>
+<summary><b>🌐 Ver notas de la versión en Español</b></summary>
+
+### 🚀 Novedades de esta versión
+
+Las pestañas de artículos ganan restauración de sesión y desplazamiento por flechas, la configuración detecta navegadores instalados, las tarjetas de estado reemplazan paneles vacíos, los botones estrenan microanimaciones táctiles y el instalador adopta banners temáticos.
+
+---
+
+### ✨ Novedades destacadas
+
+- 🗂️ **Pestañas de artículos con restauración de sesión**:
+  - Abre artículos en pestañas en segundo o primer plano con persistencia de sesión.
+  - Botón contador de pestañas interactivo con menú desplegable para cambiar o gestionar pestañas abiertas.
+  - Navegación fluida por botones de flecha en tiras de pestañas y columnas sin saltos de diseño.
+
+- 🌐 **Detección automática de navegadores**:
+  - La configuración detecta automáticamente navegadores instalados (Chrome, Edge, Firefox, Brave, Opera, Vivaldi).
+  - Abre enlaces externos directamente en tu navegador preferido o examina ejecutables personalizados.
+
+- 🎨 **Instalador temático y pulido visual**:
+  - El instalador NSIS adopta un banner lateral temático y cabecera personalizada alineados con la suite.
+  - Microanimaciones táctiles y respuesta háptica visual en botones interactivos.
+  - Tema claro calibrado con paleta cálida y logos de alto contraste.
+  - Panel de lectura vacío mejorado con tarjetas de estado informativas y diagnósticos de feed.
+
+- 🛡️ **Ajustes y diálogos refinados**:
+  - Diálogo de confirmación al cerrar para elegir entre minimizar a la bandeja o salir de la app.
+  - Modal Acerca de renovado con diseño alineado a la suite, insignias sin bordes y diagnósticos.
+  - Modos de visualización de notificaciones más claros con guías explicativas y límites automáticos.
+
+</details>
 
 ---
 
@@ -49,14 +83,16 @@ Reading across monitors and display scales is smoother, interface sizing is easi
 
 ---
 
-### 🔍 VirusTotal Scan Results (70+ Antivirus Engines)
+### VirusTotal and SHA256
 
-> ℹ️ These links open the security report on VirusTotal in a new tab, they do not download the app.
-
-- 🛡️ **Setup Installer**: [View security report on VirusTotal](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}})  
-  *(SHA256: `{{INSTALLER_HASH}}`)*
-- 🛡️ **Portable Executable**: [View security report on VirusTotal](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}})  
-  *(SHA256: `{{PORTABLE_HASH}}`)*
+- **Installer**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}}) · SHA256:
+  ```text
+  {{INSTALLER_HASH}}
+  ```
+- **Portable archive**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}}) · SHA256:
+  ```text
+  {{PORTABLE_HASH}}
+  ```
 
 ---
 
