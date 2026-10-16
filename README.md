@@ -58,6 +58,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ### 📖 Article Management
 - **Full-Content Extraction**: Fetch complete article content via worker threads
+- **Article Tabs & Session Restore**: Open articles in background or foreground tabs, switch with an interactive dropdown menu, and restore open tabs across sessions
 - **In-Article Search**: Fast in-article text search (`Ctrl+F`) with real-time match highlighting, match counter, and next/previous match cycling
 - **Sticky Reader Header**: Floating header bar with source icon and article title on scroll, plus quick return-to-top navigation
 - **Text Selection Flyout**: Search selected text, copy it, or translate it from titles and article body without leaving the reader
@@ -84,7 +85,8 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+S`)
 - **Auto-Start**: Start with Windows option
 - **Interactive Auto-Updates**: Built-in update checker with release changelog preview, immediate update, and version skip options
-- **Custom Browser**: Open links in a user-selected browser
+- **Custom Browser Detection**: Auto-detect installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or configure a custom executable
+- **Themed NSIS Installer**: Assisted setup wizard with branded side banner, multi-language support, and clean shortcuts
 
 ### 🎨 Customization
 - **6 Themes**: CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)

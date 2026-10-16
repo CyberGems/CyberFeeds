@@ -58,6 +58,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 
 ### 📖 Gestión de artículos
 - **Extracción de contenido completo**: obtiene el artículo completo mediante hilos worker
+- **Pestañas de artículos y restauración de sesión**: abre artículos en pestañas en segundo o primer plano, cámbialas desde un menú desplegable y restaura las pestañas abiertas entre sesiones
 - **Búsqueda dentro del artículo**: búsqueda rápida de texto (`Ctrl+F`) con resaltado de coincidencias en tiempo real, contador y navegación a la coincidencia siguiente o anterior
 - **Encabezado fijo del lector**: barra flotante con el icono de la fuente y el título al hacer scroll, más navegación rápida al inicio
 - **Ventana flotante de selección**: busca el texto seleccionado, cópialo o tradúcelo desde los títulos y el cuerpo del artículo sin salir del lector
@@ -84,7 +85,8 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Atajos globales**: accesos configurables (mostrar/ocultar predeterminado: `Alt+Shift+S`)
 - **Inicio automático**: opción de iniciar con Windows
 - **Actualizaciones automáticas interactivas**: comprobador de actualizaciones integrado con vista previa del changelog, actualización inmediata y opciones de omisión de versión
-- **Navegador personalizado**: abre los enlaces en un navegador elegido por ti
+- **Detección de navegadores personalizados**: descubre automáticamente navegadores instalados (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) o configura un ejecutable personalizado
+- **Instalador NSIS temático**: asistente con banner lateral temático, soporte multilingüe y accesos directos limpios
 
 ### 🎨 Personalización
 - **6 temas**: CyberFeeds (oscuro), Gris (escala de grises), Blanco (claro), Morado (Dracula), Azul (Nord) y Amarillo (Monokai)
