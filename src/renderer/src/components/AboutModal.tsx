@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type MouseEvent } from 'react'
 import {
-  X, Folder, RefreshCw, Download,
-  Tag, ClipboardCopy, Check,
-  Globe, BookOpen, Bug
+  X, RefreshCw, Download, CheckCircle2,
+  Bug, Tag, ClipboardCopy, Check, Gem, BookOpen, Heart, Github
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -11,43 +10,22 @@ import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
 import Tooltip from './Tooltip'
 
 import logoPng from '../../../../resources/icon.png'
+import suiteClockPng from '../../../../resources/suite/cyberclock.png'
+import suiteLauncherPng from '../../../../resources/suite/cyberlauncher.png'
+import suiteManagerPng from '../../../../resources/suite/cybermanager.png'
 import suiteNotesPng from '../../../../resources/suite/cybernotes.png'
 import suitePastePng from '../../../../resources/suite/cyberpaste.png'
 import suiteSnapPng from '../../../../resources/suite/cybersnap.png'
+import suiteTrayPng from '../../../../resources/suite/cybertray.png'
 import suiteViewerPng from '../../../../resources/suite/cyberviewer.png'
+import suiteWallPng from '../../../../resources/suite/cyberwall.png'
 
 const REPO_URL = 'https://github.com/CyberGems/CyberFeeds'
-const HOMEPAGE_URL = 'https://cybergems.org'
-const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
+const WIKI_URL = `${REPO_URL}/wiki`
+const DONATE_URL = `${REPO_URL}#%EF%B8%8F-donate`
+const DONATE_HEART = '#F43F5E'
 const SITE_URL = 'https://cybergems.org'
 const SUITE_URL = `${SITE_URL}/#apps`
-
-// Tira "Suite": iconos en copias LOCALES (resources/suite/) porque la app es
-// offline y no descarga nada en runtime. Si una hermana actualiza su icono,
-// copiarlo de nuevo desde su repo y reconstruir; lo peor de no hacerlo es un
-// icono desactualizado, los links siguen válidos.
-const SUITE_APPS = [
-  { slug: 'cybernotes', icon: suiteNotesPng },
-  { slug: 'cyberpaste', icon: suitePastePng },
-  { slug: 'cybersnap', icon: suiteSnapPng },
-  { slug: 'cyberviewer', icon: suiteViewerPng }
-] as const
-
-function GithubIcon({ size = 15 }: { size?: number }): JSX.Element {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
-      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-    </svg>
-  )
-}
-
-function HeartIcon({ size = 15, color = '#F43F5E' }: { size?: number; color?: string }): JSX.Element {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-    </svg>
-  )
-}
 
 type AppVersions = {
   app: string
@@ -69,6 +47,7 @@ type UpdateStatus =
   | { state: 'downloading'; percent: number }
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
+  | { state: 'restarting' }
 
 function platformLabel(platform: string): string {
   if (platform === 'win32') return 'Windows'
@@ -89,13 +68,6 @@ export default function AboutModal(): JSX.Element {
 
   const appVersion = versions?.app || ''
 
-  const suitePitches: Record<string, string> = {
-    cybernotes: t.about.suiteNotes,
-    cyberpaste: t.about.suitePaste,
-    cybersnap: t.about.suiteSnap,
-    cyberviewer: t.about.suiteViewer
-  }
-
   const handleCheck = useCallback(async (): Promise<void> => {
     setStatus({ state: 'checking' })
     try {
@@ -104,8 +76,6 @@ export default function AboutModal(): JSX.Element {
         setStatus({ state: 'error', message: res?.error || 'Update check failed' })
         return
       }
-      // Safety net: if no update-available / update-not-available event settled the
-      // UI, don't leave it spinning on "Checking…" forever.
       setStatus(prev =>
         prev.state === 'checking'
           ? { state: 'not-available', version: res.version || appVersion }
@@ -149,7 +119,7 @@ export default function AboutModal(): JSX.Element {
 
   const handleInstall = (): void => {
     setIsRestarting(true)
-    setStatus({ state: 'restarting' as any })
+    setStatus({ state: 'restarting' })
     window.api.installUpdate()
   }
 
@@ -180,18 +150,98 @@ export default function AboutModal(): JSX.Element {
     }
   }, [versions, language])
 
+  // Tira "Suite": iconos en copias LOCALES (resources/suite/) porque la app es
+  // offline y no descarga nada en runtime. Cada apertura sortea 4 de las otras apps.
+  const suitePool = [
+    { slug: 'cyberclock', icon: suiteClockPng, pitch: t.about.suiteClock },
+    { slug: 'cyberlauncher', icon: suiteLauncherPng, pitch: t.about.suiteLauncher },
+    { slug: 'cybermanager', icon: suiteManagerPng, pitch: t.about.suiteManager },
+    { slug: 'cybernotes', icon: suiteNotesPng, pitch: t.about.suiteNotes },
+    { slug: 'cyberpaste', icon: suitePastePng, pitch: t.about.suitePaste },
+    { slug: 'cybersnap', icon: suiteSnapPng, pitch: t.about.suiteSnap },
+    { slug: 'cybertray', icon: suiteTrayPng, pitch: t.about.suiteTray },
+    { slug: 'cyberviewer', icon: suiteViewerPng, pitch: t.about.suiteViewer },
+    { slug: 'cyberwall', icon: suiteWallPng, pitch: t.about.suiteWall }
+  ]
+  const [suitePick] = useState<string[]>(() => {
+    const pool = suitePool.map((a) => a.slug)
+    const picks: string[] = []
+    while (picks.length < 4 && pool.length > 0) {
+      const [slug] = pool.splice(Math.floor(Math.random() * pool.length), 1)
+      if (slug) picks.push(slug)
+    }
+    return picks
+  })
+  const suiteApps = suitePick.flatMap((slug) => suitePool.filter((a) => a.slug === slug))
+
   return (
     <div className="modal-overlay" {...overlayDismiss}>
       <div
         className="modal about-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={t.about.title}
+        onClick={(e) => e.stopPropagation()}
         style={{
           width: 440,
-          maxHeight: 'min(90vh, 648px)',
+          position: 'relative',
+          maxHeight: 'min(90vh, 640px)',
           background: 'linear-gradient(160deg, var(--bg-1), var(--bg-0))',
-          border: '1px solid var(--accent-subtle)',
-          overflow: 'hidden'
+          border: '1px solid color-mix(in srgb, var(--accent) 35%, var(--border))',
+          overflow: 'hidden',
+          userSelect: 'none',
+          WebkitUserSelect: 'none'
         }}
       >
+        {/* Glass decorativo: brillos tras el contenido, sin tocar legibilidad. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: 'inherit',
+            overflow: 'hidden',
+            pointerEvents: 'none'
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: -80,
+              left: -70,
+              width: 210,
+              height: 210,
+              borderRadius: '50%',
+              background: 'var(--accent)',
+              opacity: 0.13,
+              filter: 'blur(60px)'
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: -50,
+              right: -80,
+              width: 180,
+              height: 180,
+              borderRadius: '50%',
+              background: '#7c3aed',
+              opacity: 0.11,
+              filter: 'blur(60px)'
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: '8%',
+              right: '8%',
+              height: 1,
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent)'
+            }}
+          />
+        </div>
+
         <div className="modal-header" style={{ border: 'none', padding: '16px 16px 0', flexShrink: 0 }}>
           <div style={{ flex: 1 }} />
           <Tooltip label={t.about.close} placement="left">
@@ -206,35 +256,36 @@ export default function AboutModal(): JSX.Element {
           </Tooltip>
         </div>
 
-        <div className="modal-body about-modal-body" style={{ textAlign: 'center', padding: '16px 28px 20px', overflowY: 'auto' }}>
-          <div style={{ position: 'relative', width: 72, height: 72, margin: '8px auto 16px' }}>
-            <div style={{
-              position: 'absolute', inset: -4,
-              background: 'rgba(0, 216, 241, 0.2)',
-              borderRadius: '50%',
-              filter: 'blur(12px)'
-            }} />
+        <div className="modal-body about-modal-body" style={{ textAlign: 'center', padding: '0 28px 16px', overflowY: 'auto' }}>
+          <div style={{ margin: '0 auto 16px', display: 'flex', justifyContent: 'center' }}>
             <img
               src={logoPng}
               alt="CyberFeeds"
               style={{
-                position: 'relative',
                 width: 72,
                 height: 72,
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 0 8px rgba(0, 216, 241, 0.6)) drop-shadow(0 0 16px rgba(0, 216, 241, 0.25))'
+                display: 'block'
               }}
             />
           </div>
 
-          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 4 }}>
-            Cyber<span className="brand-feeds">Feeds</span>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-0.02em', margin: '0 0 4px' }}>
+            Cyber<span style={{ color: 'var(--accent)' }}>Feeds</span>
           </h1>
-          <div style={{
-            fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 14,
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7
-          }}>
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: 14,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 7
+            }}
+          >
             <span>{t.about.version.replace('{version}', appVersion || '…')}</span>
             {versions?.isPortable && (
               <span
@@ -260,16 +311,24 @@ export default function AboutModal(): JSX.Element {
           </p>
 
           <div style={{ textAlign: 'left' }}>
-            <div style={{
-              fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)',
-              marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8
-            }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                color: 'var(--accent)',
+                marginBottom: 12,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}
+            >
               <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
               {t.about.maintenance}
               <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
             </div>
 
-            <UpdateStatusLine status={status} t={t} />
+            <UpdateStatusLine status={status} t={t} language={language} />
 
             <div className="about-maintenance">
               {status.state === 'available' ? (
@@ -284,13 +343,17 @@ export default function AboutModal(): JSX.Element {
                   onClick={handleInstall}
                   disabled={isRestarting}
                 >
-                  <RefreshCw size={14} className={isRestarting ? 'spin' : ''} />
+                  {isRestarting ? (
+                    <RefreshCw size={14} className="spin" />
+                  ) : (
+                    <CheckCircle2 size={14} />
+                  )}
                   <span>{isRestarting ? t.about.statuses.restarting : t.about.installBtn}</span>
                 </button>
               ) : (
                 <button
                   type="button"
-                  className="btn btn-secondary about-action-btn"
+                  className="btn btn-ghost about-action-btn"
                   onClick={handleCheck}
                   disabled={status.state === 'checking' || status.state === 'downloading'}
                 >
@@ -299,53 +362,53 @@ export default function AboutModal(): JSX.Element {
                 </button>
               )}
 
-              <button type="button" className="btn btn-secondary about-action-btn" onClick={() => window.api.openDataFolder()}>
-                <Folder size={14} />
-                <span>{t.about.openFolder}</span>
-              </button>
-
               <button
                 type="button"
-                className={`btn btn-secondary about-action-btn about-diag-btn${diagCopied ? ' is-copied' : ''}`}
-                onClick={handleCopyDiagnostics}
-                disabled={!versions}
+                className="about-auto-update"
+                role="switch"
+                aria-checked={settings.autoUpdate}
+                aria-label={t.about.autoUpdates}
+                onClick={() => update({ autoUpdate: !settings.autoUpdate })}
               >
-                {diagCopied ? <Check size={14} /> : <ClipboardCopy size={14} />}
-                <span>{diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics}</span>
-              </button>
-
-              <label className="toggle about-auto-update">
-                <div
-                  className={`toggle-track ${settings.autoUpdate ? 'on' : ''}`}
-                  onClick={() => update({ autoUpdate: !settings.autoUpdate })}
-                >
-                  <div className="toggle-thumb" />
-                </div>
+                <span aria-hidden="true" className={`custom-switch ${settings.autoUpdate ? 'active' : ''}`} />
                 <span>{t.about.autoUpdates}</span>
-              </label>
+              </button>
+              {t.about.autoUpdatesHint && (
+                <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4, marginTop: 2, padding: '0 4px' }}>
+                  {t.about.autoUpdatesHint}
+                </div>
+              )}
             </div>
           </div>
 
           {settings.showSuitePromo !== false && (
-            <div style={{ textAlign: 'left', marginTop: 10 }}>
-              <div style={{
-                fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--accent)',
-                marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8
-              }}>
+            <div style={{ textAlign: 'left', marginTop: 12 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: 'var(--accent)',
+                  marginBottom: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+              >
                 <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
                 {t.about.suiteTitle}
                 <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                {SUITE_APPS.map((app) => (
-                  <Tooltip key={app.slug} label={suitePitches[app.slug]} placement="top">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                {suiteApps.map((app) => (
+                  <Tooltip key={app.slug} label={app.pitch} placement="top">
                     <button
                       type="button"
-                      className="btn btn-ghost btn-icon"
+                      className="btn btn-ghost btn-icon suite-app-btn"
                       style={{ width: 40, height: 40, borderRadius: 10 }}
                       onClick={() => window.api.openExternal(`${SITE_URL}/apps/${app.slug}/`)}
-                      aria-label={suitePitches[app.slug]}
+                      aria-label={app.pitch}
                     >
                       <img src={app.icon} alt="" style={{ width: 26, height: 26, borderRadius: 6, display: 'block' }} />
                     </button>
@@ -371,8 +434,8 @@ export default function AboutModal(): JSX.Element {
           <Tooltip label={t.about.websiteTooltip} placement="top">
             <button
               type="button"
-              className="about-footer-copyright"
-              onClick={() => window.api.openExternal(HOMEPAGE_URL)}
+              className="about-footer-brand"
+              onClick={() => window.api.openExternal(SITE_URL)}
               aria-label={t.about.websiteTooltip}
             >
               © CyberGems • 2026
@@ -383,125 +446,160 @@ export default function AboutModal(): JSX.Element {
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
-                onClick={() => window.api.openExternal(HOMEPAGE_URL)}
+                style={{ width: 28, height: 28 }}
+                onClick={() => window.api.openExternal(SITE_URL)}
                 aria-label={t.about.websiteTooltip}
               >
-                <Globe size={15} strokeWidth={1.7} />
+                <Gem size={14} />
               </button>
             </Tooltip>
-            <Tooltip label={t.about.wikiTooltip} placement="top">
+            <Tooltip label={t.about.docsTooltip || t.about.wikiTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
-                onClick={() => window.api.openExternal(`${REPO_URL}/wiki`)}
-                aria-label={t.about.wikiTooltip}
+                style={{ width: 28, height: 28 }}
+                onClick={() => window.api.openExternal(WIKI_URL)}
+                aria-label={t.about.docsTooltip || t.about.wikiTooltip}
               >
-                <BookOpen size={15} strokeWidth={1.7} />
+                <BookOpen size={14} />
               </button>
             </Tooltip>
             <Tooltip label={t.about.githubTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
+                style={{ width: 28, height: 28 }}
                 onClick={() => window.api.openExternal(REPO_URL)}
                 aria-label={t.about.githubTooltip}
               >
-                <GithubIcon size={15} />
+                <Github size={14} />
               </button>
             </Tooltip>
             <Tooltip label={t.about.issuesTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
+                style={{ width: 28, height: 28 }}
                 onClick={() => window.api.openExternal(`${REPO_URL}/issues`)}
                 aria-label={t.about.issuesTooltip}
               >
-                <Bug size={15} strokeWidth={1.7} />
+                <Bug size={14} />
+              </button>
+            </Tooltip>
+            <Tooltip label={diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                style={{ width: 28, height: 28 }}
+                onClick={handleCopyDiagnostics}
+                aria-label={diagCopied ? t.about.diagnosticsCopied : t.about.copyDiagnostics}
+                disabled={!versions}
+              >
+                {diagCopied ? <Check size={14} /> : <ClipboardCopy size={14} />}
               </button>
             </Tooltip>
             <Tooltip label={t.about.releasesTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon"
+                style={{ width: 28, height: 28 }}
                 onClick={() => window.api.openExternal(`${REPO_URL}/releases`)}
                 aria-label={t.about.releasesTooltip}
               >
-                <Tag size={15} strokeWidth={1.7} />
+                <Tag size={14} />
               </button>
             </Tooltip>
             <Tooltip label={t.about.donateTooltip} placement="top">
               <button
                 type="button"
                 className="btn btn-ghost btn-icon donate-btn"
+                style={{ width: 28, height: 28 }}
                 onClick={() => window.api.openExternal(DONATE_URL)}
                 aria-label={t.about.donateTooltip}
               >
-                <HeartIcon size={15} color="#F43F5E" />
+                <Heart size={14} color={DONATE_HEART} fill={DONATE_HEART} stroke="none" />
               </button>
             </Tooltip>
           </div>
         </div>
       </div>
-
-      <style>{`
-        .spin { animation: spin 0.8s linear infinite; }
-      `}</style>
     </div>
   )
 }
 
-function UpdateStatusLine({ status, t }: { status: UpdateStatus; t: any }): JSX.Element | null {
+function UpdateStatusLine({
+  status,
+  t,
+  language
+}: {
+  status: UpdateStatus
+  t: any
+  language: string
+}): JSX.Element | null {
+  const [showDetails, setShowDetails] = useState(false)
+  if (status.state === 'idle') return null
+  if (status.state === 'downloading') {
+    return (
+      <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
+        {t.about.statuses.downloading.replace('{percent}', String(status.percent))}
+      </div>
+    )
+  }
+
   const map: Record<string, { text: string; color: string }> = {
-    idle: { text: '', color: 'var(--text-muted)' },
     checking: { text: t.about.statuses.checking, color: 'var(--text-secondary)' },
     'not-available': { text: t.about.statuses.latest, color: 'var(--green)' },
     available: { text: t.about.statuses.available, color: 'var(--accent)' },
     downloaded: { text: t.about.statuses.downloaded, color: 'var(--green)' },
     restarting: { text: t.about.statuses.restarting, color: 'var(--accent)' },
-    error: { text: t.about.statuses.error, color: 'var(--red)' }
+    error: { text: t.about.statuses.error, color: 'var(--text-secondary)' }
   }
-  if (status.state === 'idle') return null
-  if (status.state === 'downloading') {
-    return (
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
-          <span style={{ fontWeight: 500 }}>
-            {t.about.statuses.downloading.replace('… {percent}%', '…').replace('{percent}%', '')}
-          </span>
-          <span style={{ fontWeight: 700, color: 'var(--accent)', fontFamily: 'monospace' }}>
-            {status.percent}%
-          </span>
-        </div>
-        <div
-          style={{
-            width: '100%',
-            height: 6,
-            background: 'var(--bg-3)',
-            borderRadius: 999,
-            overflow: 'hidden',
-            border: '1px solid var(--border-subtle)'
-          }}
-        >
-          <div
-            style={{
-              height: '100%',
-              width: `${Math.max(2, Math.min(100, status.percent))}%`,
-              background: 'linear-gradient(90deg, var(--accent), #38bdf8)',
-              borderRadius: 999,
-              transition: 'width 0.2s ease-out'
-            }}
-          />
-        </div>
-      </div>
-    )
-  }
-  const info = map[status.state] || { text: '', color: 'var(--text-muted)' }
+  const info = map[status.state]
+  if (!info) return null
+
   return (
     <div style={{ textAlign: 'center', fontSize: 12, color: info.color, marginBottom: 10 }}>
-      {info.text}
+      <div>{info.text}</div>
       {status.state === 'error' && (status as any).message && (
-        <div style={{ marginTop: 4, fontSize: 10, color: 'var(--text-muted)', wordBreak: 'break-word' }}>
-          {(status as any).message}
+        <div style={{ marginTop: 6 }}>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={() => setShowDetails(prev => !prev)}
+            style={{
+              padding: '2px 8px',
+              fontSize: 10.5,
+              color: 'var(--text-muted)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              margin: '0 auto'
+            }}
+          >
+            {showDetails
+              ? (language === 'es' ? 'Ocultar detalles' : 'Hide details')
+              : (language === 'es' ? 'Detalles' : 'Details')}
+          </button>
+          {showDetails && (
+            <div
+              style={{
+                marginTop: 6,
+                padding: '6px 8px',
+                borderRadius: 6,
+                background: 'rgba(0, 0, 0, 0.25)',
+                border: '1px solid var(--border)',
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: 'var(--text-muted)',
+                wordBreak: 'break-word',
+                maxHeight: 80,
+                overflowY: 'auto',
+                textAlign: 'left'
+              }}
+            >
+              {(status as any).message}
+            </div>
+          )}
         </div>
       )}
     </div>

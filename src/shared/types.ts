@@ -21,6 +21,12 @@ export interface Feed {
   disabled?: boolean
 }
 
+export interface DetectedBrowser {
+  id: string
+  name: string
+  path: string
+}
+
 export interface Article {
   id: string
   feedId: string
@@ -173,6 +179,8 @@ export interface NotificationSettings {
   preloadImages: boolean
   disableOnFullscreen: boolean
   closeOnViewInApp: boolean
+  /** If true, immediately pauses auto-dismiss even when cursor is stationary (legacy behavior). */
+  alwaysPauseOnHover: boolean
   /** Maximum number of notifications kept in history. 0 means unlimited. */
   historyLimit: number
 }
@@ -254,6 +262,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
     preloadImages: true,
     disableOnFullscreen: true,
     closeOnViewInApp: false,
+    alwaysPauseOnHover: false,
     historyLimit: 1000
   },
   pollingEnabled: true,

@@ -153,19 +153,14 @@ function maxNotifierHeight(s: NotificationSettings): number {
   return Math.max(1, Math.min(availableHeight, Math.round((wa.height * maxHeightPercent(s)) / 100)))
 }
 
-function resolveDisplayMode(s: NotificationSettings, cardCount: number): NotificationDisplayMode {
+function resolveDisplayMode(s: NotificationSettings, _cardCount?: number): NotificationDisplayMode {
   if (s.displayMode === 'compact' || s.displayMode === 'detailed') return s.displayMode
 
-  const maxStack = Math.max(1, Number(s.maxStack) || 2)
-  const visibleCards = Math.min(Math.max(1, cardCount), maxStack)
-  const visible = displayStack.slice(0, visibleCards)
-  const thumbCount = s.showThumbnails ? visible.filter((n) => n.thumbnail).length : 0
-  const gaps = Math.max(0, visibleCards - 1) * CARD_GAP
-  const peekH = cardCount > maxStack ? 44 : 0
-  const detailedHeight =
-    visibleCards * CARD_BASE_H + thumbCount * THUMB_H + gaps + WIN_PAD + CLEAR_BAR_H + peekH
-
-  return detailedHeight > maxNotifierHeight(s) ? 'compact' : 'detailed'
+  // In automatic mode: use detailed presentation if the popup height limit
+  // can comfortably fit at least one full detailed card with image (~320px).
+  // If the available popup height is too constrained (< 320px), switch to compact.
+  const minDetailedH = CARD_BASE_H + (s.showThumbnails ? THUMB_H : 0) + WIN_PAD + CLEAR_BAR_H
+  return maxNotifierHeight(s) < minDetailedH ? 'compact' : 'detailed'
 }
 
 function estimatedWindowHeight(
@@ -380,6 +375,7 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
           console.log('[Notifier] Auto-hiding window')
           notifierWindow.hide()
           displayStack.length = 0
+          isHovering = false
         }
       }, s.duration + 500)
     }
@@ -855,6 +851,7 @@ async function showSettingsPreview(
       if (notifierWindow && !notifierWindow.isDestroyed()) {
         notifierWindow.hide()
         displayStack.length = 0
+        isHovering = false
       }
     }, effectiveSettings.duration + 500)
   }
@@ -872,6 +869,8 @@ export function registerNotifierIpc(): void {
     if (idx !== -1) displayStack.splice(idx, 1)
     if (displayStack.length === 0) {
       cancelPendingBatch()
+      isHovering = false
+      if (hideTimer) clearTimeout(hideTimer)
       notifierWindow?.hide()
     } else {
       pushToWindow()
@@ -881,6 +880,8 @@ export function registerNotifierIpc(): void {
   ipcMain.on('notifier:clearAll', () => {
     cancelPendingBatch()
     displayStack.length = 0
+    isHovering = false
+    if (hideTimer) clearTimeout(hideTimer)
     notifierWindow?.hide()
   })
 
@@ -954,6 +955,7 @@ export function registerNotifierIpc(): void {
           if (notifierWindow && !notifierWindow.isDestroyed()) {
             notifierWindow.hide()
             displayStack.length = 0
+            isHovering = false
           }
         }, settings.duration + 500)
       }

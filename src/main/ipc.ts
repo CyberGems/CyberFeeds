@@ -694,6 +694,10 @@ export function registerIpc(): void {
     return shell.openExternal(targetUrl)
   })
 
+  ipcMain.handle('app:detectBrowsers', async () => {
+    return detectInstalledBrowsers()
+  })
+
   ipcMain.handle('app:pickBrowser', async () => {
     const win = BrowserWindow.getAllWindows()[0]
     const result = await dialog.showOpenDialog(win || undefined, {
@@ -1207,3 +1211,166 @@ export function registerIpc(): void {
   })
 }
 
+
+function detectInstalledBrowsers(): import('../shared/types').DetectedBrowser[] {
+  const fs = require('fs')
+  const path = require('path')
+  const platform = process.platform
+  const found: import('../shared/types').DetectedBrowser[] = []
+
+  if (platform === 'win32') {
+    const progFiles = process.env['ProgramFiles'] || 'C:\\Program Files'
+    const progFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)'
+    const localAppData = process.env['LOCALAPPDATA'] || ''
+
+    const candidates: Array<{ id: string; name: string; paths: string[] }> = [
+      {
+        id: 'firefox',
+        name: 'Mozilla Firefox',
+        paths: [
+          path.join(progFiles, 'Mozilla Firefox', 'firefox.exe'),
+          path.join(progFilesX86, 'Mozilla Firefox', 'firefox.exe'),
+          localAppData ? path.join(localAppData, 'Mozilla Firefox', 'firefox.exe') : ''
+        ]
+      },
+      {
+        id: 'chrome',
+        name: 'Google Chrome',
+        paths: [
+          path.join(progFiles, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          path.join(progFilesX86, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+          localAppData ? path.join(localAppData, 'Google', 'Chrome', 'Application', 'chrome.exe') : ''
+        ]
+      },
+      {
+        id: 'edge',
+        name: 'Microsoft Edge',
+        paths: [
+          path.join(progFilesX86, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+          path.join(progFiles, 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+        ]
+      },
+      {
+        id: 'brave',
+        name: 'Brave',
+        paths: [
+          path.join(progFiles, 'BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe'),
+          localAppData ? path.join(localAppData, 'BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe') : ''
+        ]
+      },
+      {
+        id: 'zen',
+        name: 'Zen Browser',
+        paths: [
+          path.join(progFiles, 'Zen Browser', 'zen.exe'),
+          localAppData ? path.join(localAppData, 'Zen Browser', 'zen.exe') : ''
+        ]
+      },
+      {
+        id: 'vivaldi',
+        name: 'Vivaldi',
+        paths: [
+          localAppData ? path.join(localAppData, 'Vivaldi', 'Application', 'vivaldi.exe') : '',
+          path.join(progFiles, 'Vivaldi', 'Application', 'vivaldi.exe')
+        ]
+      },
+      {
+        id: 'opera-gx',
+        name: 'Opera GX',
+        paths: [
+          localAppData ? path.join(localAppData, 'Programs', 'Opera GX', 'launcher.exe') : ''
+        ]
+      },
+      {
+        id: 'opera',
+        name: 'Opera',
+        paths: [
+          localAppData ? path.join(localAppData, 'Programs', 'Opera', 'launcher.exe') : '',
+          path.join(progFiles, 'Opera', 'launcher.exe')
+        ]
+      },
+      {
+        id: 'floorp',
+        name: 'Floorp',
+        paths: [
+          path.join(progFiles, 'Ablaze Floorp', 'floorp.exe'),
+          path.join(progFilesX86, 'Ablaze Floorp', 'floorp.exe'),
+          localAppData ? path.join(localAppData, 'Floorp', 'floorp.exe') : ''
+        ]
+      },
+      {
+        id: 'waterfox',
+        name: 'Waterfox',
+        paths: [
+          path.join(progFiles, 'Waterfox', 'waterfox.exe'),
+          localAppData ? path.join(localAppData, 'Waterfox', 'waterfox.exe') : ''
+        ]
+      },
+      {
+        id: 'librewolf',
+        name: 'LibreWolf',
+        paths: [
+          path.join(progFiles, 'LibreWolf', 'librewolf.exe'),
+          localAppData ? path.join(localAppData, 'LibreWolf', 'librewolf.exe') : ''
+        ]
+      },
+      {
+        id: 'thorium',
+        name: 'Thorium',
+        paths: [
+          localAppData ? path.join(localAppData, 'Thorium', 'Application', 'thorium.exe') : '',
+          path.join(progFiles, 'Thorium', 'Application', 'thorium.exe')
+        ]
+      },
+      {
+        id: 'arc',
+        name: 'Arc',
+        paths: [
+          localAppData ? path.join(localAppData, 'Arc', 'Arc.exe') : '',
+          localAppData ? path.join(localAppData, 'Programs', 'Arc', 'Arc.exe') : ''
+        ]
+      }
+    ]
+
+    for (const c of candidates) {
+      for (const p of c.paths) {
+        if (p && fs.existsSync(p)) {
+          found.push({ id: c.id, name: c.name, path: p })
+          break
+        }
+      }
+    }
+  } else if (platform === 'darwin') {
+    const candidates = [
+      { id: 'safari', name: 'Safari', path: '/Applications/Safari.app' },
+      { id: 'firefox', name: 'Mozilla Firefox', path: '/Applications/Firefox.app' },
+      { id: 'chrome', name: 'Google Chrome', path: '/Applications/Google Chrome.app' },
+      { id: 'brave', name: 'Brave', path: '/Applications/Brave Browser.app' },
+      { id: 'edge', name: 'Microsoft Edge', path: '/Applications/Microsoft Edge.app' },
+      { id: 'arc', name: 'Arc', path: '/Applications/Arc.app' },
+      { id: 'zen', name: 'Zen Browser', path: '/Applications/Zen Browser.app' },
+      { id: 'vivaldi', name: 'Vivaldi', path: '/Applications/Vivaldi.app' },
+      { id: 'opera', name: 'Opera', path: '/Applications/Opera.app' }
+    ]
+    for (const c of candidates) {
+      if (fs.existsSync(c.path)) {
+        found.push({ id: c.id, name: c.name, path: c.path })
+      }
+    }
+  } else if (platform === 'linux') {
+    const candidates = [
+      { id: 'firefox', name: 'Mozilla Firefox', path: '/usr/bin/firefox' },
+      { id: 'chrome', name: 'Google Chrome', path: '/usr/bin/google-chrome' },
+      { id: 'chromium', name: 'Chromium', path: '/usr/bin/chromium' },
+      { id: 'brave', name: 'Brave', path: '/usr/bin/brave-browser' },
+      { id: 'edge', name: 'Microsoft Edge', path: '/usr/bin/microsoft-edge' }
+    ]
+    for (const c of candidates) {
+      if (fs.existsSync(c.path)) {
+        found.push({ id: c.id, name: c.name, path: c.path })
+      }
+    }
+  }
+
+  return found
+}

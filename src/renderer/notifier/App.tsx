@@ -131,6 +131,7 @@ export default function NotifierApp(): JSX.Element {
   const rafRef = useRef<number | undefined>(undefined)
   const hoverOffTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHovering = useRef(false)
+  const initialCursorPos = useRef<{ x: number; y: number } | null>(null)
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const countdownEnd = useRef<number | null>(null)
   const [countdownSeconds, setCountdownSeconds] = useState(0)
@@ -175,7 +176,7 @@ export default function NotifierApp(): JSX.Element {
     [stopCountdown, state.settings?.duration]
   )
 
-  const handleMouseEnter = (): void => {
+  const pauseTimer = useCallback(() => {
     if (hoverOffTimer.current) {
       clearTimeout(hoverOffTimer.current)
       hoverOffTimer.current = null
@@ -186,14 +187,56 @@ export default function NotifierApp(): JSX.Element {
     const nominalSecs = Math.max(1, Math.round((Number(state.settings?.duration) || 6000) / 1000))
     setCountdownSeconds(nominalSecs)
     window.api.setHover(true)
-  }
+  }, [stopCountdown, state.settings?.duration])
 
-  const handleMouseLeave = (): void => {
+  const resumeTimer = useCallback(() => {
     isHovering.current = false
     setIsHovered(false)
     window.api.setHover(false)
     if (state.stack.length > 0 && state.settings) {
       startCountdown(state.settings.duration + AUTO_HIDE_BUFFER_MS)
+    }
+  }, [startCountdown, state.stack.length, state.settings])
+
+  const handleMouseEnter = (e: React.MouseEvent): void => {
+    if (state.settings?.alwaysPauseOnHover) {
+      pauseTimer()
+      return
+    }
+    initialCursorPos.current = { x: e.screenX, y: e.screenY }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent): void => {
+    if (isHovering.current) return
+
+    if (state.settings?.alwaysPauseOnHover) {
+      pauseTimer()
+      return
+    }
+
+    if (!initialCursorPos.current) {
+      initialCursorPos.current = { x: e.screenX, y: e.screenY }
+      return
+    }
+
+    const dx = Math.abs(e.screenX - initialCursorPos.current.x)
+    const dy = Math.abs(e.screenY - initialCursorPos.current.y)
+    // Require intentional movement (at least 4px) to pause countdown
+    if (dx >= 4 || dy >= 4) {
+      pauseTimer()
+    }
+  }
+
+  const handleMouseDown = (): void => {
+    if (!isHovering.current) {
+      pauseTimer()
+    }
+  }
+
+  const handleMouseLeave = (): void => {
+    initialCursorPos.current = null
+    if (isHovering.current) {
+      resumeTimer()
     }
   }
 
@@ -246,6 +289,7 @@ export default function NotifierApp(): JSX.Element {
           unseenCount: Number(unseenCount) || 0,
           displayMode
         })
+        initialCursorPos.current = null
         if (!isHovering.current) {
           const duration = Number((settingsPayload as NotificationSettings)?.duration) || 6000
           startCountdown(duration + AUTO_HIDE_BUFFER_MS)
@@ -268,6 +312,9 @@ export default function NotifierApp(): JSX.Element {
       if (document.visibilityState === 'hidden') {
         dispatch({ type: 'CLEAR' })
         stopCountdown()
+        isHovering.current = false
+        setIsHovered(false)
+        initialCursorPos.current = null
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
@@ -384,6 +431,7 @@ export default function NotifierApp(): JSX.Element {
         setIsHovered(false)
         stopCountdown()
         window.api.setHover(false)
+        initialCursorPos.current = null
       }
       window.api.dismissNotification(id)
       onAfterDismiss?.()
@@ -432,6 +480,8 @@ export default function NotifierApp(): JSX.Element {
     <div
       className="notifier-root"
       onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
       style={{
         display: 'flex',
@@ -555,6 +605,7 @@ export default function NotifierApp(): JSX.Element {
                   setIsHovered(false)
                   stopCountdown()
                   window.api.setHover(false)
+                  initialCursorPos.current = null
                   window.api.clearAllNotifications()
                 }}
               >

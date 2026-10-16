@@ -277,6 +277,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [runningAutoBackup, setRunningAutoBackup] = useState(false)
   const [actionFile, setActionFile] = useState<string | null>(null)
   const [appVersion, setAppVersion] = useState('')
+  const [detectedBrowsers, setDetectedBrowsers] = useState<import('../../../shared/types').DetectedBrowser[]>([])
   const { t } = useTranslation()
 
   const fetchAutoBackups = useCallback(async () => {
@@ -396,6 +397,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     window.api.getVersions()
       .then((versions) => setAppVersion((versions as AppVersionInfo).app))
       .catch(() => setAppVersion(''))
+  }, [])
+
+  useEffect(() => {
+    window.api.detectBrowsers?.().then((list) => {
+      if (Array.isArray(list)) setDetectedBrowsers(list)
+    }).catch(() => {})
   }, [])
 
   const persist = useCallback((next: AppSettings, debounceMs = 0) => {
@@ -1120,19 +1127,39 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
                     className="form-select"
-                    value={local.customBrowserPath ? 'custom' : 'default'}
+                    value={
+                      !local.customBrowserPath
+                        ? 'default'
+                        : detectedBrowsers.some(b => b.path.toLowerCase() === local.customBrowserPath.toLowerCase())
+                          ? local.customBrowserPath
+                          : 'custom'
+                    }
                     onChange={async e => {
-                      if (e.target.value === 'default') {
+                      const val = e.target.value
+                      if (val === 'default') {
                         update({ customBrowserPath: '' })
                         return
                       }
-                      const path = await window.api.pickBrowser()
-                      if (path) update({ customBrowserPath: path })
+                      if (val === 'custom') {
+                        const path = await window.api.pickBrowser()
+                        if (path) update({ customBrowserPath: path })
+                        return
+                      }
+                      update({ customBrowserPath: val })
                     }}
                     style={{ flex: 1 }}
                   >
                     <option value="default">{t.settings.general.openOptions.default}</option>
-                    <option value="custom">{t.settings.general.openOptions.custom}</option>
+                    {detectedBrowsers.length > 0 && (
+                      <optgroup label={t.settings.general.openOptions.detectedGroup}>
+                        {detectedBrowsers.map(b => (
+                          <option key={b.path} value={b.path}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    <option value="custom">{t.settings.general.openOptions.other}</option>
                   </select>
                   <Tooltip label={t.settings.general.pickTooltip} placement="bottom">
                     <button
@@ -1595,7 +1622,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     <option value="compact">{t.settings.notifications.displayModes.compact}</option>
                   </select>
                   <p className="settings-card-hint" style={{ margin: '8px 0 0' }}>
-                    {t.settings.notifications.displayModeHint}
+                    {t.settings.notifications.displayModeHints?.[local.notifications.displayMode || 'automatic'] || t.settings.notifications.displayModeHint}
                   </p>
                 </div>
 
@@ -1747,7 +1774,22 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   />
                 </div>
 
-                <div className="form-group">
+                <div style={{ marginBottom: 14 }}>
+                  <label className="toggle" style={{ marginBottom: 6 }}>
+                    <div
+                      className={`toggle-track ${local.notifications.alwaysPauseOnHover ? 'on' : ''}`}
+                      onClick={() => updateNotif({ alwaysPauseOnHover: !local.notifications.alwaysPauseOnHover })}
+                    >
+                      <div className="toggle-thumb" />
+                    </div>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.settings.notifications.alwaysPauseOnHover}</span>
+                  </label>
+                  <p className="settings-card-hint" style={{ margin: '0 0 0 46px' }}>
+                    {t.settings.notifications.alwaysPauseOnHoverHint}
+                  </p>
+                </div>
+
+                <div className="form-group" style={{ borderTop: '1px solid var(--border-muted)', paddingTop: 14 }}>
                   <label className="form-label">{t.settings.notifications.maxStack}</label>
                   <input
                     className="form-input"

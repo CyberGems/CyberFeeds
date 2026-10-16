@@ -89,6 +89,8 @@ const api = {
   copyImageAt: (x: number, y: number) => ipcRenderer.invoke('clipboard:copyImageAt', x, y),
   writeImageBuffer: (buffer: ArrayBuffer) => ipcRenderer.invoke('clipboard:writeImageBuffer', buffer),
   pickBrowser: () => ipcRenderer.invoke('app:pickBrowser'),
+  detectBrowsers: () =>
+    ipcRenderer.invoke('app:detectBrowsers') as Promise<import('../shared/types').DetectedBrowser[]>,
 
   // Displays
   getDisplays: () => ipcRenderer.invoke('displays:getAll'),

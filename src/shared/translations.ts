@@ -284,7 +284,7 @@ export const translations = {
       cancel: 'Cancel',
       saveSettings: 'Save Settings',
       close: 'Close',
-      saved: 'Settings saved',
+      saved: 'Saved',
       saving: 'Saving…',
       saveError: 'Could not save settings',
       tabs: {
@@ -338,9 +338,11 @@ export const translations = {
         linksOpenIn: 'External links open in',
         openOptions: {
           default: 'System default',
-          custom: 'Custom browser'
+          custom: 'Custom browser',
+          detectedGroup: 'Detected browsers',
+          other: 'Other (browse…)'
         },
-        pickBtn: 'Pick…',
+        pickBtn: 'Browse…',
         pickTooltip: 'Browse for browser executable',
         searchTitle: 'Article Search',
         instantSearch: 'Instant search while typing',
@@ -392,7 +394,12 @@ export const translations = {
           detailed: 'Detailed',
           compact: 'Compact'
         },
-        displayModeHint: 'Automatic keeps images when they fit and switches the whole stack to compact when it does not.',
+        displayModeHint: 'Automatic shows full cards with text and images, adapting to compact mode if screen space is very limited.',
+        displayModeHints: {
+          automatic: 'Shows full cards with preview text and images, automatically adapting to compact mode only if screen space is very limited.',
+          detailed: 'Always shows full cards with title, article preview text, featured image, and action buttons with labels.',
+          compact: 'Shows slim cards with only the title and action icons, hiding preview text and images to take minimal space.'
+        },
         preloadImages: 'Show only when image is fully loaded',
         disableOnFullscreen: 'Disable during fullscreen apps (games, videos)',
         closeOnViewInApp: 'Close all cards when viewing in the app',
@@ -410,6 +417,8 @@ export const translations = {
           'bottom-right': 'bottom right'
         },
         duration: 'Duration (seconds)',
+        alwaysPauseOnHover: 'Always pause immediately on mouse hover',
+        alwaysPauseOnHoverHint: 'Immediately pauses notifications whenever the mouse is over them, even if stationary. When off (default), notifications only pause when you move the mouse over them to interact.',
         maxStack: 'Max notifications in stack',
         maxStackHint: 'The height limit may show fewer cards at once; the rest remain available by scrolling.',
         historyLimit: 'Notification history limit',
@@ -603,13 +612,15 @@ export const translations = {
     about: {
       title: 'About CyberFeeds',
       version: 'Version {version}',
-      desc: 'A high-performance, minimalist RSS reader designed for power users who value speed, privacy, and a clean reading experience.',
-      maintenance: 'Maintenance',
-      autoUpdates: 'Auto updates',
+      desc: 'Your personal RSS reader. Fast, private, and distraction-free.',
+      maintenance: 'System & Updates',
+      autoUpdates: 'Automatic update checks',
+      autoUpdatesHint: 'Silently checks on startup and every 6 hours. Downloading and installing always ask first.',
       openFolder: 'Open data folder',
       checkUpdates: 'Check for updates',
       close: 'Close',
       websiteTooltip: 'Visit CyberGems website',
+      docsTooltip: 'Open the online documentation',
       wikiTooltip: 'Open the online documentation',
       githubTooltip: 'View project on GitHub',
       issuesTooltip: 'Report a bug or open an issue',
@@ -639,10 +650,15 @@ export const translations = {
       downloadPortableUpdate: 'Download portable release',
       suiteTitle: 'More from CyberGems',
       suiteMore: 'View all',
+      suiteClock: 'CyberClock: clock, calendar & timers',
+      suiteLauncher: 'CyberLauncher: hot-corners launcher',
+      suiteManager: 'CyberManager: lightweight task manager',
       suiteNotes: 'CyberNotes: privacy-focused notes',
       suitePaste: 'CyberPaste: clipboard history',
       suiteSnap: 'CyberSnap: screenshots and annotations',
-      suiteViewer: 'CyberViewer: image viewer'
+      suiteTray: 'CyberTray: system tray launcher',
+      suiteViewer: 'CyberViewer: image viewer',
+      suiteWall: 'CyberWall: per-app firewall'
     },
     doctor: {
       title: 'Feeds Doctor',
@@ -1117,7 +1133,7 @@ export const translations = {
       cancel: 'Cancelar',
       saveSettings: 'Guardar configuración',
       close: 'Cerrar',
-      saved: 'Configuración guardada',
+      saved: 'Guardado',
       saving: 'Guardando…',
       saveError: 'No se pudo guardar',
       tabs: {
@@ -1171,9 +1187,11 @@ export const translations = {
         linksOpenIn: 'Los enlaces externos se abren en',
         openOptions: {
           default: 'Predeterminado del sistema',
-          custom: 'Navegador personalizado'
+          custom: 'Navegador personalizado',
+          detectedGroup: 'Navegadores detectados',
+          other: 'Otro (explorar…)'
         },
-        pickBtn: 'Seleccionar…',
+        pickBtn: 'Examinar…',
         pickTooltip: 'Buscar ejecutable del navegador',
         searchTitle: 'Búsqueda de artículos',
         instantSearch: 'Búsqueda instantánea al teclear',
@@ -1225,7 +1243,12 @@ export const translations = {
           detailed: 'Detallado',
           compact: 'Compacto'
         },
-        displayModeHint: 'Automático mantiene las imágenes cuando caben y cambia toda la pila a compacto cuando no.',
+        displayModeHint: 'Automático muestra las tarjetas completas con texto e imágenes, adaptándose a compacto si el espacio es muy reducido.',
+        displayModeHints: {
+          automatic: 'Muestra las tarjetas completas con texto e imágenes, adaptándose automáticamente a modo compacto solo si el espacio en pantalla es muy reducido.',
+          detailed: 'Muestra siempre las tarjetas completas con título, texto del artículo, imagen destacada y botones de acción con texto.',
+          compact: 'Muestra tarjetas reducidas con solo el título e iconos de acción, sin texto de vista previa ni imágenes, ocupando el mínimo espacio.'
+        },
         preloadImages: 'Mostrar solo cuando la imagen esté cargada',
         disableOnFullscreen: 'Desactivar en aplicaciones a pantalla completa (juegos, videos)',
         closeOnViewInApp: 'Cerrar todas las tarjetas al ver en la app',
@@ -1243,6 +1266,8 @@ export const translations = {
           'bottom-right': 'inferior derecha'
         },
         duration: 'Duración (segundos)',
+        alwaysPauseOnHover: 'Pausar siempre de inmediato al detectar el ratón',
+        alwaysPauseOnHoverHint: 'Pausa la notificación de inmediato si el ratón está encima, incluso si ya estaba quieto en esa posición. Desactivado (predeterminado): la cuenta regresiva continúa si el ratón ya estaba quieto y solo se pausa si lo mueves sobre ella.',
         maxStack: 'Máximo de notificaciones en la pila',
         maxStackHint: 'El límite de altura puede mostrar menos tarjetas a la vez; las demás quedan disponibles al desplazarte.',
         historyLimit: 'Límite del historial de notificaciones',
@@ -1439,13 +1464,15 @@ export const translations = {
     about: {
       title: 'Acerca de CyberFeeds',
       version: 'Versión {version}',
-      desc: 'Un lector de RSS minimalista y de alto rendimiento diseñado para usuarios avanzados que valoran la velocidad, la privacidad y una experiencia de lectura limpia.',
-      maintenance: 'Mantenimiento',
-      autoUpdates: 'Actualizaciones automáticas',
+      desc: 'Tu lector de RSS personal. Rápido, privado y sin distracciones.',
+      maintenance: 'Sistema y Actualizaciones',
+      autoUpdates: 'Comprobación automática de actualizaciones',
+      autoUpdatesHint: 'Comprueba en silencio al iniciar y cada 6 horas. Descargar e instalar siempre piden tu confirmación.',
       openFolder: 'Abrir carpeta de datos',
       checkUpdates: 'Buscar actualizaciones',
       close: 'Cerrar',
-      websiteTooltip: 'Visitar el sitio web de CyberGems',
+      websiteTooltip: 'Visitar el sitio de CyberGems',
+      docsTooltip: 'Abrir la documentación en línea',
       wikiTooltip: 'Abrir la documentación en línea',
       githubTooltip: 'Ver el proyecto en GitHub',
       issuesTooltip: 'Reportar un error o abrir un issue',
@@ -1475,10 +1502,15 @@ export const translations = {
       downloadPortableUpdate: 'Descargar versión portable',
       suiteTitle: 'Más de CyberGems',
       suiteMore: 'Ver todas',
-      suiteNotes: 'CyberNotes: notas privadas',
+      suiteClock: 'CyberClock: reloj, calendario y temporizadores',
+      suiteLauncher: 'CyberLauncher: lanzador con esquinas activas',
+      suiteManager: 'CyberManager: gestor de tareas ligero',
+      suiteNotes: 'CyberNotes: notas privadas y offline',
       suitePaste: 'CyberPaste: historial del portapapeles',
       suiteSnap: 'CyberSnap: capturas y anotaciones',
-      suiteViewer: 'CyberViewer: visor de imágenes'
+      suiteTray: 'CyberTray: lanzador en bandeja',
+      suiteViewer: 'CyberViewer: visor de imágenes',
+      suiteWall: 'CyberWall: firewall por aplicación'
     },
     doctor: {
       title: 'Doctor de feeds',
