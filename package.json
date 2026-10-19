@@ -5,6 +5,7 @@
   "description": "CyberGems — Performance-first, full featured RSS Reader",
   "main": "./out/main/index.js",
   "author": "CyberGems",
+  "license": "GPL-3.0-only",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",
