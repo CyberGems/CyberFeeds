@@ -293,7 +293,7 @@ export const translations = {
         filters: 'Filters & Rules',
         notifications: 'Notifications',
         keyboard: 'Keyboard',
-        backupMaintenance: 'Maintenance'
+        backupMaintenance: 'Backup & Data'
       },
       general: {
         title: 'General',
@@ -1142,7 +1142,7 @@ export const translations = {
         filters: 'Filtros y reglas',
         notifications: 'Notificaciones',
         keyboard: 'Teclado',
-        backupMaintenance: 'Mantenimiento'
+        backupMaintenance: 'Respaldo y Datos'
       },
       general: {
         title: 'General',

@@ -873,8 +873,10 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       <div className="settings-layout">
         <aside className="settings-nav">
           <div className="settings-nav-title">
-            <Settings size={14} />
-            {t.settings.title}
+            <span className="settings-nav-title-ico" aria-hidden="true">
+              <Settings size={14} strokeWidth={2.1} />
+            </span>
+            <span className="settings-nav-title-text">{t.settings.title}</span>
           </div>
           <div className="settings-nav-items">
             {navItems.map(item => (
@@ -888,7 +890,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <span className="settings-nav-ico" aria-hidden="true">
                   <item.Icon size={14} strokeWidth={2.1} />
                 </span>
-                {item.label}
+                <span className="settings-nav-label">{item.label}</span>
               </button>
             ))}
           </div>
