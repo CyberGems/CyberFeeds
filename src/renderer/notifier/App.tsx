@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState, useCallback } from 'react'
+import { useEffect, useLayoutEffect, useReducer, useRef, useState, useCallback } from 'react'
 import { X, ExternalLink, ChevronDown, Bell, BellOff, Clock, Check, Eye, Settings } from 'lucide-react'
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from '@shared/types'
 import { translations } from '@shared/translations'
@@ -86,6 +86,7 @@ interface State {
   settings: NotificationSettings | null
   unseenCount: number
   displayMode: NotificationDisplayMode
+  batchId: number
 }
 
 type Action =
@@ -106,7 +107,8 @@ function reducer(state: State, action: Action): State {
         stack: action.stack,
         settings: action.settings,
         unseenCount: action.unseenCount,
-        displayMode: action.displayMode
+        displayMode: action.displayMode,
+        batchId: state.batchId + 1
       }
     case 'DISMISS':
       return { ...state, stack: state.stack.filter((n) => n.id !== action.id) }
@@ -122,7 +124,8 @@ export default function NotifierApp(): JSX.Element {
     stack: [],
     settings: null,
     unseenCount: 0,
-    displayMode: 'automatic'
+    displayMode: 'automatic',
+    batchId: 0
   })
   const [lang, setLang] = useState<'en' | 'es'>('en')
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -289,6 +292,9 @@ export default function NotifierApp(): JSX.Element {
           unseenCount: Number(unseenCount) || 0,
           displayMode
         })
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0
+        }
         initialCursorPos.current = null
         if (!isHovering.current) {
           const duration = Number((settingsPayload as NotificationSettings)?.duration) || 6000
@@ -300,13 +306,46 @@ export default function NotifierApp(): JSX.Element {
     return unsub
   }, [startCountdown])
 
+  // Reset scroll to top on every new notification batch before and after layout paint
+  useLayoutEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0
+    }
+  }, [state.batchId])
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0
+    }
+    const raf = requestAnimationFrame(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [state.batchId])
+
+  // Listen for explicit clear signal from the main process
+  useEffect(() => {
+    const unsubClear = window.api.onNotifierClear?.(() => {
+      dispatch({ type: 'CLEAR' })
+      stopCountdown()
+      isHovering.current = false
+      setIsHovered(false)
+      initialCursorPos.current = null
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0
+      }
+    })
+    return unsubClear
+  }, [stopCountdown])
+
   // When the popup window is hidden (auto-hide, dismiss-all, snooze, open-in-app,
   // open-history, ...) the main process clears its displayStack but never sends
   // an empty stack here (pushToWindow() early-returns on empty). The renderer
   // would otherwise keep the previous batch painted and briefly flash it again
   // the next time the window is shown, before the new stack arrives. Reset our
-  // local stack as soon as the window becomes hidden so the next showing always
-  // starts from a clean (transparent) state.
+  // local stack as soon as the window becomes hidden and ensure main process state aligns.
   useEffect(() => {
     const handleVisibility = (): void => {
       if (document.visibilityState === 'hidden') {
@@ -315,11 +354,35 @@ export default function NotifierApp(): JSX.Element {
         isHovering.current = false
         setIsHovered(false)
         initialCursorPos.current = null
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0
+        }
+        window.api.clearAllNotifications()
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [stopCountdown])
+
+  // Safety: resume countdown if cursor leaves document or window blurs
+  useEffect(() => {
+    const handleWindowBlur = (): void => {
+      if (isHovering.current) {
+        resumeTimer()
+      }
+    }
+    const handleDocMouseLeave = (e: MouseEvent): void => {
+      if (!e.relatedTarget && isHovering.current) {
+        resumeTimer()
+      }
+    }
+    window.addEventListener('blur', handleWindowBlur)
+    document.addEventListener('mouseleave', handleDocMouseLeave)
+    return () => {
+      window.removeEventListener('blur', handleWindowBlur)
+      document.removeEventListener('mouseleave', handleDocMouseLeave)
+    }
+  }, [resumeTimer])
 
   const computeBelowCount = useCallback(() => {
     const el = scrollRef.current
@@ -460,7 +523,7 @@ export default function NotifierApp(): JSX.Element {
     }
   }
 
-  if (state.stack.length === 0) return <div />
+  if (state.stack.length === 0) return <div style={{ pointerEvents: 'none' }} />
 
   const showMoreIndicator = belowCount > 0
   const snoozeMinutes = state.settings?.snoozeMinutes ?? 30
@@ -487,7 +550,8 @@ export default function NotifierApp(): JSX.Element {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: 'rgba(0,0,0,0.01)'
+        background: 'rgba(0,0,0,0.01)',
+        pointerEvents: state.stack.length > 0 ? 'auto' : 'none'
       }}
     >
       {/* Clear & See History — fixed at top, always accessible */}

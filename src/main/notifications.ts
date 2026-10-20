@@ -278,7 +278,9 @@ function createNotifierWindow(s: NotificationSettings): BrowserWindow {
     }
   })
 
-  win.setIgnoreMouseEvents(false)
+  // Initially ignore mouse events while hidden to prevent any transparent
+  // hit-testing interference during startup or between notification batches.
+  win.setIgnoreMouseEvents(true, { forward: true })
   win.webContents.setBackgroundThrottling(false)
 
   notifierReady = new Promise<void>((resolve) => {
@@ -315,6 +317,28 @@ function ensureWindow(): BrowserWindow {
   return notifierWindow
 }
 
+export function hideNotifierWindow(): void {
+  if (notifierWindow && !notifierWindow.isDestroyed()) {
+    try {
+      notifierWindow.setIgnoreMouseEvents(true, { forward: true })
+    } catch {
+      /* ignore */
+    }
+    notifierWindow.hide()
+    try {
+      notifierWindow.webContents.send('notifier:clear')
+    } catch {
+      /* ignore */
+    }
+  }
+  displayStack.length = 0
+  isHovering = false
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+    hideTimer = null
+  }
+}
+
 /** Push current stack to the notifier window, size & position it, show if hidden. */
 let isPushing = false
 async function pushToWindow(s: NotificationSettings = settings): Promise<boolean> {
@@ -347,6 +371,9 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
     //    (Windows can demote z-order after repeated hide/show cycles)
     win.setAlwaysOnTop(true, 'screen-saver')
 
+    // Allow pointer interaction with visible cards
+    win.setIgnoreMouseEvents(false)
+
     // 4. Show — then stamp position again. showInactive() can recenter
     //    transparent windows on Windows.
     if (!win.isVisible()) {
@@ -357,11 +384,16 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
 
     // Wait until the renderer has had two paint frames after receiving the
     // stack, keeping the notification sound synchronized with the visible card.
+    // Use bounded race so an inactive, occluded or startup-throttled Chromium window
+    // cannot hang the notification loop indefinitely.
     let painted = true
     try {
-      await win.webContents.executeJavaScript(
-        'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve(true))))'
-      )
+      await Promise.race([
+        win.webContents.executeJavaScript(
+          'new Promise(resolve => { let done = false; const f = () => { if (!done) { done = true; resolve(true) } }; requestAnimationFrame(() => requestAnimationFrame(f)); setTimeout(f, 300); })'
+        ),
+        new Promise((resolve) => setTimeout(resolve, 400))
+      ])
     } catch (err) {
       painted = false
       console.error('[Notifier] Failed waiting for notification paint:', err)
@@ -371,12 +403,7 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
     if (hideTimer) clearTimeout(hideTimer)
     if (!isHovering) {
       hideTimer = setTimeout(() => {
-        if (notifierWindow && !notifierWindow.isDestroyed()) {
-          console.log('[Notifier] Auto-hiding window')
-          notifierWindow.hide()
-          displayStack.length = 0
-          isHovering = false
-        }
+        hideNotifierWindow()
       }, s.duration + 500)
     }
     return painted
@@ -559,8 +586,7 @@ function removeFeedFromQueues(feedId: string): void {
   }
 
   if (displayStack.length === 0) {
-    if (hideTimer) clearTimeout(hideTimer)
-    notifierWindow?.hide()
+    hideNotifierWindow()
   } else {
     void pushToWindow()
   }
@@ -842,17 +868,14 @@ async function showSettingsPreview(
     resolveDisplayMode(effectiveSettings, displayStack.length)
   )
   win.setAlwaysOnTop(true, 'screen-saver')
+  win.setIgnoreMouseEvents(false)
   if (!win.isVisible()) win.showInactive()
   reassertNotifierPosition(win, 1, effectiveSettings)
 
   if (hideTimer) clearTimeout(hideTimer)
   if (!isHovering) {
     hideTimer = setTimeout(() => {
-      if (notifierWindow && !notifierWindow.isDestroyed()) {
-        notifierWindow.hide()
-        displayStack.length = 0
-        isHovering = false
-      }
+      hideNotifierWindow()
     }, effectiveSettings.duration + 500)
   }
 
@@ -869,9 +892,7 @@ export function registerNotifierIpc(): void {
     if (idx !== -1) displayStack.splice(idx, 1)
     if (displayStack.length === 0) {
       cancelPendingBatch()
-      isHovering = false
-      if (hideTimer) clearTimeout(hideTimer)
-      notifierWindow?.hide()
+      hideNotifierWindow()
     } else {
       pushToWindow()
     }
@@ -879,10 +900,7 @@ export function registerNotifierIpc(): void {
 
   ipcMain.on('notifier:clearAll', () => {
     cancelPendingBatch()
-    displayStack.length = 0
-    isHovering = false
-    if (hideTimer) clearTimeout(hideTimer)
-    notifierWindow?.hide()
+    hideNotifierWindow()
   })
 
   ipcMain.on('notifier:markRead', (_, articleId: string) => {
@@ -893,15 +911,13 @@ export function registerNotifierIpc(): void {
     cancelPendingBatch()
     settings = { ...settings, snoozedUntil: Date.now() + minutes * 60_000 }
     db.saveSettings({ ...db.getSettings(), notifications: settings })
-    displayStack.length = 0
-    notifierWindow?.hide()
+    hideNotifierWindow()
   })
 
   ipcMain.on('notifier:openInApp', (_, feedId: string, articleId: string) => {
     if (settings.closeOnViewInApp) {
       cancelPendingBatch()
-      displayStack.length = 0
-      notifierWindow?.hide()
+      hideNotifierWindow()
     }
     const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
     if (mainWin) {
@@ -912,7 +928,7 @@ export function registerNotifierIpc(): void {
 
   ipcMain.on('notifier:openHistory', () => {
     cancelPendingBatch()
-    notifierWindow?.hide()
+    hideNotifierWindow()
     const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
     if (mainWin) {
       restoreMainWindow()
@@ -922,7 +938,7 @@ export function registerNotifierIpc(): void {
 
   ipcMain.on('notifier:openSettings', (_, tab?: string) => {
     cancelPendingBatch()
-    notifierWindow?.hide()
+    hideNotifierWindow()
     const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
     if (mainWin) {
       restoreMainWindow()
@@ -952,12 +968,10 @@ export function registerNotifierIpc(): void {
       if (displayStack.length > 0) {
         if (hideTimer) clearTimeout(hideTimer)
         hideTimer = setTimeout(() => {
-          if (notifierWindow && !notifierWindow.isDestroyed()) {
-            notifierWindow.hide()
-            displayStack.length = 0
-            isHovering = false
-          }
+          hideNotifierWindow()
         }, settings.duration + 500)
+      } else {
+        hideNotifierWindow()
       }
     }
   })

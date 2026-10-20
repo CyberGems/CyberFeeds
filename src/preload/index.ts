@@ -185,6 +185,11 @@ const api = {
     ipcRenderer.on('notifier:stack', handler)
     return () => { ipcRenderer.removeListener('notifier:stack', handler) }
   },
+  onNotifierClear: (cb: () => void) => {
+    const handler = () => cb()
+    ipcRenderer.on('notifier:clear', handler)
+    return () => { ipcRenderer.removeListener('notifier:clear', handler) }
+  },
 
   // Window controls (for custom titlebar)
   windowMinimize: () => ipcRenderer.send('window:minimize'),
