@@ -70,7 +70,8 @@ function resolveStartupBounds(raw: WindowState): ReturnType<typeof clampWindowBo
   const clamped = clampWindowBounds(raw, {
     displays: screen.getAllDisplays(),
     primary: screen.getPrimaryDisplay(),
-    savedDisplayId: raw.displayId
+    savedDisplayId: raw.displayId,
+    savedDisplayBounds: raw.displayBounds
   })
   const inflated = !!(
     Number.isFinite(raw.width) &&
@@ -106,7 +107,8 @@ function persistMainWindowState(win: BrowserWindow): void {
     const clamped = clampWindowBounds(raw, {
       displays: screen.getAllDisplays(),
       primary: screen.getPrimaryDisplay(),
-      savedDisplayId: liveDisplay?.id
+      savedDisplayId: liveDisplay?.id,
+      savedDisplayBounds: liveDisplay?.bounds
     })
 
     saveWindowState({
@@ -115,7 +117,15 @@ function persistMainWindowState(win: BrowserWindow): void {
       width: clamped.width,
       height: clamped.height,
       maximized,
-      displayId: liveDisplay?.id ?? clamped.displayId
+      displayId: liveDisplay?.id ?? clamped.displayId,
+      displayBounds: liveDisplay
+        ? {
+            x: liveDisplay.bounds.x,
+            y: liveDisplay.bounds.y,
+            width: liveDisplay.bounds.width,
+            height: liveDisplay.bounds.height
+          }
+        : null
     })
   } catch (err) {
     console.error('[Main] Failed to persist window state:', err)
@@ -133,8 +143,17 @@ export function restoreMainWindow(): void {
     const saved = getWindowState()
     const startup = resolveStartupBounds(saved)
     const displays = screen.getAllDisplays()
-    const targetDisplay = displays.find((d) => d.id === startup.displayId)
-      || screen.getPrimaryDisplay()
+    const targetDisplay =
+      displays.find((d) => d.id === startup.displayId) ||
+      (saved.displayBounds &&
+        displays.find(
+          (d) =>
+            d.bounds.x === saved.displayBounds!.x &&
+            d.bounds.y === saved.displayBounds!.y &&
+            d.bounds.width === saved.displayBounds!.width &&
+            d.bounds.height === saved.displayBounds!.height
+        )) ||
+      screen.getPrimaryDisplay()
     const wa = targetDisplay.workArea || targetDisplay.bounds
 
     // If the window is currently on a different display, nudge it
@@ -363,11 +382,13 @@ function createMainWindow(): BrowserWindow {
     setTimeout(() => {
       if (!win || win.isDestroyed() || win.isMaximized()) return
       try {
+        const saved = getWindowState()
         const raw = win.getBounds()
         const clamped = clampWindowBounds(raw, {
           displays: screen.getAllDisplays(),
           primary: screen.getPrimaryDisplay(),
-          savedDisplayId: getWindowState().displayId
+          savedDisplayId: saved.displayId,
+          savedDisplayBounds: saved.displayBounds
         })
         if (raw.width > clamped.width + 8 || raw.height > clamped.height + 8) {
           win.setBounds({
@@ -474,10 +495,60 @@ app.whenReady().then(() => {
 
   // Auto-update (electron-updater). No-op in dev / unpacked builds.
   initUpdater(settings)
+
+  // Listen for displays added or metrics changed after startup (e.g. secondary monitor powers on after Windows boot)
+  const recheckDisplay = (): void => {
+    if (!mainWindow || mainWindow.isDestroyed()) return
+    try {
+      const saved = getWindowState()
+      if (!saved.displayBounds) return
+      const displays = screen.getAllDisplays()
+      const matched = displays.find(
+        (d) =>
+          d.bounds.x === saved.displayBounds!.x &&
+          d.bounds.y === saved.displayBounds!.y &&
+          d.bounds.width === saved.displayBounds!.width &&
+          d.bounds.height === saved.displayBounds!.height
+      )
+      if (matched) {
+        const cur = mainWindow.getBounds()
+        const curDisp =
+          (typeof screen.getDisplayMatching === 'function' && screen.getDisplayMatching(cur)) ||
+          screen.getDisplayNearestPoint({
+            x: Math.round(cur.x + cur.width / 2),
+            y: Math.round(cur.y + cur.height / 2)
+          })
+        if (curDisp && curDisp.id !== matched.id) {
+          console.log(`[Main] Saved display ${matched.id} became available. Moving window.`)
+          const wa = matched.workArea || matched.bounds
+          const wasMax = mainWindow.isMaximized()
+          if (wasMax) mainWindow.unmaximize()
+          mainWindow.setBounds({
+            x: wa.x + 48,
+            y: wa.y + 48,
+            width: Math.min(saved.width, Math.max(MIN_WINDOW_WIDTH, wa.width - 96)),
+            height: Math.min(saved.height, Math.max(MIN_WINDOW_HEIGHT, wa.height - 96))
+          })
+          if (wasMax || saved.maximized) {
+            mainWindow.maximize()
+          }
+          persistMainWindowState(mainWindow)
+        }
+      }
+    } catch (err) {
+      console.error('[Main] Error handling display recheck:', err)
+    }
+  }
+
+  screen.on('display-added', recheckDisplay)
+  screen.on('display-metrics-changed', recheckDisplay)
 })
 
 app.on('before-quit', () => {
   ;(app as any).isQuitting = true
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    persistMainWindowState(mainWindow)
+  }
   closePipWindow()
   destroyTray()
 })

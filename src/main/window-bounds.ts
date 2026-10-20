@@ -9,6 +9,7 @@ export interface WindowBoundsInput {
   width?: number | null
   height?: number | null
   displayId?: number | null
+  displayBounds?: { x: number; y: number; width: number; height: number } | null
 }
 
 export interface ClampedWindowBounds {
@@ -26,6 +27,8 @@ export interface ClampWindowBoundsOpts {
   preferredDisplayId?: string | number | null
   /** Last-closed monitor id (overrides center-point guess). */
   savedDisplayId?: string | number | null
+  /** Last-closed monitor bounds (survives ID changes across Windows reboots). */
+  savedDisplayBounds?: { x: number; y: number; width: number; height: number } | null
 }
 
 /**
@@ -35,9 +38,10 @@ export interface ClampWindowBoundsOpts {
  *
  * Display priority:
  * 1) preferredDisplayId (explicit, not "auto")
- * 2) bounds.displayId / opts.savedDisplayId
- * 3) display nearest to bounds center
- * 4) primary
+ * 2) Exact displayId match
+ * 3) Exact display geometry bounds match (survives Windows reboots where IDs change)
+ * 4) Display nearest to window coordinates center
+ * 5) primary fallback
  */
 export function clampWindowBounds(
   bounds: WindowBoundsInput | null | undefined,
@@ -49,20 +53,45 @@ export function clampWindowBounds(
     return { x: 0, y: 0, width: 1280, height: 800, displayId: 0 }
   }
 
-  let display = primary
+  let display: Display | null = null
   const preferredId = opts.preferredDisplayId
   const savedId =
     (opts.savedDisplayId != null ? opts.savedDisplayId : null) ??
     (bounds && bounds.displayId != null ? bounds.displayId : null)
+  const savedBounds = opts.savedDisplayBounds ?? bounds?.displayBounds
 
+  // 1. Explicit preferred monitor setting
   if (preferredId != null && preferredId !== '' && preferredId !== 'auto') {
-    display = displays.find((d) => d.id.toString() === preferredId.toString()) || primary
-  } else if (savedId != null && savedId !== '' && savedId !== 'auto') {
-    display = displays.find((d) => d.id.toString() === savedId.toString()) || primary
-  } else if (bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number') {
+    display = displays.find((d) => d.id.toString() === preferredId.toString()) || null
+  }
+
+  // 2. Exact display ID match (same session or stable IDs)
+  if (!display && savedId != null && savedId !== '' && savedId !== 'auto') {
+    display = displays.find((d) => d.id.toString() === savedId.toString()) || null
+  }
+
+  // 3. Exact display geometry match (crucial: survives Windows reboots where display IDs change)
+  if (!display && savedBounds) {
+    display =
+      displays.find(
+        (d) =>
+          d.bounds.x === savedBounds.x &&
+          d.bounds.y === savedBounds.y &&
+          d.bounds.width === savedBounds.width &&
+          d.bounds.height === savedBounds.height
+      ) || null
+  }
+
+  // 4. Match by window coordinates: which display contains or is nearest to (cx, cy)
+  if (!display && bounds && typeof bounds.x === 'number' && typeof bounds.y === 'number') {
     const cx = Math.round(bounds.x + (Number(bounds.width) || 0) / 2)
     const cy = Math.round(bounds.y + (Number(bounds.height) || 0) / 2)
     display = displayNearestPoint(displays, primary, cx, cy)
+  }
+
+  // 5. Ultimate fallback if displays list is empty or coordinates are invalid
+  if (!display) {
+    display = primary
   }
 
   const area = display.workArea || display.bounds

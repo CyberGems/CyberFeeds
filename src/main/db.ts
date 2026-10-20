@@ -147,6 +147,7 @@ function createSchema(): void {
 
   // Mixed-DPI restore: remember which monitor the window was on
   try { db.exec('ALTER TABLE window_state ADD COLUMN displayId INTEGER') } catch { /* already exists */ }
+  try { db.exec('ALTER TABLE window_state ADD COLUMN displayBounds TEXT') } catch { /* already exists */ }
 
   // Seed default settings if empty
   const count = (db.prepare('SELECT COUNT(*) as c FROM settings').get() as { c: number }).c
@@ -900,26 +901,36 @@ export function saveSettings(settings: AppSettings): void {
 export function getWindowState(): WindowState {
   const row = db.prepare('SELECT * FROM window_state WHERE id = 1').get() as any
   if (!row) return { width: 1280, height: 800, maximized: true }
+  let displayBounds: { x: number; y: number; width: number; height: number } | null = null
+  if (row.displayBounds) {
+    try {
+      displayBounds = JSON.parse(row.displayBounds)
+    } catch {
+      /* ignore */
+    }
+  }
   return {
     x: row.x ?? undefined,
     y: row.y ?? undefined,
     width: row.width,
     height: row.height,
     maximized: row.maximized === 1,
-    displayId: row.displayId ?? null
+    displayId: row.displayId ?? null,
+    displayBounds
   }
 }
 
 export function saveWindowState(state: WindowState): void {
   db.prepare(`
-    UPDATE window_state SET x=?, y=?, width=?, height=?, maximized=?, displayId=? WHERE id=1
+    UPDATE window_state SET x=?, y=?, width=?, height=?, maximized=?, displayId=?, displayBounds=? WHERE id=1
   `).run(
     state.x ?? null,
     state.y ?? null,
     state.width,
     state.height,
     state.maximized ? 1 : 0,
-    state.displayId ?? null
+    state.displayId ?? null,
+    state.displayBounds ? JSON.stringify(state.displayBounds) : null
   )
 }
 

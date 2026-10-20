@@ -193,6 +193,8 @@ export interface WindowState {
   maximized: boolean
   /** Last display the window lived on (mixed-DPI restore). */
   displayId?: number | null
+  /** Geometry of the monitor the window lived on (survives ID changes across reboots). */
+  displayBounds?: { x: number; y: number; width: number; height: number } | null
 }
 
 export interface NotifierPatch {
