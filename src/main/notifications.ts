@@ -26,7 +26,7 @@ const CLEAR_BAR_H = 34
 const WIN_PAD = 16
 // Safety cap for transient notification queues and popup rendering. The full
 // history is still persisted according to the configured history limit.
-const HARD_CAP = 50
+const HARD_CAP = 100
 const RENDERER_BATCH_CAP = HARD_CAP
 const DEFAULT_MAX_HEIGHT_PERCENT = 65
 const MIN_MAX_HEIGHT_PERCENT = 35
@@ -553,31 +553,46 @@ const BATCH_DEBOUNCE_MS = 1200
 const BATCH_MAX_WAIT_MS = 3000
 
 let isBatchBlockedByPolling = false
+let pollSettleTimer: ReturnType<typeof setTimeout> | null = null
 
 export function setPollingBatchHold(hold: boolean): void {
   isBatchBlockedByPolling = hold
+  if (pollSettleTimer) {
+    clearTimeout(pollSettleTimer)
+    pollSettleTimer = null
+  }
   if (!hold) {
-    if (incomingBatchQueue.length > 0) {
-      if (batchTimer) {
-        clearTimeout(batchTimer)
-        batchTimer = null
+    // When a poll cycle completes, give all feed results and database operations
+    // a brief settling window (1200ms) so that every single feed from that cycle
+    // is safely gathered into one single consolidated batch.
+    pollSettleTimer = setTimeout(() => {
+      pollSettleTimer = null
+      if (incomingBatchQueue.length > 0) {
+        if (batchTimer) {
+          clearTimeout(batchTimer)
+          batchTimer = null
+        }
+        if (isNotifierWindowOpen()) {
+          console.log(
+            `[Notifier] Polling finished with ${incomingBatchQueue.length} queued notification(s), holding until notification window closes.`
+          )
+          return
+        }
+        void flushBatch()
+      } else {
+        setTrayActivity('batch', false)
       }
-      if (isNotifierWindowOpen()) {
-        console.log(
-          `[Notifier] Polling finished with ${incomingBatchQueue.length} queued notification(s), holding until notification window closes.`
-        )
-        return
-      }
-      void flushBatch()
-    } else {
-      setTrayActivity('batch', false)
-    }
+    }, 1200)
   }
 }
 
 export function cancelPendingBatch(): void {
   currentBatchId++
   incomingBatchQueue.length = 0
+  if (pollSettleTimer) {
+    clearTimeout(pollSettleTimer)
+    pollSettleTimer = null
+  }
   if (batchTimer) {
     clearTimeout(batchTimer)
     batchTimer = null
@@ -615,6 +630,10 @@ function removeFeedFromQueues(feedId: string): void {
       clearTimeout(batchTimer)
       batchTimer = null
     }
+    if (pollSettleTimer) {
+      clearTimeout(pollSettleTimer)
+      pollSettleTimer = null
+    }
     batchStartTime = 0
     if (displayStack.length === 0) setTrayActivity('batch', false)
   }
@@ -644,6 +663,8 @@ export function pruneFeedFilter(feedId: string): void {
   })
 }
 
+let isFlushing = false
+
 async function flushBatch(): Promise<void> {
   // If a full scan/poll cycle is currently active, hold until completion
   if (isBatchBlockedByPolling) {
@@ -660,17 +681,39 @@ async function flushBatch(): Promise<void> {
     setTrayActivity('batch', false)
     return
   }
-  const fullBatch = [...incomingBatchQueue]
-  incomingBatchQueue.length = 0
-  batchStartTime = 0
-  const thisBatchId = ++currentBatchId
 
-  // Cap to at most HARD_CAP (50) items for the notifier window popup
-  const batch = fullBatch.slice(-HARD_CAP)
-
-  console.log(`[Notifier] Preparing batch of ${batch.length} notification(s) (queue had ${fullBatch.length})...`)
+  if (isFlushing) {
+    return
+  }
+  isFlushing = true
 
   try {
+    // Check fullscreen once right before popping up the notification window
+    if (settings.disableOnFullscreen) {
+      const isFullscreen = await isAnyAppFullscreen()
+      if (isFullscreen) {
+        const forPopup = incomingBatchQueue.slice(-HARD_CAP)
+        console.log(`[Notifier] Suppressing popup: full screen detected. Queuing ${forPopup.length} notification(s)`)
+        queuedNotifications.push(...forPopup)
+        if (queuedNotifications.length > HARD_CAP) {
+          queuedNotifications.splice(0, queuedNotifications.length - HARD_CAP)
+        }
+        incomingBatchQueue.length = 0
+        startQueueChecker()
+        return
+      }
+    }
+
+    const fullBatch = [...incomingBatchQueue]
+    incomingBatchQueue.length = 0
+    batchStartTime = 0
+    const thisBatchId = ++currentBatchId
+
+    // Cap to at most HARD_CAP items for the notifier window popup
+    const batch = fullBatch.slice(-HARD_CAP)
+
+    console.log(`[Notifier] Preparing batch of ${batch.length} notification(s) (queue had ${fullBatch.length})...`)
+
     // Only preload thumbnails for the top items that can actually be visible (max 10),
     // and limit concurrency to at most 3 with a short timeout to prevent network saturation and 100% CPU.
     const MAX_PRELOAD_CARDS = 10
@@ -730,6 +773,7 @@ async function flushBatch(): Promise<void> {
       lastSoundTime = Date.now()
     }
   } finally {
+    isFlushing = false
     setTrayActivity('batch', false)
   }
 }
@@ -796,7 +840,7 @@ function stopQueueChecker(): void {
   }
 }
 
-export async function showNotificationsBatch(items: NotificationHistoryItem[]): Promise<void> {
+export function showNotificationsBatch(items: NotificationHistoryItem[]): void {
   if (!settings.enabled || items.length === 0) return
   if (settings.snoozedUntil && Date.now() < settings.snoozedUntil) {
     console.warn('[Notifier] Notifications suppressed: snoozed until', new Date(settings.snoozedUntil).toISOString())
@@ -841,30 +885,15 @@ export async function showNotificationsBatch(items: NotificationHistoryItem[]): 
     }
   }
 
-  // 3. Fullscreen check
-  if (settings.disableOnFullscreen) {
-    const isFullscreen = await isAnyAppFullscreen()
-    if (isFullscreen) {
-      const forPopup = allowed.slice(-HARD_CAP)
-      console.log(`[Notifier] Suppressing popup: full screen detected. Queuing ${forPopup.length} notification(s)`)
-      queuedNotifications.push(...forPopup)
-      if (queuedNotifications.length > HARD_CAP) {
-        queuedNotifications.splice(0, queuedNotifications.length - HARD_CAP)
-      }
-      startQueueChecker()
-      return
-    }
-  }
-
-  // 4. Queue for popup batch (cap to at most HARD_CAP so desktop toast never gets flooded)
+  // 3. Queue for popup batch synchronously without async delay
   const forPopup = allowed.slice(-HARD_CAP)
   for (const item of forPopup) {
     queueForBatch(item)
   }
 }
 
-export async function showNotification(item: NotificationHistoryItem): Promise<void> {
-  return showNotificationsBatch([item])
+export function showNotification(item: NotificationHistoryItem): void {
+  showNotificationsBatch([item])
 }
 
 /**

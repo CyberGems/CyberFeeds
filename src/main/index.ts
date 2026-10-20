@@ -461,7 +461,7 @@ app.whenReady().then(() => {
         feedId: feedId,
         articleId: article.id
       }))
-      void showNotificationsBatch(items)
+      showNotificationsBatch(items)
     }
     if (inserted.length > 0) {
       rebuildTrayMenu()
