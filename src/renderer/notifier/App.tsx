@@ -129,6 +129,7 @@ export default function NotifierApp(): JSX.Element {
   })
   const [lang, setLang] = useState<'en' | 'es'>('en')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const isProgrammaticScroll = useRef(false)
   const [belowCount, setBelowCount] = useState(0)
   const [scrollbarW, setScrollbarW] = useState(0)
   const rafRef = useRef<number | undefined>(undefined)
@@ -230,7 +231,29 @@ export default function NotifierApp(): JSX.Element {
     }
   }
 
+  const resetScrollTop = useCallback(() => {
+    if (scrollRef.current) {
+      isProgrammaticScroll.current = true
+      scrollRef.current.scrollTop = 0
+      requestAnimationFrame(() => {
+        isProgrammaticScroll.current = false
+      })
+    }
+  }, [])
+
   const handleMouseDown = (): void => {
+    if (!isHovering.current) {
+      pauseTimer()
+    }
+  }
+
+  const handleWheel = (): void => {
+    if (!isHovering.current) {
+      pauseTimer()
+    }
+  }
+
+  const handleKeyDown = (): void => {
     if (!isHovering.current) {
       pauseTimer()
     }
@@ -292,9 +315,7 @@ export default function NotifierApp(): JSX.Element {
           unseenCount: Number(unseenCount) || 0,
           displayMode
         })
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = 0
-        }
+        resetScrollTop()
         initialCursorPos.current = null
         if (!isHovering.current) {
           const duration = Number((settingsPayload as NotificationSettings)?.duration) || 6000
@@ -304,26 +325,20 @@ export default function NotifierApp(): JSX.Element {
       }
     )
     return unsub
-  }, [startCountdown])
+  }, [resetScrollTop, startCountdown])
 
   // Reset scroll to top on every new notification batch before and after layout paint
   useLayoutEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0
-    }
-  }, [state.batchId])
+    resetScrollTop()
+  }, [resetScrollTop, state.batchId])
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0
-    }
+    resetScrollTop()
     const raf = requestAnimationFrame(() => {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0
-      }
+      resetScrollTop()
     })
     return () => cancelAnimationFrame(raf)
-  }, [state.batchId])
+  }, [resetScrollTop, state.batchId])
 
   // Listen for explicit clear signal from the main process
   useEffect(() => {
@@ -333,12 +348,10 @@ export default function NotifierApp(): JSX.Element {
       isHovering.current = false
       setIsHovered(false)
       initialCursorPos.current = null
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = 0
-      }
+      resetScrollTop()
     })
     return unsubClear
-  }, [stopCountdown])
+  }, [resetScrollTop, stopCountdown])
 
   // When the popup window is hidden (auto-hide, dismiss-all, snooze, open-in-app,
   // open-history, ...) the main process clears its displayStack but never sends
@@ -354,15 +367,13 @@ export default function NotifierApp(): JSX.Element {
         isHovering.current = false
         setIsHovered(false)
         initialCursorPos.current = null
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = 0
-        }
+        resetScrollTop()
         window.api.clearAllNotifications()
       }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [stopCountdown])
+  }, [resetScrollTop, stopCountdown])
 
   // Safety: resume countdown if cursor leaves document or window blurs
   useEffect(() => {
@@ -417,12 +428,15 @@ export default function NotifierApp(): JSX.Element {
   }, [state.settings?.maxStack, state.stack.length])
 
   const handleScroll = useCallback(() => {
+    if (!isProgrammaticScroll.current && !isHovering.current) {
+      pauseTimer()
+    }
     if (rafRef.current != null) return
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = undefined
       computeBelowCount()
     })
-  }, [computeBelowCount])
+  }, [computeBelowCount, pauseTimer])
 
   const scrollToBottom = useCallback(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -546,6 +560,8 @@ export default function NotifierApp(): JSX.Element {
       onMouseMove={handleMouseMove}
       onMouseDown={handleMouseDown}
       onMouseLeave={handleMouseLeave}
+      onWheel={handleWheel}
+      onKeyDown={handleKeyDown}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -694,6 +710,7 @@ export default function NotifierApp(): JSX.Element {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
+        onWheel={handleWheel}
         style={{
           flex: 1,
           minHeight: 0,
