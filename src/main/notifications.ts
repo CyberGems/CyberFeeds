@@ -317,6 +317,17 @@ function ensureWindow(): BrowserWindow {
   return notifierWindow
 }
 
+export function isNotifierWindowOpen(): boolean {
+  return Boolean(
+    notifierWindow &&
+      !notifierWindow.isDestroyed() &&
+      notifierWindow.isVisible() &&
+      displayStack.length > 0
+  )
+}
+
+let pendingBatchTimer: ReturnType<typeof setTimeout> | null = null
+
 export function hideNotifierWindow(): void {
   if (notifierWindow && !notifierWindow.isDestroyed()) {
     try {
@@ -336,6 +347,19 @@ export function hideNotifierWindow(): void {
   if (hideTimer) {
     clearTimeout(hideTimer)
     hideTimer = null
+  }
+
+  // If a batch arrived while the window was open and polling is complete,
+  // schedule a clean presentation now that the window is closed.
+  if (pendingBatchTimer) {
+    clearTimeout(pendingBatchTimer)
+    pendingBatchTimer = null
+  }
+  if (incomingBatchQueue.length > 0 && !isBatchBlockedByPolling) {
+    pendingBatchTimer = setTimeout(() => {
+      pendingBatchTimer = null
+      void flushBatch()
+    }, 400)
   }
 }
 
@@ -538,6 +562,12 @@ export function setPollingBatchHold(hold: boolean): void {
         clearTimeout(batchTimer)
         batchTimer = null
       }
+      if (isNotifierWindowOpen()) {
+        console.log(
+          `[Notifier] Polling finished with ${incomingBatchQueue.length} queued notification(s), holding until notification window closes.`
+        )
+        return
+      }
       void flushBatch()
     } else {
       setTrayActivity('batch', false)
@@ -551,6 +581,10 @@ export function cancelPendingBatch(): void {
   if (batchTimer) {
     clearTimeout(batchTimer)
     batchTimer = null
+  }
+  if (pendingBatchTimer) {
+    clearTimeout(pendingBatchTimer)
+    pendingBatchTimer = null
   }
   batchStartTime = 0
   setTrayActivity('batch', false)
@@ -611,6 +645,17 @@ export function pruneFeedFilter(feedId: string): void {
 }
 
 async function flushBatch(): Promise<void> {
+  // If a full scan/poll cycle is currently active, hold until completion
+  if (isBatchBlockedByPolling) {
+    return
+  }
+
+  // Never update live if the notifier window is currently open and visible to the user
+  if (isNotifierWindowOpen()) {
+    console.log('[Notifier] Notifier window is currently open, holding batch flush until it closes.')
+    return
+  }
+
   if (incomingBatchQueue.length === 0) {
     setTrayActivity('batch', false)
     return
@@ -660,6 +705,13 @@ async function flushBatch(): Promise<void> {
       return
     }
 
+    // If polling started or the window was opened while preloading was running
+    if (isBatchBlockedByPolling || isNotifierWindowOpen()) {
+      console.log(`[Notifier] Batch ${thisBatchId} hold asserted during preparation, returning items to queue`)
+      incomingBatchQueue.unshift(...batch)
+      return
+    }
+
     const processed = batch.map((item) => {
       const dataUrl = preloadMap.get(item.id)
       return dataUrl ? { ...item, thumbnail: dataUrl } : { ...item }
@@ -668,11 +720,9 @@ async function flushBatch(): Promise<void> {
     const allowed = processed.filter((item) => !(settings.feedFilters ?? []).includes(item.feedId || ''))
     if (allowed.length === 0) return
 
-    // Push all processed items to displayStack
+    // Cleanly replace displayStack with the new batch (never append onto stale items)
+    displayStack.length = 0
     displayStack.push(...allowed)
-    if (displayStack.length > HARD_CAP) {
-      displayStack.splice(0, displayStack.length - HARD_CAP)
-    }
 
     const displayed = await pushToWindow()
     if (displayed && thisBatchId === currentBatchId && Date.now() - lastSoundTime > 60_000) {
@@ -691,8 +741,13 @@ function queueForBatch(item: NotificationHistoryItem): void {
   }
   setTrayActivity('batch', true)
 
-  // When a full poll cycle is in progress, hold the batch until the cycle finishes
+  // 1. When a scan/poll cycle is in progress, hold the batch until the cycle finishes
   if (isBatchBlockedByPolling) {
+    return
+  }
+
+  // 2. When the notifier window is currently open, hold the batch until the window closes
+  if (isNotifierWindowOpen()) {
     return
   }
 
@@ -888,18 +943,16 @@ export function registerNotifierIpc(): void {
   })
 
   ipcMain.on('notifier:dismiss', (_, id: string) => {
-    const idx = displayStack.findIndex(n => n.id === id)
+    const idx = displayStack.findIndex((n) => n.id === id)
     if (idx !== -1) displayStack.splice(idx, 1)
     if (displayStack.length === 0) {
-      cancelPendingBatch()
       hideNotifierWindow()
     } else {
-      pushToWindow()
+      void pushToWindow()
     }
   })
 
   ipcMain.on('notifier:clearAll', () => {
-    cancelPendingBatch()
     hideNotifierWindow()
   })
 
@@ -916,10 +969,9 @@ export function registerNotifierIpc(): void {
 
   ipcMain.on('notifier:openInApp', (_, feedId: string, articleId: string) => {
     if (settings.closeOnViewInApp) {
-      cancelPendingBatch()
       hideNotifierWindow()
     }
-    const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
+    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
     if (mainWin) {
       restoreMainWindow()
       mainWin.webContents.send('app:openArticle', { feedId, articleId })
@@ -927,9 +979,8 @@ export function registerNotifierIpc(): void {
   })
 
   ipcMain.on('notifier:openHistory', () => {
-    cancelPendingBatch()
     hideNotifierWindow()
-    const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
+    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
     if (mainWin) {
       restoreMainWindow()
       mainWin.webContents.send('app:openHistory')
@@ -937,9 +988,8 @@ export function registerNotifierIpc(): void {
   })
 
   ipcMain.on('notifier:openSettings', (_, tab?: string) => {
-    cancelPendingBatch()
     hideNotifierWindow()
-    const mainWin = BrowserWindow.getAllWindows().find(w => w !== notifierWindow)
+    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
     if (mainWin) {
       restoreMainWindow()
       mainWin.webContents.send('app:openSettings', tab || 'notifications')

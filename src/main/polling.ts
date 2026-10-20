@@ -52,6 +52,7 @@ function runPendingPoll(): void {
   const options = pendingPollOptions ?? undefined
   pendingPoll = false
   pendingPollOptions = null
+  setPollingBatchHold(true)
   void pollFeeds(undefined, undefined, options)
 }
 
@@ -81,6 +82,7 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
   if (!settings.pollingEnabled && !feeds) {
     console.log('[Polling] Automatic polling is globally disabled, skipping cycle.')
     isPolling = false
+    setPollingBatchHold(false)
     onComplete?.()
     return
   }
@@ -91,6 +93,7 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
     if (isAppFocused) {
       console.log('[Polling] Application is currently focused and pollOnlyWhenUnfocused is enabled, skipping background poll cycle.')
       isPolling = false
+      setPollingBatchHold(false)
       onComplete?.()
       return
     }
@@ -113,6 +116,7 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
   if (feedsToFetch.length === 0) {
     console.log('[Polling] No feeds to fetch, stopping cycle.')
     isPolling = false
+    setPollingBatchHold(false)
     onComplete?.()
     return
   }
@@ -139,7 +143,9 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
     completed = true
     if (activeWorker === worker) activeWorker = null
     setTrayActivity('polling', false)
-    setPollingBatchHold(false)
+    if (!pendingPoll) {
+      setPollingBatchHold(false)
+    }
     rebuildTrayMenu()
     onComplete?.()
   }
