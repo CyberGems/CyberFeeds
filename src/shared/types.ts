@@ -69,7 +69,7 @@ export interface NotificationHistoryItem {
 }
 
 export interface AppSettings {
-  theme: 'dark' | 'grayscale' | 'light' | 'dracula' | 'nord' | 'monokai'
+  theme: 'dark' | 'grayscale' | 'light'
   layout: 'three-panel' | 'two-panel' | 'one-panel' | 'horizontal-split'
   language: 'en' | 'es'
   pollingInterval: number

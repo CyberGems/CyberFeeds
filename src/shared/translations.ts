@@ -317,10 +317,7 @@ export const translations = {
         themes: {
           dark: 'CyberFeeds',
           grayscale: 'Gray',
-          light: 'White',
-          dracula: 'Purple',
-          nord: 'Blue',
-          monokai: 'Yellow'
+          light: 'Light'
         },
         layout: 'Layout',
         layouts: {
@@ -1166,10 +1163,7 @@ export const translations = {
         themes: {
           dark: 'CyberFeeds',
           grayscale: 'Gris',
-          light: 'Blanco',
-          dracula: 'Morado',
-          nord: 'Azul',
-          monokai: 'Amarillo'
+          light: 'Claro'
         },
         layout: 'Diseño',
         layouts: {

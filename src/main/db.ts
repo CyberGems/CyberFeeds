@@ -875,9 +875,14 @@ export function getSettings(): AppSettings {
   if (!row) return DEFAULT_SETTINGS
   try {
     const parsed = JSON.parse(row.value) as Partial<AppSettings>
+    const validTheme: AppSettings['theme'] =
+      parsed.theme === 'grayscale' || parsed.theme === 'light' || parsed.theme === 'dark'
+        ? parsed.theme
+        : DEFAULT_SETTINGS.theme
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
+      theme: validTheme,
       notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications },
       shortcuts: { ...DEFAULT_SETTINGS.shortcuts, ...parsed.shortcuts },
       filters: { ...DEFAULT_SETTINGS.filters, ...parsed.filters },

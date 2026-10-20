@@ -57,10 +57,7 @@ export function getMainWindow(): BrowserWindow | null {
 const THEME_BACKGROUND: Record<string, string> = {
   dark: '#0d1117',
   grayscale: '#18181b',
-  light: '#f6f8fa',
-  dracula: '#282a36',
-  nord: '#2e3440',
-  monokai: '#272822'
+  light: '#f6f8fa'
 }
 
 function resolveStartupBounds(raw: WindowState): ReturnType<typeof clampWindowBounds> & {
