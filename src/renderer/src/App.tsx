@@ -227,7 +227,7 @@ export default function App(): JSX.Element {
 
     if (search) query.search = search
     load(query)
-  }, [selectedFeedId, unreadOnly, readOnly, search, quickFilter, settings.filters])
+  }, [selectedFeedId, unreadOnly, readOnly, search, quickFilter, settings.filters?.muteAction, (settings.filters?.muteKeywords ?? []).join(','), (settings.filters?.priorityKeywords ?? []).join(',')])
 
   // Listen for new articles from main process
   useEffect(() => {
@@ -361,7 +361,7 @@ export default function App(): JSX.Element {
   // Listen for polling toggled requests from tray context menu
   useEffect(() => {
     const unsub = window.api.onPollingToggled((pollingEnabled) => {
-      useSettingsStore.getState().update({ pollingEnabled })
+      useSettingsStore.setState((s) => ({ settings: { ...s.settings, pollingEnabled } }))
     })
     return unsub
   }, [])

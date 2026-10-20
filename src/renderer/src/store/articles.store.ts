@@ -51,6 +51,23 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   }
 }
 
+function areQueriesEqual(a: ArticleQuery, b: ArticleQuery): boolean {
+  if (a === b) return true
+  const keysA = Object.keys(a)
+  const keysB = Object.keys(b)
+  if (keysA.length !== keysB.length) return false
+  for (const k of keysA) {
+    const valA = (a as any)[k]
+    const valB = (b as any)[k]
+    if (Array.isArray(valA) && Array.isArray(valB)) {
+      if (valA.length !== valB.length || !valA.every((v, i) => v === valB[i])) return false
+    } else if (valA !== valB) {
+      return false
+    }
+  }
+  return true
+}
+
 export const useArticlesStore = create<ArticlesState>((set, get) => ({
   articles: [],
   totalCount: 0,
@@ -60,6 +77,11 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
   currentQuery: {},
 
   load: async (query) => {
+    const isSameQuery = areQueriesEqual(query, get().currentQuery) && get().articles.length > 0
+    if (isSameQuery) {
+      await get().refresh()
+      return
+    }
     const requestId = ++latestLoadRequest
     set({ loading: true, currentQuery: query, articles: [], totalCount: 0, incomingCount: 0 })
     const q = { ...query, limit: PAGE_SIZE, offset: 0 }

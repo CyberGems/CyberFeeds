@@ -51,7 +51,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
     detectedUserName,
     setTopbarMenuOpen
   } = useUIStore()
-  const { settings, update } = useSettingsStore()
+  const { settings, update, togglePolling } = useSettingsStore()
   const { t } = useTranslation()
   const [maximized, setMaximized] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -252,10 +252,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
 
   const handleTogglePolling = async (): Promise<void> => {
     setMenuOpen(false)
-    const res = await window.api.togglePolling()
-    if (res?.ok && typeof res.pollingEnabled === 'boolean') {
-      update({ pollingEnabled: res.pollingEnabled })
-    }
+    await togglePolling()
   }
 
   return (

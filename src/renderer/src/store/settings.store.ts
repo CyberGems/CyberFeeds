@@ -34,9 +34,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   togglePolling: async () => {
-    await window.api.togglePolling()
-    const settings = await window.api.getSettings()
-    set({ settings: { ...get().settings, ...settings } })
+    const res = await window.api.togglePolling()
+    if (res?.ok && typeof res.pollingEnabled === 'boolean') {
+      set((s) => ({ settings: { ...s.settings, pollingEnabled: res.pollingEnabled } }))
+    }
   },
 
   setFeedNotificationMuted: (feedIds, muted) => {
