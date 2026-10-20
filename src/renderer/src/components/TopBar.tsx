@@ -169,7 +169,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
 
   useEffect(() => {
     if (isTickerHovered || tickerItems.length <= 1) return
-    const interval = setInterval(cycleNextTicker, 8000)
+    const interval = setInterval(cycleNextTicker, 16000)
     return () => clearInterval(interval)
   }, [isTickerHovered, tickerItems.length, cycleNextTicker])
 

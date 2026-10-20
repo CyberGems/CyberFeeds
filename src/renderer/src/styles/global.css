@@ -470,35 +470,19 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: color 0.2s ease;
+  position: relative;
+  top: 1px;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.9;
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
-.topbar-welcome-icon.morning {
-  color: #e5a93c;
-}
-.topbar-welcome-icon.afternoon {
-  color: #f59e0b;
-}
-.topbar-welcome-icon.evening {
-  color: #818cf8;
-}
-.topbar-welcome-icon.unread {
-  color: var(--accent);
-}
-.topbar-welcome-icon.caught-up {
-  color: var(--green, #2ea043);
-}
-.topbar-welcome-icon.rss {
-  color: #f97316;
+.topbar-welcome:hover .topbar-welcome-icon {
+  opacity: 1;
+  color: var(--text-secondary);
 }
 .topbar-welcome-icon.refreshing {
-  color: var(--accent);
   animation: spin 1.2s linear infinite;
-}
-.topbar-welcome-icon.date {
-  color: var(--text-muted);
-}
-.theme-grayscale .topbar-welcome-icon {
-  color: var(--text-secondary) !important;
 }
 @media (max-width: 680px) {
   .topbar-welcome {
