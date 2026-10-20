@@ -6,7 +6,6 @@ import {
   Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles,
   Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive, Layers
 } from 'lucide-react'
-import { formatDisplayName } from '@shared/welcome'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useConfirm } from '../hooks/useConfirm'
@@ -252,7 +251,7 @@ interface SettingsPanelProps {
 }
 
 export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Element {
-  const { closePanel: storeClosePanel, openPanel, detectedUserName } = useUIStore()
+  const { closePanel: storeClosePanel, openPanel } = useUIStore()
   const closePanel = onClose || storeClosePanel
   const { settings, save } = useSettingsStore()
   const { feeds, folders, loadAll, deleteAllFeeds } = useFeedsStore()
@@ -278,7 +277,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [actionFile, setActionFile] = useState<string | null>(null)
   const [appVersion, setAppVersion] = useState('')
   const [detectedBrowsers, setDetectedBrowsers] = useState<import('../../../shared/types').DetectedBrowser[]>([])
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
 
   const fetchAutoBackups = useCallback(async () => {
     setLoadingAutoBackups(true)
@@ -926,26 +925,69 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     <label className="form-label" style={{ margin: 0 }}>
                       {t.settings.general.userName}
                     </label>
-                    {detectedUserName && !local.userName && (
-                      <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                        {formatDisplayName(detectedUserName)}
-                      </span>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {Boolean(local.userName && local.userName.trim()) && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => update({ userName: '' })}
+                          style={{ fontSize: 11, padding: '2px 7px', height: 'auto', color: 'var(--text-muted)' }}
+                          title={t.settings.general.leaveNameEmpty}
+                        >
+                          {t.settings.general.leaveNameEmpty}
+                        </button>
+                      )}
+                      {local.userName !== (language === 'es' ? 'Usuario' : 'User') && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => update({ userName: language === 'es' ? 'Usuario' : 'User' })}
+                          style={{ fontSize: 11, padding: '2px 7px', height: 'auto', color: 'var(--text-muted)' }}
+                          title={t.settings.general.useDefaultUserName}
+                        >
+                          {t.settings.general.useDefaultUserName}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      ref={userNameInputRef}
+                      className="form-input"
+                      type="text"
+                      maxLength={40}
+                      placeholder={t.settings.general.userNamePlaceholder}
+                      value={local.userName ?? ''}
+                      onChange={(e) => update({ userName: e.target.value }, 300)}
+                      onKeyDown={handleUserNameKeyDown}
+                      style={{ paddingRight: local.userName ? 30 : 10 }}
+                    />
+                    {Boolean(local.userName) && (
+                      <button
+                        type="button"
+                        onClick={() => update({ userName: '' })}
+                        style={{
+                          position: 'absolute',
+                          right: 8,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: 2,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0.7
+                        }}
+                        title={t.settings.general.clearName}
+                        aria-label={t.settings.general.clearName}
+                      >
+                        <X size={14} />
+                      </button>
                     )}
                   </div>
-                  <input
-                    ref={userNameInputRef}
-                    className="form-input"
-                    type="text"
-                    maxLength={40}
-                    placeholder={
-                      detectedUserName
-                        ? `${t.settings.general.userNamePlaceholder} (${formatDisplayName(detectedUserName)})`
-                        : t.settings.general.userNamePlaceholder
-                    }
-                    value={local.userName ?? ''}
-                    onChange={(e) => update({ userName: e.target.value }, 300)}
-                    onKeyDown={handleUserNameKeyDown}
-                  />
                   <div className="form-hint" style={{ marginTop: 4 }}>
                     {t.settings.general.userNameHint}
                   </div>

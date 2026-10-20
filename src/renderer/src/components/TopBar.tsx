@@ -19,13 +19,21 @@ import {
   HelpCircle,
   Tag,
   Globe,
-  Info
+  Info,
+  Sun,
+  Moon,
+  Coffee,
+  Sparkles,
+  CheckCircle2,
+  Rss,
+  Calendar
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
+import { useFeedsStore } from '../store/feeds.store'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
-import { getTimeOfDay, getEffectiveUserName, getGreetingText } from '@shared/welcome'
+import { getTimeOfDay, getEffectiveUserName, getGreetingText, formatWelcomeDate } from '@shared/welcome'
 
 const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
 const WIKI_URL = 'https://github.com/CyberGems/CyberFeeds/wiki'
@@ -52,12 +60,23 @@ const TopBar = memo(function TopBar(): JSX.Element {
     setTopbarMenuOpen
   } = useUIStore()
   const { settings, update, togglePolling } = useSettingsStore()
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
+  const isFetching = useUIStore((s) => s.isFetching)
+  const { unreadCounts, feeds } = useFeedsStore()
   const [maximized, setMaximized] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [menuKeyboardIndex, setMenuKeyboardIndex] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
+
+  const totalFeeds = feeds.length
+  const totalUnread = useMemo(
+    () =>
+      Object.entries(unreadCounts)
+        .filter(([k]) => k !== 'starred' && k !== 'all')
+        .reduce((sum, [, count]) => sum + count, 0),
+    [unreadCounts]
+  )
 
   const timeOfDay = useMemo(() => getTimeOfDay(), [])
   const effectiveName = useMemo(
@@ -68,6 +87,91 @@ const TopBar = memo(function TopBar(): JSX.Element {
     () => getGreetingText(timeOfDay, effectiveName, t.welcome),
     [timeOfDay, effectiveName, t.welcome]
   )
+
+  const TimeIcon = useMemo(() => {
+    if (timeOfDay === 'morning') return Coffee
+    if (timeOfDay === 'afternoon') return Sun
+    return Moon
+  }, [timeOfDay])
+
+  const formattedDate = useMemo(
+    () => formatWelcomeDate(new Date(), language),
+    [language]
+  )
+
+  const tickerItems = useMemo(() => {
+    const items: Array<{ id: string; icon: any; iconClass: string; text: string }> = [
+      {
+        id: 'greeting',
+        icon: TimeIcon,
+        iconClass: timeOfDay,
+        text: greeting
+      }
+    ]
+
+    if (totalUnread > 0) {
+      const formatted = new Intl.NumberFormat(language === 'es' ? 'es-ES' : 'en-US').format(totalUnread)
+      items.push({
+        id: 'unread',
+        icon: Sparkles,
+        iconClass: 'unread',
+        text: `${formatted} ${totalUnread === 1 ? t.welcome.unreadArticleLabel : t.welcome.unreadArticlesLabel}`
+      })
+    } else {
+      items.push({
+        id: 'caught-up',
+        icon: CheckCircle2,
+        iconClass: 'caught-up',
+        text: t.welcome.allCaughtUp
+      })
+    }
+
+    if (isFetching) {
+      items.push({
+        id: 'syncing',
+        icon: RefreshCw,
+        iconClass: 'refreshing',
+        text: t.topBar.syncingFeeds || (language === 'es' ? 'Sincronizando feeds...' : 'Syncing feeds...')
+      })
+    } else if (totalFeeds > 0) {
+      items.push({
+        id: 'feeds',
+        icon: Rss,
+        iconClass: 'rss',
+        text: t.welcome.activeFeeds.replace('{count}', String(totalFeeds))
+      })
+    }
+
+    items.push({
+      id: 'date',
+      icon: Calendar,
+      iconClass: 'date',
+      text: formattedDate
+    })
+
+    return items
+  }, [TimeIcon, timeOfDay, greeting, totalUnread, totalFeeds, isFetching, language, t, formattedDate])
+
+  const [tickerIndex, setTickerIndex] = useState(0)
+  const [isTickerHovered, setIsTickerHovered] = useState(false)
+  const [isFading, setIsFading] = useState(false)
+
+  const safeIndex = tickerIndex % Math.max(1, tickerItems.length)
+  const currentItem = tickerItems[safeIndex] || tickerItems[0]
+
+  const cycleNextTicker = useCallback(() => {
+    setIsFading(true)
+    setTimeout(() => {
+      setTickerIndex((prev) => (prev + 1) % tickerItems.length)
+      setIsFading(false)
+    }, 200)
+  }, [tickerItems.length])
+
+  useEffect(() => {
+    if (isTickerHovered || tickerItems.length <= 1) return
+    const interval = setInterval(cycleNextTicker, 8000)
+    return () => clearInterval(interval)
+  }, [isTickerHovered, tickerItems.length, cycleNextTicker])
 
   const historyLimit = settings.notifications?.historyLimit ?? 1000
   const isHistoryLimitReached = historyLimit > 0 && unseenNotificationsCount >= historyLimit
@@ -268,11 +372,24 @@ const TopBar = memo(function TopBar(): JSX.Element {
         </button>
       </Tooltip>
       <div className="topbar-drag">
-        {settings.showWelcomeGreeting !== false && (
-          <div className="topbar-welcome" aria-label={greeting}>
-            <span className="topbar-welcome-dot" aria-hidden="true" />
-            <span className="topbar-welcome-text">{greeting}</span>
-          </div>
+        {settings.showWelcomeGreeting !== false && currentItem && (
+          <Tooltip label={t.topBar.statusCycleTooltip || (language === 'es' ? 'Haz clic para rotar información' : 'Click to cycle status information')} placement="bottom">
+            <button
+              type="button"
+              className="topbar-welcome no-drag"
+              onClick={cycleNextTicker}
+              onMouseEnter={() => setIsTickerHovered(true)}
+              onMouseLeave={() => setIsTickerHovered(false)}
+              aria-label={currentItem.text}
+            >
+              <div className={`topbar-welcome-content ${isFading ? 'fading' : ''}`}>
+                <span className={`topbar-welcome-icon ${currentItem.iconClass}`} aria-hidden="true">
+                  <currentItem.icon size={13} />
+                </span>
+                <span className="topbar-welcome-text">{currentItem.text}</span>
+              </div>
+            </button>
+          </Tooltip>
         )}
       </div>
 

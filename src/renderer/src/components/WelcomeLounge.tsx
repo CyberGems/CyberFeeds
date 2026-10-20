@@ -110,27 +110,29 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
         </div>
 
         {/* Header pill with greeting and time icon */}
-        <div className="welcome-greeting-badge">
-          <span className={`welcome-time-icon ${timeOfDay}`}>
-            <TimeIcon size={16} />
-          </span>
-          <span className="welcome-greeting-text">
-            {greetingPrefix}
-            {effectiveName && ', '}
-          </span>
-          {effectiveName && (
-            <Tooltip label={t.welcome.editName} placement="bottom">
-              <button
-                type="button"
-                className="welcome-greeting-name"
-                onClick={openUserNameSettings}
-                aria-label={t.welcome.editName}
-              >
-                {effectiveName}
-              </button>
-            </Tooltip>
-          )}
-        </div>
+        {settings.showWelcomeGreeting !== false && (
+          <div className="welcome-greeting-badge">
+            <span className={`welcome-time-icon ${timeOfDay}`}>
+              <TimeIcon size={16} />
+            </span>
+            <span className="welcome-greeting-text">
+              {greetingPrefix}
+              {effectiveName ? ', ' : ''}
+            </span>
+            {effectiveName && (
+              <Tooltip label={t.welcome.editName} placement="bottom">
+                <button
+                  type="button"
+                  className="welcome-greeting-name"
+                  onClick={openUserNameSettings}
+                  aria-label={t.welcome.editName}
+                >
+                  {effectiveName}
+                </button>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
         {/* Date and Welcoming titles */}
         <p className="welcome-date">{formattedDate}</p>

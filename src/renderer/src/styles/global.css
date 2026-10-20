@@ -440,23 +440,65 @@ body {
   color: var(--text-muted);
   opacity: 0.85;
   letter-spacing: 0.01em;
-  pointer-events: none;
   user-select: none;
   white-space: nowrap;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 3px 8px;
+  border-radius: 12px;
+  cursor: pointer;
 }
 .topbar-welcome:hover {
   opacity: 1;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
-.topbar-welcome-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-  opacity: 0.85;
+.topbar-welcome-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.topbar-welcome-content.fading {
+  opacity: 0;
+  transform: translateY(-2px);
+}
+.topbar-welcome-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  transition: color 0.2s ease;
+}
+.topbar-welcome-icon.morning {
+  color: #e5a93c;
+}
+.topbar-welcome-icon.afternoon {
+  color: #f59e0b;
+}
+.topbar-welcome-icon.evening {
+  color: #818cf8;
+}
+.topbar-welcome-icon.unread {
+  color: var(--accent);
+}
+.topbar-welcome-icon.caught-up {
+  color: var(--green, #2ea043);
+}
+.topbar-welcome-icon.rss {
+  color: #f97316;
+}
+.topbar-welcome-icon.refreshing {
+  color: var(--accent);
+  animation: spin 1.2s linear infinite;
+}
+.topbar-welcome-icon.date {
+  color: var(--text-muted);
+}
+.theme-grayscale .topbar-welcome-icon {
+  color: var(--text-secondary) !important;
 }
 @media (max-width: 680px) {
   .topbar-welcome {

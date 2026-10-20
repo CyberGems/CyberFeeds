@@ -19,13 +19,14 @@ export function formatDisplayName(raw?: string): string {
 }
 
 /**
- * Get the effective user name by preferring custom settings name over detected OS name.
+ * Get the effective user name from settings.
+ * If empty or unset, returns an empty string so greetings display cleanly without forcing an OS username.
  */
-export function getEffectiveUserName(settingsName?: string, detectedName?: string): string {
+export function getEffectiveUserName(settingsName?: string, _detectedName?: string): string {
   if (settingsName && settingsName.trim()) {
     return settingsName.trim()
   }
-  return formatDisplayName(detectedName)
+  return ''
 }
 
 /**
