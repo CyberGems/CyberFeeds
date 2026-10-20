@@ -33,7 +33,7 @@ def bounds(values: tuple[float, float, float, float]) -> tuple[int, int, int, in
 
 
 def line(draw: ImageDraw.ImageDraw, points: list[tuple[float, float]], color=NEUTRAL, width=STROKE) -> None:
-    draw.line([point(x, y) for x, y in points], fill=color, width=width * SCALE, joint='curve')
+    draw.line([point(x, y) for x, y in points], fill=color, width=round(width * SCALE), joint='curve')
 
 
 def rounded_rect(draw: ImageDraw.ImageDraw, rect, radius: float, *, color=NEUTRAL, fill=None, width=STROKE) -> None:
@@ -181,9 +181,12 @@ def draw_update() -> None:
 
 
 def draw_suite() -> None:
+    """Draw the CyberGems diamond (Gem) matching the About modal website icon."""
     image, draw = canvas()
-    for left, top in [(11, 11), (35, 11), (11, 35), (35, 35)]:
-        rounded_rect(draw, (left, top, left + 18, top + 18), 3)
+    outline = [(18.8, 11.1), (45.2, 11.1), (54.0, 24.3), (32.0, 52.9), (10.0, 24.3), (18.8, 11.1)]
+    line(draw, outline, width=4.5)
+    line(draw, [(10.0, 24.3), (54.0, 24.3)], width=4.5)
+    line(draw, [(29.8, 11.1), (23.2, 24.3), (32.0, 52.9), (40.8, 24.3), (34.2, 11.1)], width=4.5)
     save(image, 'suite.png')
 
 
