@@ -70,7 +70,8 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Múltiples disposiciones**: vistas de tres paneles, dos paneles, un panel y división horizontal
 
 ### 🔔 Notificaciones inteligentes
-- **Ventana de notificación personalizada**: notificador integrado con agrupación y botones de acción
+- **Lotes unificados de escaneo**: los artículos detectados en cada ciclo de sondeo se entregan en una sola notificación consolidada, priorizando los más recientes
+- **Ventana de notificación personalizada**: notificador integrado con agrupación, botones de acción y protección de pausa al desplazarse
 - **Actualizaciones en vivo**: ve los artículos recién obtenidos en una píldora flotante sin perder tu posición en la lista
 - **Filtrado por palabras clave**: recibe notificaciones solo de los temas que te importan
 - **Historial de notificaciones**: límite de historial configurable, renderizado progresivo por lotes para más de 1.000 elementos, insignias adaptativas con el acento del tema y avisos de límite, y elementos recientes en la bandeja
@@ -80,7 +81,8 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Detección de pantalla completa**: suprime las notificaciones durante juegos o vídeos
 
 ### 🖥️ Integración con escritorio
-- **Bandeja del sistema**: minimizar a la bandeja, menú de acciones rápidas, submenú de artículos recientes en tiempo real y animación bidireccional durante el sondeo en segundo plano
+- **Barra superior dinámica**: rota saludos contextuales según la hora, contador de artículos sin leer, estado de sincronización, feeds activos y fecha con pausa al pasar el cursor y clic directo
+- **Bandeja del sistema**: minimizar a la bandeja, menú de acciones rápidas, submenú de artículos recientes en tiempo real, acceso directo con diamante de la suite y animación durante el sondeo
 - **Memoria de ventana multi-monitor**: recuerda automáticamente los límites de la pantalla activa y restaura la ventana en el monitor designado
 - **Atajos globales**: accesos configurables (mostrar/ocultar predeterminado: `Alt+Shift+S`)
 - **Inicio automático**: opción de iniciar con Windows
@@ -89,7 +91,9 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Instalador NSIS temático**: asistente con banner lateral temático, soporte multilingüe y accesos directos limpios
 
 ### 🎨 Personalización
-- **6 temas**: CyberFeeds (oscuro), Gris (escala de grises), Blanco (claro), Morado (Dracula), Azul (Nord) y Amarillo (Monokai)
+- **3 temas armónicos**: CyberFeeds (oscuro predeterminado), Gris (escala de grises sin distracciones) y Claro
+- **Interruptores modernos de la suite**: conmutadores tipo píldora interactivos con checkmarks táctiles y acentos reactivos al tema
+- **Personalización de saludos**: configura tu nombre, usa el título por defecto o déjalo vacío para saludos puros
 - **Escala de interfaz**: ajusta rápidamente la escala general desde el panel de bienvenida, con controles independientes detallados de interfaz y lector en Configuración
 - **Preferencias de lectura**: tamaño de fuente, interlineado, ancho máximo, tema de lectura (Predeterminado, Sepia, Oscuro) y conmutador de reproducción de YouTube en la app
 - **Interfaz bilingüe**: interfaz completa en inglés y español

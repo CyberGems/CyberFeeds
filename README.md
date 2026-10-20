@@ -70,7 +70,8 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Multiple Layouts**: Three-panel, two-panel, one-panel, and horizontal-split views
 
 ### 🔔 Smart Notifications
-- **Custom Notification Window**: Built-in notifier with batching and action buttons
+- **Unified Scan Batches**: Articles discovered during each polling cycle arrive in a single coordinated notification batch, sorted with newest articles first
+- **Custom Notification Window**: Built-in notifier with batching, action buttons, and scroll-aware pause protection
 - **Live Article Updates**: See newly fetched articles in a floating pill while keeping your place in the list
 - **Keyword Filtering**: Only get notified about topics that matter
 - **Notification History**: Configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
@@ -80,7 +81,8 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Fullscreen Detection**: Suppress notifications during games or videos
 
 ### 🖥️ Desktop Integration
-- **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, and bidirectional animation during background polling
+- **Dynamic Titlebar Ticker**: Cycles through contextual time-of-day greetings, unread counters, sync status, active feeds, and localized date with hover-pause and click navigation
+- **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, suite diamond shortcut, and animation during background polling
 - **Multi-Monitor Window Memory**: Automatically remembers active display bounds and restores window to designated monitor
 - **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+S`)
 - **Auto-Start**: Start with Windows option
@@ -89,7 +91,9 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Themed NSIS Installer**: Assisted setup wizard with branded side banner, multi-language support, and clean shortcuts
 
 ### 🎨 Customization
-- **6 Themes**: CyberFeeds (dark), Gray (grayscale), White (light), Purple (Dracula), Blue (Nord), and Yellow (Monokai)
+- **3 Harmonious Themes**: CyberFeeds (default dark), Grayscale (clean distraction-free monochrome), and Light (Claro)
+- **Modern Suite Toggles**: Interactive pill-switch toggles with tactile checkmarks and theme-reactive accents
+- **Greeting Personalization**: Set your custom name, use the default title, or clear it for pure greetings
 - **Interface Scale**: Quickly adjust the overall interface scale from the welcome panel, with detailed independent interface and reader controls in Settings
 - **Reading Preferences**: Font size, line height, max width, reading theme (Default, Sepia, Dark), and in-app YouTube playback toggle
 - **Bilingual UI**: Full English and Spanish interface
