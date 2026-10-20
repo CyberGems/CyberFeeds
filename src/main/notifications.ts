@@ -27,6 +27,7 @@ const WIN_PAD = 16
 // Safety cap for transient notification queues and popup rendering. The full
 // history is still persisted according to the configured history limit.
 const HARD_CAP = 100
+const QUEUE_CAP = 500
 const RENDERER_BATCH_CAP = HARD_CAP
 const DEFAULT_MAX_HEIGHT_PERCENT = 65
 const MIN_MAX_HEIGHT_PERCENT = 35
@@ -709,8 +710,12 @@ async function flushBatch(): Promise<void> {
     batchStartTime = 0
     const thisBatchId = ++currentBatchId
 
-    // Cap to at most HARD_CAP items for the notifier window popup
-    const batch = fullBatch.slice(-HARD_CAP)
+    // Sort by publication timestamp descending so that the popup presents
+    // the absolute newest/most recent articles across all feeds first
+    fullBatch.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+
+    // Cap to at most HARD_CAP items for the notifier window popup (taking newest first)
+    const batch = fullBatch.slice(0, HARD_CAP)
 
     console.log(`[Notifier] Preparing batch of ${batch.length} notification(s) (queue had ${fullBatch.length})...`)
 
@@ -780,8 +785,8 @@ async function flushBatch(): Promise<void> {
 
 function queueForBatch(item: NotificationHistoryItem): void {
   incomingBatchQueue.push(item)
-  if (incomingBatchQueue.length > HARD_CAP) {
-    incomingBatchQueue.splice(0, incomingBatchQueue.length - HARD_CAP)
+  if (incomingBatchQueue.length > QUEUE_CAP) {
+    incomingBatchQueue.splice(0, incomingBatchQueue.length - QUEUE_CAP)
   }
   setTrayActivity('batch', true)
 

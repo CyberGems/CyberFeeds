@@ -457,7 +457,7 @@ app.whenReady().then(() => {
         feedName: feedTitle,
         icon: feedIcon,
         thumbnail: article.thumbnail,
-        createdAt: Date.now(),
+        createdAt: typeof article.pubDate === 'number' && !isNaN(article.pubDate) && article.pubDate > 0 ? article.pubDate : Date.now(),
         feedId: feedId,
         articleId: article.id
       }))
