@@ -288,27 +288,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
           <Bell size={15} />
           {unseenNotificationsCount > 0 && (
             <span
-              style={{
-                position: 'absolute',
-                top: 1,
-                right: unseenNotificationsCount >= 100 ? -4 : 1,
-                background: isHistoryLimitReached ? 'var(--red, #f85149)' : 'var(--accent)',
-                color: '#ffffff',
-                textShadow: '0 0.5px 1.5px rgba(0,0,0,0.4)',
-                borderRadius: 8,
-                minWidth: 15,
-                height: 15,
-                padding: '0 3.5px',
-                fontSize: unseenNotificationsCount >= 1000 ? 8 : 9,
-                fontWeight: 'bold',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid var(--bg-0)',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.35)',
-                pointerEvents: 'none',
-                lineHeight: 1
-              }}
+              className={`topbar-notification-badge${isHistoryLimitReached ? ' is-limit' : ''}${unseenNotificationsCount >= 100 ? ' is-wide' : ''}${unseenNotificationsCount >= 1000 ? ' is-extra-wide' : ''}`}
             >
               {unseenNotificationsCount}
             </span>

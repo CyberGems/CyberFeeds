@@ -145,8 +145,32 @@ a {
   accent-color: var(--accent);
 }
 
-[data-theme='grayscale'] .toggle-track.on {
+[data-theme='grayscale'] .topbar-notification-badge {
+  color: #121214 !important;
+  text-shadow: none !important;
+  font-weight: 800;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme='grayscale'] .toggle-track.on,
+[data-theme='grayscale'] .custom-switch.active {
   background: #71717a;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='grayscale'] .toggle-track,
+[data-theme='grayscale'] .custom-switch {
+  background: #3f3f46;
+}
+
+[data-theme='grayscale'] .toggle-thumb,
+[data-theme='grayscale'] .custom-switch::after {
+  background-color: #18181b;
+}
+
+[data-theme='grayscale'] .toggle-track.on .toggle-thumb,
+[data-theme='grayscale'] .custom-switch.active::after {
+  background-color: #ffffff;
 }
 
 [data-theme='grayscale'] .settings-nav-btn {
@@ -503,6 +527,38 @@ body {
 .win-btn.close:hover {
   background: var(--red);
   color: #fff;
+}
+
+/* ─── Topbar Notification Badge ─────────────────────────────────────────── */
+.topbar-notification-badge {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background: var(--accent);
+  color: #ffffff;
+  text-shadow: 0 0.5px 1.5px rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 3.5px;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--bg-0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  line-height: 1;
+}
+.topbar-notification-badge.is-wide {
+  right: -4px;
+}
+.topbar-notification-badge.is-extra-wide {
+  font-size: 8px;
+}
+.topbar-notification-badge.is-limit {
+  background: var(--red, #f85149);
 }
 
 /* ─── Topbar More Menu Dropdown ─────────────────────────────────────────── */
@@ -3177,49 +3233,89 @@ input[type="checkbox"],
 input[type="radio"] {
   accent-color: var(--accent);
 }
+/* ─── Unified Suite Toggles (CyberNotes Style) ────────────────────────── */
 .toggle {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   margin-bottom: 8px;
 }
-.toggle-track {
-  width: 36px;
-  height: 20px;
-  border-radius: 10px;
-  background: var(--bg-3);
+.toggle-track,
+.custom-switch {
   position: relative;
-  transition: background 0.2s, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  width: 44px;
+  min-width: 44px;
   flex-shrink: 0;
+  height: 24px;
+  background: #5e6672;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+  user-select: none;
 }
-.toggle-track.on {
+.toggle-track.on,
+.custom-switch.active {
   background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
 }
-.toggle-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
+.toggle-thumb,
+.custom-switch::after {
+  content: '';
   position: absolute;
-  top: 3px;
   left: 3px;
-  transition: left 0.2s cubic-bezier(0.2, 0, 0, 1), width 0.12s ease;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #12161e;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transition: left 0.2s ease, background-color 0.2s ease;
 }
-.toggle-track.on .toggle-thumb {
-  left: 19px;
+.toggle-track.on .toggle-thumb,
+.custom-switch.active::after {
+  left: 23px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.35 6.45 11.45 12.8 4.7' fill='none' stroke='%2312161e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 12px 12px;
 }
-.toggle:active:not(.disabled) .toggle-track {
+.toggle:active:not(.disabled) .toggle-track,
+.custom-switch:active {
   transform: scale(0.96);
-}
-.toggle:active:not(.disabled) .toggle-thumb {
-  width: 17px;
 }
 .toggle.disabled {
   opacity: 0.45;
 }
-.toggle.disabled .toggle-track {
+.toggle.disabled .toggle-track,
+.custom-switch.disabled {
   cursor: not-allowed;
+}
+
+[data-theme='light'] .toggle-track,
+[data-theme='light'] .custom-switch {
+  background: #cad0de;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+[data-theme='light'] .toggle-thumb,
+[data-theme='light'] .custom-switch::after {
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+[data-theme='light'] .toggle-track.on,
+[data-theme='light'] .custom-switch.active {
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+[data-theme='light'] .toggle-track.on .toggle-thumb,
+[data-theme='light'] .custom-switch.active::after {
+  background-color: #ffffff;
 }
 
 /* ─── Modal ─────────────────────────────────────────────────────────────── */
@@ -3426,47 +3522,6 @@ input[type="radio"] {
 .about-auto-update > span:last-child {
   font-size: 12px;
   color: var(--text-secondary);
-}
-.custom-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 44px;
-  min-width: 44px;
-  flex-shrink: 0;
-  height: 24px;
-  background: #5e6672;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
-  user-select: none;
-}
-.custom-switch::after {
-  content: '';
-  position: absolute;
-  left: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #12161e;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  transition: left 0.2s ease, background-color 0.2s ease;
-}
-.custom-switch.active {
-  background: var(--accent);
-  box-shadow: 0 0 10px var(--accent-subtle);
-}
-.custom-switch.active::after {
-  left: 23px;
-  background-color: #fff;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.2 8.35 6.45 11.45 12.8 4.7' fill='none' stroke='%2312161e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 12px 12px;
 }
 .suite-app-btn {
   background: transparent !important;
