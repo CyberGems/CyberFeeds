@@ -216,50 +216,86 @@ function applyTrayWindowGeometry(
   const cardW = width - 2 * shadowPad
   const cardH = height - 2 * shadowPad
 
+  // Calculate taskbar thickness on each edge to find the actual taskbar location
+  const bottomThick = (db.y + db.height) - (wa.y + wa.height)
+  const topThick = wa.y - db.y
+  const leftThick = wa.x - db.x
+  const rightThick = (db.x + db.width) - (wa.x + wa.width)
+
+  let taskbarPosition: 'bottom' | 'top' | 'left' | 'right' = 'bottom'
+  let maxThick = 0
+
+  if (bottomThick > maxThick) {
+    maxThick = bottomThick
+    taskbarPosition = 'bottom'
+  }
+  if (topThick > maxThick) {
+    maxThick = topThick
+    taskbarPosition = 'top'
+  }
+  if (leftThick > maxThick) {
+    maxThick = leftThick
+    taskbarPosition = 'left'
+  }
+  if (rightThick > maxThick) {
+    maxThick = rightThick
+    taskbarPosition = 'right'
+  }
+
+  // If auto-hide taskbar (workArea equals bounds), deduce edge closest to anchor
+  if (maxThick === 0) {
+    const distLeft = Math.abs(anchorX - db.x)
+    const distRight = Math.abs(db.x + db.width - anchorX)
+    const distTop = Math.abs(anchorY - db.y)
+    const distBottom = Math.abs(db.y + db.height - anchorY)
+
+    const minDist = Math.min(distLeft, distRight, distTop, distBottom)
+    if (minDist === distLeft) taskbarPosition = 'left'
+    else if (minDist === distRight) taskbarPosition = 'right'
+    else if (minDist === distTop) taskbarPosition = 'top'
+    else taskbarPosition = 'bottom'
+  }
+
   let cardX: number
   let cardY: number
 
-  // Detect taskbar position
-  const isTaskbarBottom = wa.y + wa.height < db.y + db.height
-  const isTaskbarTop = wa.y > db.y
-  const isTaskbarLeft = wa.x > db.x
-  const isTaskbarRight = wa.x + wa.width < db.x + db.width
-
-  if (isTaskbarBottom) {
+  if (taskbarPosition === 'bottom') {
     cardY = wa.y + wa.height - cardH - gap
     cardX = anchorX - Math.round(cardW / 2)
-  } else if (isTaskbarTop) {
+  } else if (taskbarPosition === 'top') {
     cardY = wa.y + gap
     cardX = anchorX - Math.round(cardW / 2)
-  } else if (isTaskbarLeft) {
+  } else if (taskbarPosition === 'left') {
     cardX = wa.x + gap
     cardY = anchorY - Math.round(cardH / 2)
-  } else if (isTaskbarRight) {
+  } else {
+    // right
     cardX = wa.x + wa.width - cardW - gap
     cardY = anchorY - Math.round(cardH / 2)
-  } else {
-    // Hidden taskbar fallback
-    if (anchorY > wa.y + wa.height / 2) {
-      cardY = anchorY - cardH - gap
-    } else {
-      cardY = anchorY + gap
-    }
-    cardX = anchorX - Math.round(cardW / 2)
   }
 
-  // Clamp within work area bounds
-  cardX = Math.min(wa.x + wa.width - cardW, Math.max(wa.x, cardX))
-  cardY = Math.min(wa.y + wa.height - cardH, Math.max(wa.y, cardY))
+  // Clamp within work area bounds with gap padding
+  cardX = Math.max(wa.x + gap, Math.min(wa.x + wa.width - cardW - gap, cardX))
+  cardY = Math.max(wa.y + gap, Math.min(wa.y + wa.height - cardH - gap, cardY))
 
   const winX = cardX - shadowPad
   const winY = cardY - shadowPad
 
-  trayWindow.setBounds({
-    x: winX,
-    y: winY,
-    width,
-    height
-  })
+  // Only call setBounds if dimensions or coordinates changed to avoid DWM flicker
+  const currentBounds = trayWindow.getBounds()
+  if (
+    currentBounds.x !== winX ||
+    currentBounds.y !== winY ||
+    currentBounds.width !== width ||
+    currentBounds.height !== height
+  ) {
+    trayWindow.setBounds({
+      x: winX,
+      y: winY,
+      width,
+      height
+    })
+  }
 }
 
 function ensureTrayWindow(): BrowserWindow {
@@ -310,33 +346,43 @@ function showTrayMenu(): void {
   const win = ensureTrayWindow()
   if (win.isDestroyed()) return
 
-  let anchorX = 0
-  let anchorY = 0
+  const cursor = screen.getCursorScreenPoint()
+  const cursorDisplay = screen.getDisplayNearestPoint(cursor)
+
+  let anchorX = cursor.x
+  let anchorY = cursor.y
 
   if (tray && !tray.isDestroyed()) {
     try {
       const bounds = tray.getBounds()
       if (bounds.width > 0 && bounds.height > 0) {
-        anchorX = Math.round(bounds.x + bounds.width / 2)
-        anchorY = Math.round(bounds.y + bounds.height / 2)
+        const boundsCenter = {
+          x: Math.round(bounds.x + bounds.width / 2),
+          y: Math.round(bounds.y + bounds.height / 2)
+        }
+        const boundsDisplay = screen.getDisplayNearestPoint(boundsCenter)
+        // Only use tray bounds if they reside on the same monitor as the click
+        // and are reasonably near the cursor to protect against Windows multi-DPI bugs
+        const dx = Math.abs(boundsCenter.x - cursor.x)
+        const dy = Math.abs(boundsCenter.y - cursor.y)
+        if (boundsDisplay.id === cursorDisplay.id && dx < 150 && dy < 150) {
+          anchorX = boundsCenter.x
+          anchorY = boundsCenter.y
+        }
       }
     } catch {
-      // fallback
+      // fallback to cursor
     }
-  }
-
-  if (anchorX === 0 && anchorY === 0) {
-    const cursor = screen.getCursorScreenPoint()
-    anchorX = cursor.x
-    anchorY = cursor.y
   }
 
   trayAnchor = { x: anchorX, y: anchorY }
   applyTrayWindowGeometry(anchorX, anchorY, currentTraySize.width, currentTraySize.height)
 
+  const snapshot = getTrayMenuSnapshot()
+  win.webContents.send('tray:show', snapshot)
+
   win.show()
   win.focus()
-  win.webContents.send('tray:show')
 }
 
 export function hideTrayMenu(): void {
@@ -378,7 +424,7 @@ function handleTrayAction(action: string): void {
         _mainWindow.webContents.send('settings:pollingToggled', pollingEnabled)
       }
       if (trayWindow && !trayWindow.isDestroyed()) {
-        trayWindow.webContents.send('tray:show')
+        trayWindow.webContents.send('tray:show', getTrayMenuSnapshot())
       }
       break
     }
@@ -444,10 +490,14 @@ function registerTrayIpc(): void {
 
   ipcMain.handle('tray:reportSize', (_event, size: { width: number; height: number }) => {
     if (!size || typeof size.width !== 'number' || typeof size.height !== 'number') return
-    currentTraySize = {
-      width: Math.max(260, Math.min(450, Math.round(size.width))),
-      height: Math.max(200, Math.min(800, Math.round(size.height)))
+    const newWidth = Math.max(260, Math.min(450, Math.round(size.width)))
+    const newHeight = Math.max(200, Math.min(800, Math.round(size.height)))
+
+    if (newWidth === currentTraySize.width && newHeight === currentTraySize.height) {
+      return
     }
+
+    currentTraySize = { width: newWidth, height: newHeight }
     if (trayAnchor) {
       applyTrayWindowGeometry(
         trayAnchor.x,
@@ -496,7 +546,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
   // Re-broadcast state when main window visibility changes
   const notifyState = (): void => {
     if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
-      trayWindow.webContents.send('tray:show')
+      trayWindow.webContents.send('tray:show', getTrayMenuSnapshot())
     }
   }
 
@@ -510,7 +560,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
 
 export function rebuildTrayMenu(): void {
   if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
-    trayWindow.webContents.send('tray:show')
+    trayWindow.webContents.send('tray:show', getTrayMenuSnapshot())
   }
 }
 

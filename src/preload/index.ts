@@ -331,8 +331,8 @@ const api = {
     reportSize: (size: { width: number; height: number }) =>
       ipcRenderer.invoke('tray:reportSize', size),
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
-    onShow: (cb: () => void): (() => void) => {
-      const handler = (): void => cb()
+    onShow: (cb: (snapshot?: import('../shared/types').TrayMenuSnapshot) => void): (() => void) => {
+      const handler = (_: unknown, snapshot?: import('../shared/types').TrayMenuSnapshot): void => cb(snapshot)
       ipcRenderer.on('tray:show', handler)
       return (): void => {
         ipcRenderer.removeListener('tray:show', handler)

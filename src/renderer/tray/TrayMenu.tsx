@@ -149,19 +149,21 @@ export function TrayMenu(): React.JSX.Element {
     void window.api.trayMenu.reportSize({ width, height })
   }, [])
 
+  const applySnapshot = useCallback((next: TrayMenuSnapshot) => {
+    setSnapshot(next)
+    const theme = next.theme || 'dark'
+    document.documentElement.dataset.theme =
+      theme === 'grayscale' ? 'grayscale' : theme === 'light' ? 'light' : 'dark'
+  }, [])
+
   const refresh = useCallback(async () => {
     try {
       const next = await window.api.trayMenu.getState()
-      setSnapshot(next)
-      const theme = next.theme || 'dark'
-      document.documentElement.dataset.theme =
-        theme === 'grayscale' ? 'grayscale' : theme === 'light' ? 'light' : 'dark'
+      applySnapshot(next)
     } catch {
       // fallback
     }
-    setView('main')
-    window.requestAnimationFrame(() => window.requestAnimationFrame(reportSize))
-  }, [reportSize])
+  }, [applySnapshot])
 
   const runAction = (action: string): void => {
     void window.api.trayMenu.action(action)
@@ -186,22 +188,24 @@ export function TrayMenu(): React.JSX.Element {
       .getState()
       .then((next) => {
         if (!active) return
-        setSnapshot(next)
-        const theme = next.theme || 'dark'
-        document.documentElement.dataset.theme =
-          theme === 'grayscale' ? 'grayscale' : theme === 'light' ? 'light' : 'dark'
+        applySnapshot(next)
         window.requestAnimationFrame(() => window.requestAnimationFrame(reportSize))
       })
       .catch(() => {})
 
-    const removeListener = window.api.trayMenu.onShow(() => {
-      void refresh()
+    const removeListener = window.api.trayMenu.onShow((snap) => {
+      if (snap) {
+        applySnapshot(snap)
+      } else {
+        void refresh()
+      }
+      setView('main')
     })
     return () => {
       active = false
       removeListener()
     }
-  }, [refresh, reportSize])
+  }, [applySnapshot, refresh, reportSize])
 
   useEffect(() => {
     window.requestAnimationFrame(() => window.requestAnimationFrame(reportSize))
