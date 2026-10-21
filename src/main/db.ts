@@ -360,16 +360,17 @@ const VIDEO_CONTENT_PATTERNS = [
   '%odysee.com/$/embed/%'
 ]
 
-function buildVideoClause(): { sql: string; params: string[] } {
+function buildVideoClause(prefix: string = ''): { sql: string; params: string[] } {
+  const p = prefix ? `${prefix}.` : ''
   const clauses: string[] = []
   const params: string[] = []
 
   for (const pattern of VIDEO_LINK_PATTERNS) {
-    clauses.push('a.link LIKE ?')
+    clauses.push(`${p}link LIKE ?`)
     params.push(pattern)
   }
   for (const pattern of VIDEO_CONTENT_PATTERNS) {
-    clauses.push('a.content LIKE ?')
+    clauses.push(`${p}content LIKE ?`)
     params.push(pattern)
   }
 
