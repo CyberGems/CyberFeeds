@@ -472,9 +472,14 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  width: 13px;
+  height: 13px;
   line-height: 1;
   color: var(--text-muted);
   opacity: 0.9;
+  /* Optical correction: font descenders push the visual text center ~1px
+     below the mathematical center, so nudge the icon down to match. */
+  transform: translateY(0.5px);
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .topbar-welcome-icon svg {

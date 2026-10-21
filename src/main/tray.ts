@@ -205,25 +205,40 @@ function calculateTrayMenuGeometry(
   windowW: number,
   windowH: number
 ): { x: number; y: number; width: number; height: number } {
-  let b = (iconBounds && typeof iconBounds.x === 'number' && (iconBounds.width || iconBounds.height))
-    ? { x: iconBounds.x, y: iconBounds.y, width: iconBounds.width || 0, height: iconBounds.height || 0 }
-    : null
-  if (!b && tray && !tray.isDestroyed()) {
-    try {
-      const tb = tray.getBounds()
-      if (tb && (tb.width > 0 || tb.height > 0)) b = tb
-    } catch {
-      b = null
-    }
+  // 1) Cursor position is the most reliable anchor on Windows, especially
+  //    on secondary monitors with vertical taskbars and mixed DPI where
+  //    tray.getBounds() can return incorrect/stale coordinates.
+  let cursor: { x: number; y: number } = { x: 0, y: 0 }
+  try {
+    cursor = screen.getCursorScreenPoint()
+  } catch {
+    cursor = { x: 0, y: 0 }
   }
-  if (!b || (!b.width && !b.height)) {
-    let p: { x: number; y: number } = { x: 0, y: 0 }
-    try {
-      p = screen.getCursorScreenPoint()
-    } catch {
-      p = { x: 0, y: 0 }
+
+  // 2) Use iconBounds only if they seem plausible (on the same display as cursor).
+  //    On vertical taskbars, tray.getBounds() often returns primary-display coords.
+  let b: { x: number; y: number; width: number; height: number }
+
+  const eventBoundsValid = iconBounds && typeof iconBounds.x === 'number' &&
+    (iconBounds.width > 0 || iconBounds.height > 0)
+
+  if (eventBoundsValid) {
+    // Check if event bounds are on the same display as the cursor
+    const cursorDisplay = screen.getDisplayNearestPoint(cursor)
+    const boundsCenter = {
+      x: iconBounds.x + (iconBounds.width || 0) / 2,
+      y: iconBounds.y + (iconBounds.height || 0) / 2
     }
-    b = { x: p.x, y: p.y, width: 0, height: 0 }
+    const boundsDisplay = screen.getDisplayNearestPoint(boundsCenter)
+
+    if (cursorDisplay.id === boundsDisplay.id) {
+      b = { x: iconBounds.x, y: iconBounds.y, width: iconBounds.width || 0, height: iconBounds.height || 0 }
+    } else {
+      // Bounds are on a different display than cursor; cursor is more reliable
+      b = { x: cursor.x, y: cursor.y, width: 0, height: 0 }
+    }
+  } else {
+    b = { x: cursor.x, y: cursor.y, width: 0, height: 0 }
   }
 
   const cx = b.x + b.width / 2
@@ -248,15 +263,19 @@ function calculateTrayMenuGeometry(
   const dBottom = (work.y + work.height) - cy
 
   if (dBottom <= dLeft && dBottom <= dRight && dBottom <= dTop) {
+    // Taskbar at bottom
     cardX = cx - cardW / 2
     cardY = (b.height > 0 ? b.y - cardH : work.y + work.height - cardH) - gap
   } else if (dTop <= dLeft && dTop <= dRight) {
+    // Taskbar at top
     cardX = cx - cardW / 2
     cardY = (b.height > 0 ? b.y + b.height : work.y) + gap
   } else if (dLeft <= dRight) {
+    // Taskbar at left
     cardX = (b.width > 0 ? b.x + b.width : work.x) + gap
     cardY = cy - cardH / 2
   } else {
+    // Taskbar at right
     cardX = (b.width > 0 ? b.x - cardW : work.x + work.width - cardW) - gap
     cardY = cy - cardH / 2
   }
@@ -338,15 +357,22 @@ function showTrayMenu(eventBounds?: any): void {
 
   const geo = calculateTrayMenuGeometry(eventBounds, currentTraySize.width, currentTraySize.height)
 
+  // To avoid flicker: hide first if visible, reposition, then show.
+  // This prevents the user from seeing the window jump from its old position.
+  const wasVisible = win.isVisible()
+  if (wasVisible) {
+    win.hide()
+  }
+
+  // Set final position while hidden
   win.setBounds(geo)
 
   const snapshot = getTrayMenuSnapshot()
   win.webContents.send('tray:show', snapshot)
 
   trayMenuLastShown = Date.now()
-  if (!win.isVisible()) win.show()
+  win.show()
   win.focus()
-  win.setBounds(geo)
 }
 
 export function hideTrayMenu(): void {

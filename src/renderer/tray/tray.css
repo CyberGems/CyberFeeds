@@ -312,7 +312,6 @@ body {
 
 .tray-deck[data-view='main'] #view-main {
   display: block;
-  animation: tray-view-fade 0.16s ease;
 }
 
 .tray-deck[data-view='main'] #view-help,
