@@ -158,9 +158,9 @@ def draw_homepage() -> None:
 
 def draw_donate() -> None:
     image, draw = canvas()
-    arc(draw, (11, 12, 33, 35), 180, 360)
-    arc(draw, (31, 12, 53, 35), 180, 360)
-    line(draw, [(11, 24), (32, 52), (53, 24)])
+    arc(draw, (11, 12, 33, 35), 180, 360, color=DANGER)
+    arc(draw, (31, 12, 53, 35), 180, 360, color=DANGER)
+    line(draw, [(11, 24), (32, 52), (53, 24)], color=DANGER)
     save(image, 'donate.png')
 
 
