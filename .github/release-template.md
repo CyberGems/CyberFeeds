@@ -8,7 +8,7 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Titlebar introduces rotating status tickers with contextual greetings, notifications deliver in unified scan batches prioritizing newest articles, interface toggles modernize to suite standards, and theme selection refines to streamlined dark, grayscale, and light palettes.
+Tray menu introduces floating quick panel cards with live window state indicators, article cards add video identification badges, media filtering executes instantly with indexed queries, and notification batch stacks gain refined mute controls.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,56 +17,44 @@ Titlebar introduces rotating status tickers with contextual greetings, notificat
 
 ### ✨ Key Features & Highlights
 
-- 🧭 **Dynamic titlebar ticker & greeting personalization**:
-  - The titlebar now cycles through dynamic information (time-of-day greeting with coffee/sun/moon icons, unread counter, sync status, active feeds, and localized date) at a relaxed 16-second cadence.
-  - Interactive pause-on-hover and click-to-cycle navigation.
-  - Personalization options in General settings allow customizing your display name, clearing it for pure greetings (e.g. "Good morning"), or using the default user title.
+- 💎 **Modernized quick-panel tray menu**:
+  - The system tray context menu is redesigned as a sleek glassmorphism quick panel card aligned with CyberGems suite standards.
+  - Displays real-time window visibility status (Visible, Minimized, or Hidden) with instant toggle action.
+  - Interactive brand logo with micro-zoom animation and refined theme accents across action buttons.
 
-- 🔔 **Batch notifications & scan consolidation**:
-  - All articles discovered during a polling scan cycle are now grouped and delivered in a single notification batch instead of individual fragmented popups.
-  - Articles are prioritized by publication date so the freshest content appears at the top.
-  - Smart interaction protects the notification window from auto-dismissing while scrolling through notifications.
+- 🎬 **Video badges & instant media filtering**:
+  - Article cards in the main feed list now display distinct video badges for posts with embedded YouTube, Vimeo, or web videos.
+  - Video filter queries now utilize an indexed database column (`hasVideo`), executing in under 1 ms and eliminating UI lag over large libraries.
+  - Embedded player links reliably open in your preferred browser configured in Settings.
 
-- 🎨 **Suite-aligned themes & modern toggles**:
-  - Streamlined theme selection to three core palettes: CyberFeeds (Dark), Grayscale (pure distraction-free monochrome), and Light (Claro).
-  - Toggles across Settings, About, and dialogs modernized to the tactile CyberNotes pill-switch style with checkmarks and theme-reactive accents.
-  - "Show suite recommendations" moved to the bottom of the Appearance tab, keeping General settings focused.
-  - Tray context menu upgraded with the official CyberGems diamond icon for suite navigation.
-
-- ⚡ **Polling & performance stability**:
-  - Pausing and resuming polling no longer flickers or resets your reading position in the article list.
-  - Window position and monitor placement reliably restore on multi-monitor setups across system restarts.
+- 🔔 **Notification stack stability & quick mute**:
+  - Notification popups maintain scroll stability across incoming batches without disruptive position resets.
+  - Direct in-toast feed mute action silences high-frequency feeds and decrements unread counters seamlessly.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-La barra superior estrena estados rotativos con saludos contextuales, las notificaciones se entregan en lotes unificados priorizando artículos recientes, los interruptores se modernizan al estándar de la suite y los temas se refinan a paletas oscura, gris y clara.
+El menú de la bandeja incorpora tarjetas flotantes con indicadores del estado de la ventana en tiempo real, las tarjetas de artículos añaden distintivos para videos, el filtrado multimedia se ejecuta instantáneamente con consultas indexadas y las notificaciones incorporan controles refinados para silenciar feeds.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 🧭 **Barra superior dinámica y personalización de saludos**:
-  - La barra de título rota estados informativos (saludo según la hora con iconos de café/sol/luna, artículos sin leer, sincronización, feeds activos y fecha) con un ritmo relajado de 16 segundos.
-  - Pausa interactiva al pasar el cursor y cambio inmediato al hacer clic.
-  - Ajustes de personalización en General para configurar tu nombre, dejarlo vacío para saludos puros («Buenos días») o usar el nombre por defecto.
+- 💎 **Menú de bandeja modernizado con panel rápido**:
+  - El menú contextual de la bandeja se rediseña como una tarjeta flotante de estilo cristal alineada a la suite CyberGems.
+  - Muestra el estado de la ventana en tiempo real (Visible, Minimizada u Oculta) con acceso rápido de alternancia.
+  - Logotipo interactivo con microanimación de zoom al pasar el cursor y colores de acento refinados.
 
-- 🔔 **Notificaciones por lote y consolidación de escaneo**:
-  - Todos los artículos encontrados en una tanda de escaneo se entregan agrupados en una sola notificación en lugar de ventanas fragmentadas consecutivas.
-  - Los artículos se ordenan por fecha de publicación para que lo más reciente aparezca arriba.
-  - La interacción mediante desplazamiento con la rueda del ratón evita el cierre prematuro mientras revisas.
+- 🎬 **Distintivos de video y filtrado instantáneo**:
+  - Las tarjetas de artículos muestran una insignia distintiva de video en publicaciones con contenido multimedia de YouTube, Vimeo y web.
+  - El filtro de videos ahora utiliza una columna indexada (`hasVideo`), ejecutándose en menos de 1 ms y eliminando cualquier retraso en bibliotecas masivas.
+  - Los enlaces a reproductores externos respetan fielmente el navegador web seleccionado en Configuración.
 
-- 🎨 **Temas alineados a la suite e interruptores modernos**:
-  - Selección de temas simplificada a 3 paletas esenciales: CyberFeeds (Oscuro), Gris (escala de grises sin distracciones) y Claro.
-  - Todos los interruptores de la interfaz adoptan el estilo moderno de CyberNotes con checkmark y acentos de color acordes al tema.
-  - La opción «Mostrar recomendaciones de la suite» se trasladó al final de la pestaña Apariencia.
-  - El menú de la bandeja del sistema incorpora el diamante oficial de CyberGems.
-
-- ⚡ **Estabilidad de sincronización y rendimiento**:
-  - Pausar y reanudar la sincronización ya no parpadea ni recarga la lista de artículos.
-  - La posición de la ventana y el monitor se restauran fielmente en configuraciones multimonitor tras reiniciar el sistema.
+- 🔔 **Estabilidad de notificaciones y silencio rápido**:
+  - Las notificaciones emergentes preservan la posición de desplazamiento entre lotes sin reinicios abruptos.
+  - Acción rápida para silenciar feeds directamente desde la notificación con actualización inmediata de contadores.
 
 </details>
 
