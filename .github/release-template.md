@@ -8,7 +8,7 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Tray menu introduces floating quick panel cards with live window state indicators, article cards add video identification badges, media filtering executes instantly with indexed queries, and notification batch stacks gain refined mute controls.
+Customizable storage cleanup allows selective article and thumbnail pruning with real-time feedback, tray quick panel geometry is optimized for vertical taskbars and multi-monitor setups, and header greeting icons receive optical alignment.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,44 +17,36 @@ Tray menu introduces floating quick panel cards with live window state indicator
 
 ### ✨ Key Features & Highlights
 
-- 💎 **Modernized quick-panel tray menu**:
-  - The system tray context menu is redesigned as a sleek glassmorphism quick panel card aligned with CyberGems suite standards.
-  - Displays real-time window visibility status (Visible, Minimized, or Hidden) with instant toggle action.
-  - Interactive brand logo with micro-zoom animation and refined theme accents across action buttons.
+- 🧹 **Granular storage cleanup & maintenance**:
+  - Choose specific cleanup targets including read articles older than a custom threshold, orphaned image thumbnails, and SQLite database compaction (VACUUM).
+  - Real-time reactive feedback banner during operations with clear byte reclaim summaries.
+  - Keeps local storage lean without affecting your bookmarked or favorited articles.
 
-- 🎬 **Video badges & instant media filtering**:
-  - Article cards in the main feed list now display distinct video badges for posts with embedded YouTube, Vimeo, or web videos.
-  - Video filter queries now utilize an indexed database column (`hasVideo`), executing in under 1 ms and eliminating UI lag over large libraries.
-  - Embedded player links reliably open in your preferred browser configured in Settings.
-
-- 🔔 **Notification stack stability & quick mute**:
-  - Notification popups maintain scroll stability across incoming batches without disruptive position resets.
-  - Direct in-toast feed mute action silences high-frequency feeds and decrements unread counters seamlessly.
+- 💎 **Tray menu & multi-monitor geometry improvements**:
+  - Redesigned cursor-aware anchor geometry prevents positioning errors on vertical taskbars and secondary monitors.
+  - Eliminated window flicker during tray open actions.
+  - Optical alignment refinement on header greeting icons and typography.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-El menú de la bandeja incorpora tarjetas flotantes con indicadores del estado de la ventana en tiempo real, las tarjetas de artículos añaden distintivos para videos, el filtrado multimedia se ejecuta instantáneamente con consultas indexadas y las notificaciones incorporan controles refinados para silenciar feeds.
+La limpieza de almacenamiento personalizable permite depurar selectivamente artículos y miniaturas con respuesta en tiempo real, la geometría del menú de bandeja se optimiza para barras verticales y configuraciones multimonitor, y el icono de bienvenida recibe alineación óptica.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 💎 **Menú de bandeja modernizado con panel rápido**:
-  - El menú contextual de la bandeja se rediseña como una tarjeta flotante de estilo cristal alineada a la suite CyberGems.
-  - Muestra el estado de la ventana en tiempo real (Visible, Minimizada u Oculta) con acceso rápido de alternancia.
-  - Logotipo interactivo con microanimación de zoom al pasar el cursor y colores de acento refinados.
+- 🧹 **Limpieza granular de almacenamiento y mantenimiento**:
+  - Selecciona objetivos específicos de limpieza como artículos leídos antiguos, miniaturas huérfanas y compactación de SQLite (VACUUM).
+  - Notificaciones y banners con retroalimentación en tiempo real del progreso y espacio recuperado.
+  - Mantiene el almacenamiento ligero sin tocar artículos marcados o favoritos.
 
-- 🎬 **Distintivos de video y filtrado instantáneo**:
-  - Las tarjetas de artículos muestran una insignia distintiva de video en publicaciones con contenido multimedia de YouTube, Vimeo y web.
-  - El filtro de videos ahora utiliza una columna indexada (`hasVideo`), ejecutándose en menos de 1 ms y eliminando cualquier retraso en bibliotecas masivas.
-  - Los enlaces a reproductores externos respetan fielmente el navegador web seleccionado en Configuración.
-
-- 🔔 **Estabilidad de notificaciones y silencio rápido**:
-  - Las notificaciones emergentes preservan la posición de desplazamiento entre lotes sin reinicios abruptos.
-  - Acción rápida para silenciar feeds directamente desde la notificación con actualización inmediata de contadores.
+- 💎 **Mejoras de geometría en bandeja y soporte multimonitor**:
+  - Geometría adaptada al cursor para evitar problemas en barras de tareas verticales y monitores secundarios.
+  - Eliminación del parpadeo visual al abrir el menú de la bandeja.
+  - Ajustes de alineación óptica en el icono de bienvenida de la barra superior.
 
 </details>
 
