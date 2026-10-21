@@ -459,8 +459,8 @@ body {
 .topbar-welcome-content {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  line-height: 1;
+  gap: 7px;
+  line-height: 1.2;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .topbar-welcome-content.fading {
@@ -475,6 +475,7 @@ body {
   line-height: 1;
   color: var(--text-muted);
   opacity: 0.9;
+  transform: translateY(1px);
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .topbar-welcome-icon svg {
@@ -482,7 +483,7 @@ body {
 }
 .topbar-welcome-text {
   display: inline-block;
-  line-height: 1;
+  line-height: 1.2;
 }
 .topbar-welcome:hover .topbar-welcome-icon {
   opacity: 1;
@@ -1957,6 +1958,7 @@ mark.reader-search-match.reader-search-active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transform: translateY(1px);
 }
 
 .welcome-time-icon.morning {

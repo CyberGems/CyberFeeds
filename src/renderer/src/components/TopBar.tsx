@@ -384,7 +384,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
             >
               <div className={`topbar-welcome-content ${isFading ? 'fading' : ''}`}>
                 <span className={`topbar-welcome-icon ${currentItem.iconClass}`} aria-hidden="true">
-                  <currentItem.icon size={12} />
+                  <currentItem.icon size={13} />
                 </span>
                 <span className="topbar-welcome-text">{currentItem.text}</span>
               </div>
