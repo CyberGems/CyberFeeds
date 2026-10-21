@@ -154,7 +154,6 @@ function createSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_articles_unread ON articles(read, pubDate DESC);
     CREATE INDEX IF NOT EXISTS idx_articles_starred ON articles(starred, pubDate DESC);
     CREATE INDEX IF NOT EXISTS idx_articles_guid ON articles(guid);
-    CREATE INDEX IF NOT EXISTS idx_articles_has_video ON articles(hasVideo, pubDate DESC);
 
     INSERT OR IGNORE INTO window_state (id, width, height, maximized) VALUES (1, 1280, 800, 0);
   `)
