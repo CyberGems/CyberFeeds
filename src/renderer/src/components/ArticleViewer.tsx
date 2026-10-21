@@ -476,6 +476,27 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
         setPipArticleId(articleId || null)
       } else {
         setPipArticleId(null)
+        // Restore any inline player in readerBody
+        const root = contentRef.current
+        if (root) {
+          const cards = Array.from(root.querySelectorAll<HTMLElement>('.reader-pip-active-card[data-pip-active="true"]'))
+          for (const card of cards) {
+            const container = card.parentElement
+            if (container) {
+              const media = container.querySelector<HTMLMediaElement | HTMLIFrameElement>('video, iframe')
+              if (media) {
+                if (media.dataset.pipSavedSrc) {
+                  media.src = media.dataset.pipSavedSrc
+                  delete media.dataset.pipSavedSrc
+                }
+                media.style.display = ''
+              }
+              const btn = container.querySelector<HTMLElement>('.reader-pip-overlay-btn')
+              if (btn) btn.style.display = ''
+            }
+            card.remove()
+          }
+        }
       }
     })
 
@@ -498,6 +519,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const handleClosePip = useCallback(() => {
     window.api.pip.close()
     setPipArticleId(null)
+    setIsPlayingVideo(false)
   }, [])
 
   const [showStickyTitle, setShowStickyTitle] = useState(false)
@@ -781,6 +803,21 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       )
     )
 
+    const restoreInlinePipElement = (containerEl: HTMLElement): void => {
+      const activeCard = containerEl.querySelector('.reader-pip-active-card')
+      if (activeCard) activeCard.remove()
+      const media = containerEl.querySelector<HTMLMediaElement | HTMLIFrameElement>('video, iframe')
+      if (media) {
+        if (media.dataset.pipSavedSrc) {
+          media.src = media.dataset.pipSavedSrc
+          delete media.dataset.pipSavedSrc
+        }
+        media.style.display = ''
+      }
+      const btn = containerEl.querySelector<HTMLElement>('.reader-pip-overlay-btn')
+      if (btn) btn.style.display = ''
+    }
+
     for (const mediaEl of mediaElements) {
       if (mediaEl.dataset.pipAttached) continue
       mediaEl.dataset.pipAttached = 'true'
@@ -841,6 +878,78 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           }
         }
         if (payload) {
+          // Restore any existing active PiP cards in this article body
+          const existingCards = Array.from(
+            readerBody.querySelectorAll<HTMLElement>('.reader-pip-active-card[data-pip-active="true"]')
+          )
+          for (const card of existingCards) {
+            if (card.parentElement) restoreInlinePipElement(card.parentElement)
+          }
+
+          // Stop and hide current inline media
+          if (mediaEl.tagName === 'IFRAME') {
+            const iframe = mediaEl as HTMLIFrameElement
+            try {
+              iframe.contentWindow?.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*')
+            } catch {}
+            iframe.dataset.pipSavedSrc = iframe.getAttribute('src') || iframe.src || ''
+            iframe.src = 'about:blank'
+          } else if (mediaEl.tagName === 'VIDEO') {
+            ;(mediaEl as HTMLVideoElement).pause()
+          }
+          mediaEl.style.display = 'none'
+          pipBtn.style.display = 'none'
+
+          // Insert active PiP placeholder card inside container
+          const activeCard = document.createElement('div')
+          activeCard.className = 'reader-pip-active-card'
+          activeCard.dataset.pipActive = 'true'
+          activeCard.innerHTML = `
+            <div class="reader-pip-active-icon">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 9V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h4"></path>
+                <rect width="10" height="7" x="12" y="13" rx="1"></rect>
+              </svg>
+            </div>
+            <div class="reader-pip-active-content">
+              <div class="reader-pip-active-title">${t.articleViewer.pipActiveTitle}</div>
+              <div class="reader-pip-active-desc">${t.articleViewer.pipActiveDesc}</div>
+            </div>
+            <div class="reader-pip-active-actions">
+              <button type="button" class="btn btn-primary reader-pip-active-btn pip-return-action">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 9V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10c0 1.1.9 2 2 2h4"></path>
+                  <rect width="10" height="7" x="12" y="13" rx="1"></rect>
+                </svg>
+                <span>${t.articleViewer.pipReturnToReader}</span>
+              </button>
+              <button type="button" class="btn btn-secondary reader-pip-active-btn pip-close-action">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 6 6 18"></path>
+                  <path d="m6 6 12 12"></path>
+                </svg>
+                <span>${t.articleViewer.pipCloseFloating}</span>
+              </button>
+            </div>
+          `
+
+          const returnBtn = activeCard.querySelector('.pip-return-action')
+          returnBtn?.addEventListener('click', (ev) => {
+            ev.stopPropagation()
+            if (container) restoreInlinePipElement(container)
+            window.api.pip.returnToReader()
+            setPipArticleId(null)
+          })
+
+          const closeBtn = activeCard.querySelector('.pip-close-action')
+          closeBtn?.addEventListener('click', (ev) => {
+            ev.stopPropagation()
+            if (container) restoreInlinePipElement(container)
+            window.api.pip.close()
+            setPipArticleId(null)
+          })
+
+          container.appendChild(activeCard)
           handleOpenPip(payload)
         }
       })
@@ -852,6 +961,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       for (const timer of timers) window.clearTimeout(timer)
       const cards = Array.from(readerBody.querySelectorAll('.reader-video-fallback-card'))
       for (const c of cards) c.remove()
+      const pipCards = Array.from(readerBody.querySelectorAll('.reader-pip-active-card[data-pip-active="true"]'))
+      for (const pc of pipCards) pc.remove()
       const pipBtns = Array.from(readerBody.querySelectorAll('.reader-pip-overlay-btn'))
       for (const b of pipBtns) b.remove()
     }

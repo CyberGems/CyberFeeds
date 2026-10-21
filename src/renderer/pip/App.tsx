@@ -12,6 +12,13 @@ export default function PipApp(): React.JSX.Element {
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
   useEffect(() => {
+    // Reset zoom factor to 1.0 so that renderer-side host zoom does not clip the PIP player
+    try {
+      window.api.setZoomFactor(1.0)
+    } catch {
+      // ignore
+    }
+
     // Fetch app language and settings
     window.api.getSettings().then((s: any) => {
       if (s?.language === 'es' || s?.language === 'en') {
@@ -218,7 +225,7 @@ export default function PipApp(): React.JSX.Element {
       </div>
 
       {/* Video Content */}
-      <div style={{ width: '100%', height: '100%' }}>
+      <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
         {data.type === 'youtube' && data.videoId ? (
           <iframe
             key={data.videoId}

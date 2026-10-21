@@ -16,42 +16,61 @@ function notifyMainWindow(active: boolean, articleId?: string): void {
   }
 }
 
-function resolveInitialBounds(): { x: number; y: number; width: number; height: number } {
-  const cursorPoint = screen.getCursorScreenPoint()
-  const display = screen.getDisplayNearestPoint(cursorPoint) || screen.getPrimaryDisplay()
-  const wa = display.workArea || display.bounds
-
-  const defaultWidth = 520
-  const defaultHeight = Math.round((defaultWidth * 9) / 16)
-
-  if (lastBounds) {
-    // Check if lastBounds is roughly visible in any current display
-    const visible = screen.getAllDisplays().some((d) => {
-      const db = d.bounds
-      return (
-        lastBounds!.x + 100 >= db.x &&
-        lastBounds!.x <= db.x + db.width &&
-        lastBounds!.y + 100 >= db.y &&
-        lastBounds!.y <= db.y + db.height
-      )
-    })
-    if (visible) {
-      return {
-        x: lastBounds.x,
-        y: lastBounds.y,
-        width: Math.max(320, lastBounds.width),
-        height: Math.max(180, Math.round((Math.max(320, lastBounds.width) * 9) / 16))
+function getTargetDisplay(): Electron.Display {
+  const mainWin = getMainWindow()
+  if (mainWin && !mainWin.isDestroyed()) {
+    try {
+      const mb = mainWin.getBounds()
+      const center = {
+        x: Math.round(mb.x + mb.width / 2),
+        y: Math.round(mb.y + mb.height / 2)
       }
+      const match =
+        (typeof screen.getDisplayMatching === 'function' && screen.getDisplayMatching(mb)) ||
+        screen.getDisplayNearestPoint(center)
+      if (match) return match
+    } catch {
+      // fallback
     }
   }
 
-  // Default to bottom-right corner of current display work area
+  const cursorPoint = screen.getCursorScreenPoint()
+  return screen.getDisplayNearestPoint(cursorPoint) || screen.getPrimaryDisplay()
+}
+
+function resolveInitialBounds(): { x: number; y: number; width: number; height: number } {
+  const targetDisplay = getTargetDisplay()
+  const wa = targetDisplay.workArea || targetDisplay.bounds
+
+  const defaultWidth = 520
+
+  // Clamp desired dimensions to work area
+  const width = Math.min(wa.width - 32, Math.max(320, lastBounds ? lastBounds.width : defaultWidth))
+  const height = Math.round((width * 9) / 16)
+
+  // If lastBounds exists AND is located within the target display's work area, preserve user position
+  if (
+    lastBounds &&
+    lastBounds.x >= wa.x &&
+    lastBounds.x + width <= wa.x + wa.width &&
+    lastBounds.y >= wa.y &&
+    lastBounds.y + height <= wa.y + wa.height
+  ) {
+    return {
+      x: lastBounds.x,
+      y: lastBounds.y,
+      width,
+      height
+    }
+  }
+
+  // Default to bottom-right corner of target display work area
   const margin = 24
   return {
-    x: wa.x + wa.width - defaultWidth - margin,
-    y: wa.y + wa.height - defaultHeight - margin,
-    width: defaultWidth,
-    height: defaultHeight
+    x: wa.x + wa.width - width - margin,
+    y: wa.y + wa.height - height - margin,
+    width,
+    height
   }
 }
 
@@ -105,8 +124,16 @@ export function createOrUpdatePipWindow(payload: PipVideoPayload): void {
   })
 
   pipWindow.webContents.on('did-finish-load', () => {
-    if (pipWindow && !pipWindow.isDestroyed() && currentPayload) {
-      pipWindow.webContents.send('pip:update-data', currentPayload)
+    if (pipWindow && !pipWindow.isDestroyed()) {
+      try {
+        pipWindow.webContents.setZoomFactor(1.0)
+        pipWindow.webContents.setVisualZoomLevelLimits(1, 1)
+      } catch {
+        // ignore
+      }
+      if (currentPayload) {
+        pipWindow.webContents.send('pip:update-data', currentPayload)
+      }
     }
   })
 
