@@ -96,22 +96,38 @@ type Action =
       settings: NotificationSettings
       unseenCount: number
       displayMode: NotificationDisplayMode
+      isNewBatch?: boolean
     }
   | { type: 'DISMISS'; id: string }
+  | { type: 'MUTE_FEED'; feedId: string }
   | { type: 'CLEAR' }
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case 'SET_STACK':
+    case 'SET_STACK': {
+      const isNewBatch = action.isNewBatch ?? (state.stack.length === 0)
       return {
         stack: action.stack,
         settings: action.settings,
         unseenCount: action.unseenCount,
         displayMode: action.displayMode,
-        batchId: state.batchId + 1
+        batchId: isNewBatch ? state.batchId + 1 : state.batchId
       }
+    }
     case 'DISMISS':
-      return { ...state, stack: state.stack.filter((n) => n.id !== action.id) }
+      return {
+        ...state,
+        stack: state.stack.filter((n) => n.id !== action.id),
+        unseenCount: Math.max(0, state.unseenCount - 1)
+      }
+    case 'MUTE_FEED': {
+      const removedCount = state.stack.filter((n) => n.feedId === action.feedId).length
+      return {
+        ...state,
+        stack: state.stack.filter((n) => n.feedId !== action.feedId),
+        unseenCount: Math.max(0, state.unseenCount - removedCount)
+      }
+    }
     case 'CLEAR':
       return { ...state, stack: [] }
     default:
@@ -130,8 +146,13 @@ export default function NotifierApp(): JSX.Element {
   const [lang, setLang] = useState<'en' | 'es'>('en')
   const scrollRef = useRef<HTMLDivElement>(null)
   const isProgrammaticScroll = useRef(false)
+  const stackLengthRef = useRef(0)
   const [belowCount, setBelowCount] = useState(0)
   const [scrollbarW, setScrollbarW] = useState(0)
+
+  useEffect(() => {
+    stackLengthRef.current = state.stack.length
+  }, [state.stack.length])
   const rafRef = useRef<number | undefined>(undefined)
   const hoverOffTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHovering = useRef(false)
@@ -279,6 +300,7 @@ export default function NotifierApp(): JSX.Element {
     } else {
       if (confirmMuteTimerRef.current) clearTimeout(confirmMuteTimerRef.current)
       setConfirmMuteFeedId(null)
+      dispatch({ type: 'MUTE_FEED', feedId })
       window.api.muteFeedNotifications(feedId)
     }
   }
@@ -308,14 +330,18 @@ export default function NotifierApp(): JSX.Element {
             : payloadSettings.displayMode === 'compact' || payloadSettings.displayMode === 'detailed'
               ? payloadSettings.displayMode
               : 'detailed'
+        const isNewBatch = stackLengthRef.current === 0
         dispatch({
           type: 'SET_STACK',
           stack: stack as NotificationHistoryItem[],
           settings: payloadSettings,
           unseenCount: Number(unseenCount) || 0,
-          displayMode
+          displayMode,
+          isNewBatch
         })
-        resetScrollTop()
+        if (isNewBatch) {
+          resetScrollTop()
+        }
         initialCursorPos.current = null
         if (!isHovering.current) {
           const duration = Number((settingsPayload as NotificationSettings)?.duration) || 6000
@@ -329,10 +355,13 @@ export default function NotifierApp(): JSX.Element {
 
   // Reset scroll to top on every new notification batch before and after layout paint
   useLayoutEffect(() => {
-    resetScrollTop()
+    if (state.batchId > 0) {
+      resetScrollTop()
+    }
   }, [resetScrollTop, state.batchId])
 
   useEffect(() => {
+    if (state.batchId <= 0) return undefined
     resetScrollTop()
     const raf = requestAnimationFrame(() => {
       resetScrollTop()
@@ -755,6 +784,7 @@ export default function NotifierApp(): JSX.Element {
               </div>
               <Tooltip label={t.notifier.dismissTooltip} placement="bottom">
                 <button
+                  type="button"
                   className="notif-close"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -780,6 +810,7 @@ export default function NotifierApp(): JSX.Element {
             <div className="notif-actions" onClick={(e) => e.stopPropagation()}>
               <Tooltip label={t.notifier.markReadTooltip} placement="bottom">
                 <button
+                  type="button"
                   className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
                   aria-label={t.notifier.markRead}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -802,6 +833,7 @@ export default function NotifierApp(): JSX.Element {
                   placement="bottom"
                 >
                   <button
+                    type="button"
                     className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
                     aria-label={
                       confirmMuteFeedId === item.feedId ? t.notifier.confirmMute : t.notifier.mute
@@ -831,6 +863,7 @@ export default function NotifierApp(): JSX.Element {
               {item.feedId && (
                 <Tooltip label={t.notifier.viewTooltip} placement="bottom">
                   <button
+                    type="button"
                     className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
                     aria-label={t.notifier.view}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
@@ -844,6 +877,7 @@ export default function NotifierApp(): JSX.Element {
               {item.link && (
                 <Tooltip label={t.notifier.openTooltip} placement="bottom">
                   <button
+                    type="button"
                     className={`notif-btn${isCompact ? ' notif-btn-compact' : ''}`}
                     aria-label={t.notifier.open}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}

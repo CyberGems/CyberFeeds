@@ -981,8 +981,6 @@ export function registerNotifierIpc(): void {
     if (idx !== -1) displayStack.splice(idx, 1)
     if (displayStack.length === 0) {
       hideNotifierWindow()
-    } else {
-      void pushToWindow()
     }
   })
 
