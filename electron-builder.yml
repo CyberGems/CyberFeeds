@@ -38,14 +38,13 @@ nsis:
   deleteAppDataOnUninstall: false
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
-  installerHeader: build/installerHeader.bmp
   installerSidebar: build/installerSidebar.bmp
   uninstallerSidebar: build/installerSidebar.bmp
   installerHeaderIcon: build/icon.ico
   include: build/installer.nsh
   installerLanguages:
-    - es
     - en
+    - es
   multiLanguageInstaller: true
 portable:
   artifactName: ${productName}-${version}-portable.${ext}
