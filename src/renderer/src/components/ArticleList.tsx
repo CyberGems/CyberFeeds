@@ -42,6 +42,7 @@ import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 import { copyArticleImage, featuredThumbImg } from '../lib/copyImage'
+import { articleHasVideo } from '@shared/youtube'
 
 function formatDate(ts: number, t: any): string {
   const d = new Date(ts)
@@ -1947,6 +1948,10 @@ const ArticleItem = memo(
       })
     }, [priorityKeywords, article.title, article.snippet])
 
+    const hasVideo = React.useMemo(() => {
+      return articleHasVideo(article)
+    }, [article.link, article.content, article.snippet])
+
     return (
       <div
         ref={measureRef}
@@ -1960,7 +1965,7 @@ const ArticleItem = memo(
       >
         {/* Thumbnail strip */}
         {article.thumbnail && settings.showArticleThumbnails && (
-          <div className="article-thumbnail">
+          <div className="article-thumbnail" style={{ position: 'relative' }}>
             <img
               src={article.thumbnail}
               alt=""
@@ -1973,6 +1978,12 @@ const ArticleItem = memo(
                 if (item) measureRef?.(item)
               }}
             />
+            {hasVideo && (
+              <div className="article-thumbnail-video-tag" title={t.articleList.videoBadgeTooltip}>
+                <Play size={10} fill="currentColor" />
+                <span>{t.articleList.videoBadge}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -1984,6 +1995,12 @@ const ArticleItem = memo(
           <span className="article-title" style={{ flex: 1 }}>
             {article.title}
           </span>
+          {hasVideo && (!article.thumbnail || !settings.showArticleThumbnails) && (
+            <span className="article-video-badge" title={t.articleList.videoBadgeTooltip}>
+              <Play size={9} fill="currentColor" />
+              <span>{t.articleList.videoBadge}</span>
+            </span>
+          )}
           {isPriority && (
             <span className="article-priority-badge" title={t.articleList.relevantBadge}>
               <Star size={10} fill="var(--star)" color="var(--star)" />

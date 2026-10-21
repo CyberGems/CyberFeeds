@@ -354,3 +354,25 @@ export function buildYouTubeArticleContent(params: {
 </div>`.trim()
 }
 
+const VIDEO_LINK_REGEX =
+  /(?:youtube\.com\/(?:watch|shorts|live)|youtu\.be\/|rumble\.com\/|vimeo\.com\/|dailymotion\.com\/video\/|bitchute\.com\/video\/|streamable\.com\/|odysee\.com\/@|tiktok\.com\/@?[^/]+\/video\/|twitch\.tv\/videos\/|clips\.twitch\.tv)/i
+
+const VIDEO_CONTENT_REGEX =
+  /<video\b|<iframe\b[^>]*(?:youtube|youtube-nocookie|vimeo|rumble|dailymotion|jwplatform|jwplayer|twitch|bitchute|streamable|odysee|facebook\.com\/plugins\/video|tiktok\.com\/embed|player\.)|\b(?:reader-embed-player|reader-rumble-player|reader-jwplayer-player|reader-youtube-player|wp-block-embed-youtube|jwplayer--floatingVideo)\b|Rumble\s*\(\s*["']play["']/i
+
+/** Determines whether an article contains an embedded or linked video. */
+export function articleHasVideo(article: {
+  link?: string
+  content?: string
+  snippet?: string
+  enclosureType?: string
+  mediaType?: string
+}): boolean {
+  if (article.link && VIDEO_LINK_REGEX.test(article.link)) return true
+  if (article.enclosureType?.startsWith('video/') || article.mediaType?.startsWith('video/')) return true
+  if (article.content && VIDEO_CONTENT_REGEX.test(article.content)) return true
+  if (article.snippet && VIDEO_CONTENT_REGEX.test(article.snippet)) return true
+  return false
+}
+
+

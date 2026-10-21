@@ -89,6 +89,8 @@ export const translations = {
         videos: 'Videos'
       },
       relevantBadge: 'Relevant',
+      videoBadge: 'Video',
+      videoBadgeTooltip: 'Contains embedded video',
       newArticlesPill: '{count} new articles',
       newArticlePill: '1 new article',
       favorites: 'Favorites',
@@ -977,6 +979,8 @@ export const translations = {
         videos: 'Videos'
       },
       relevantBadge: 'Relevante',
+      videoBadge: 'Video',
+      videoBadgeTooltip: 'Contiene video embebido',
       newArticlesPill: '{count} artículos nuevos',
       newArticlePill: '1 artículo nuevo',
       favorites: 'Favoritos',

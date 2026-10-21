@@ -9,10 +9,10 @@ let currentPayload: PipVideoPayload | null = null
 let isPinned = true
 let lastBounds: { x: number; y: number; width: number; height: number } | null = null
 
-function notifyMainWindow(active: boolean, articleId?: string): void {
+function notifyMainWindow(active: boolean, articleId?: string, currentTime?: number): void {
   const mainWin = getMainWindow()
   if (mainWin && !mainWin.isDestroyed()) {
-    mainWin.webContents.send('pip:status-changed', { active, articleId })
+    mainWin.webContents.send('pip:status-changed', { active, articleId, currentTime })
   }
 }
 
@@ -222,9 +222,11 @@ export function togglePipPin(): boolean {
   return isPinned
 }
 
-export function returnPipToReader(): void {
+export function returnPipToReader(currentTime?: number): void {
   restoreMainWindow()
+  const articleId = currentPayload?.articleId
   closePipWindow()
+  notifyMainWindow(false, articleId, currentTime)
 }
 
 export function initPipIpc(): void {
@@ -242,8 +244,19 @@ export function initPipIpc(): void {
     return togglePipPin()
   })
 
-  ipcMain.handle('pip:returnToReader', () => {
-    returnPipToReader()
+  ipcMain.handle('pip:returnToReader', (_event, params?: { currentTime?: number }) => {
+    returnPipToReader(params?.currentTime)
+    return { ok: true }
+  })
+
+  ipcMain.handle('pip:moveBy', (_event, { dx, dy }: { dx: number; dy: number }) => {
+    if (pipWindow && !pipWindow.isDestroyed()) {
+      const b = pipWindow.getBounds()
+      const newX = Math.round(b.x + dx)
+      const newY = Math.round(b.y + dy)
+      pipWindow.setPosition(newX, newY)
+      lastBounds = { x: newX, y: newY, width: b.width, height: b.height }
+    }
     return { ok: true }
   })
 

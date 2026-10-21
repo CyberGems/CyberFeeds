@@ -203,7 +203,7 @@ function transformDynamicEmbeds(html: string): string {
   result = result.replace(
     /<p\b[^>]*>\s*<a\b[^>]*\bhref=["'](?:https?:)?\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:[&?][^"']*)?["'][^>]*>(?:https?:\/\/[^<]+|Watch (?:video|on YouTube)[^<]*|YouTube:?[^<]*)<\/a>\s*<\/p>/gi,
     (_, videoId) => {
-      return `<iframe class="reader-embed-player reader-youtube-player" src="https://www.youtube-nocookie.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>`
+      return `<iframe class="reader-embed-player reader-youtube-player" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" loading="lazy"></iframe>`
     }
   )
 
@@ -212,6 +212,12 @@ function transformDynamicEmbeds(html: string): string {
     /<iframe\b([^>]*\bsrc=["']https:\/\/(?:[a-zA-Z0-9-]+\.)?(?:youtube\.com|youtube-nocookie\.com)\/embed\/[^"']+["'][^>]*)>/gi,
     (m) => {
       let tag = m
+      if (!tag.includes('enablejsapi=1')) {
+        tag = tag.replace(/(src=["']https:\/\/[^"']+)(["'])/, (_match, p1, p2) => {
+          const sep = p1.includes('?') ? '&' : '?'
+          return `${p1}${sep}enablejsapi=1${p2}`
+        })
+      }
       if (!tag.includes('allow=')) {
         tag = tag.replace('<iframe', '<iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"')
       }
@@ -454,12 +460,37 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isPlayingVideo, setIsPlayingVideo] = useState(false)
   const [pipArticleId, setPipArticleId] = useState<string | null>(null)
+  const [headerResumeTime, setHeaderResumeTime] = useState<number>(0)
+  const lastActiveYtTimeRef = useRef<number>(0)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
   const scrollRaf = useRef<number | undefined>(undefined)
   const pendingFullHtmlRef = useRef<string | null>(null)
   const ytVideoId = (article && isYouTubeUrl(article.link)) ? extractYouTubeVideoId(article.link) : null
   const isYt = Boolean(ytVideoId || (article && isYouTubeUrl(article.link)))
+
+  // Reset video progress tracking when article changes
+  useEffect(() => {
+    lastActiveYtTimeRef.current = 0
+    setHeaderResumeTime(0)
+  }, [article?.id])
+
+  // Track YouTube player playback progress from embedded iframes
+  useEffect(() => {
+    const handleYtMessage = (e: MessageEvent): void => {
+      try {
+        const payload = typeof e.data === 'string' ? JSON.parse(e.data) : e.data
+        if (payload?.event === 'infoDelivery' && payload?.info) {
+          const ct = payload.info.currentTime
+          if (typeof ct === 'number' && ct > 0) {
+            lastActiveYtTimeRef.current = ct
+          }
+        }
+      } catch {}
+    }
+    window.addEventListener('message', handleYtMessage)
+    return () => window.removeEventListener('message', handleYtMessage)
+  }, [])
 
   // Picture-in-Picture status synchronization
   useEffect(() => {
@@ -471,11 +502,18 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       }
     }).catch(() => {})
 
-    const unsub = window.api.pip.onStatusChange(({ active, articleId }) => {
+    const unsub = window.api.pip.onStatusChange(({ active, articleId, currentTime }) => {
       if (active) {
         setPipArticleId(articleId || null)
       } else {
         setPipArticleId(null)
+        if (currentTime && currentTime > 1) {
+          lastActiveYtTimeRef.current = currentTime
+          if (articleId === article?.id) {
+            setHeaderResumeTime(currentTime)
+            setIsPlayingVideo(true)
+          }
+        }
         // Restore any inline player in readerBody
         const root = contentRef.current
         if (root) {
@@ -486,8 +524,24 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
               const media = container.querySelector<HTMLMediaElement | HTMLIFrameElement>('video, iframe')
               if (media) {
                 if (media.dataset.pipSavedSrc) {
-                  media.src = media.dataset.pipSavedSrc
+                  let restoredSrc = media.dataset.pipSavedSrc
+                  if (currentTime && currentTime > 1) {
+                    if (restoredSrc.includes('youtube') || restoredSrc.includes('youtu.be')) {
+                      if (restoredSrc.includes('start=')) {
+                        restoredSrc = restoredSrc.replace(/start=\d+/, `start=${Math.floor(currentTime)}`)
+                      } else {
+                        const sep = restoredSrc.includes('?') ? '&' : '?'
+                        restoredSrc = `${restoredSrc}${sep}start=${Math.floor(currentTime)}`
+                      }
+                    }
+                  }
+                  media.src = restoredSrc
                   delete media.dataset.pipSavedSrc
+                }
+                if (media.tagName === 'VIDEO' && currentTime && currentTime > 1) {
+                  const v = media as HTMLVideoElement
+                  v.currentTime = currentTime
+                  v.play().catch(() => {})
                 }
                 media.style.display = ''
               }
@@ -503,7 +557,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     return () => {
       unsub()
     }
-  }, [])
+  }, [article?.id])
 
   const handleOpenPip = useCallback((payload: PipVideoPayload) => {
     window.api.pip.open(payload)
@@ -861,12 +915,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
           const src = iframe.getAttribute('src') || iframe.src || ''
           const ytId = extractYouTubeVideoId(src)
           if (ytId) {
+            const curSec = Math.floor(lastActiveYtTimeRef.current || 0)
             payload = {
               type: 'youtube',
               videoId: ytId,
               src,
               title: article?.title || '',
-              articleId: article?.id
+              articleId: article?.id,
+              currentTime: curSec
             }
           } else {
             payload = {
@@ -1663,12 +1719,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   <button
                     className="btn btn-ghost"
                     onClick={() => {
+                      const curSec = Math.floor(lastActiveYtTimeRef.current || headerResumeTime || 0)
                       handleOpenPip({
                         type: 'youtube',
                         videoId: ytVideoId,
-                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}`,
+                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}${curSec > 1 ? `?start=${curSec}` : ''}`,
                         title: article.title,
-                        articleId: article.id
+                        articleId: article.id,
+                        currentTime: curSec
                       })
                     }}
                     style={{
@@ -1723,12 +1781,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                     className="reader-pip-overlay-btn"
                     onClick={(e) => {
                       e.stopPropagation()
+                      const curSec = Math.floor(lastActiveYtTimeRef.current || headerResumeTime || 0)
                       handleOpenPip({
                         type: 'youtube',
                         videoId: ytVideoId,
-                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}`,
+                        src: `https://www.youtube-nocookie.com/embed/${ytVideoId}${curSec > 1 ? `?start=${curSec}` : ''}`,
                         title: article.title,
-                        articleId: article.id
+                        articleId: article.id,
+                        currentTime: curSec
                       })
                     }}
                     title={t.articleViewer.pipTooltip}
@@ -1737,7 +1797,8 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                     <span className="reader-pip-overlay-text">{t.articleViewer.pipButton}</span>
                   </button>
                   <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=0&rel=0`}
+                    key={`yt-header-${ytVideoId}-${headerResumeTime}`}
+                    src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=${headerResumeTime > 1 || settings.autoPlayYouTube ? '1' : '0'}&rel=0&enablejsapi=1${headerResumeTime > 1 ? `&start=${Math.floor(headerResumeTime)}` : ''}`}
                     title={article.title}
                     style={{
                       position: 'absolute',

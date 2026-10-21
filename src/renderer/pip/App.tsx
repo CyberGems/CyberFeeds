@@ -46,11 +46,65 @@ export default function PipApp(): React.JSX.Element {
     }
   }, [])
 
+  const isDraggingRef = useRef(false)
+  const dragStartPos = useRef<{ x: number; y: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const currentPipTimeRef = useRef<number>(0)
+
+  useEffect(() => {
+    const handlePipMessage = (e: MessageEvent): void => {
+      try {
+        const payload = typeof e.data === 'string' ? JSON.parse(e.data) : e.data
+        if (payload?.event === 'infoDelivery' && payload?.info) {
+          const ct = payload.info.currentTime
+          if (typeof ct === 'number' && ct > 0) {
+            currentPipTimeRef.current = ct
+          }
+        }
+      } catch {}
+    }
+    window.addEventListener('message', handlePipMessage)
+    return () => window.removeEventListener('message', handlePipMessage)
+  }, [])
+
+  const handleDragMouseDown = (e: React.MouseEvent): void => {
+    if (e.button !== 0) return
+    e.preventDefault()
+    e.stopPropagation()
+
+    isDraggingRef.current = true
+    setIsDragging(true)
+    dragStartPos.current = { x: e.screenX, y: e.screenY }
+
+    const onMouseMove = (moveEvent: MouseEvent): void => {
+      if (!isDraggingRef.current || !dragStartPos.current) return
+      const dx = moveEvent.screenX - dragStartPos.current.x
+      const dy = moveEvent.screenY - dragStartPos.current.y
+      if (dx !== 0 || dy !== 0) {
+        dragStartPos.current = { x: moveEvent.screenX, y: moveEvent.screenY }
+        window.api.pip.moveBy(dx, dy).catch(() => {})
+      }
+    }
+
+    const onMouseUp = (): void => {
+      isDraggingRef.current = false
+      setIsDragging(false)
+      dragStartPos.current = null
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('mouseup', onMouseUp)
+    }
+
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('mouseup', onMouseUp)
+  }
+
   const resetHideTimer = (): void => {
     setShowControls(true)
     if (hideTimerRef.current) window.clearTimeout(hideTimerRef.current)
     hideTimerRef.current = window.setTimeout(() => {
-      setShowControls(false)
+      if (!isDraggingRef.current) {
+        setShowControls(false)
+      }
     }, 2500)
   }
 
@@ -64,7 +118,10 @@ export default function PipApp(): React.JSX.Element {
   }
 
   const handleReturnToReader = async (): Promise<void> => {
-    await window.api.pip.returnToReader()
+    const finalTime =
+      (videoRef.current ? videoRef.current.currentTime : currentPipTimeRef.current) ||
+      (data?.currentTime ?? 0)
+    await window.api.pip.returnToReader(Math.floor(finalTime))
   }
 
   const handleClose = async (): Promise<void> => {
@@ -91,7 +148,7 @@ export default function PipApp(): React.JSX.Element {
     )
   }
 
-  const startSecond = data.currentTime && data.currentTime > 2 ? Math.floor(data.currentTime) : 0
+  const startSecond = data.currentTime && data.currentTime > 1 ? Math.floor(data.currentTime) : 0
 
   return (
     <div
@@ -106,34 +163,49 @@ export default function PipApp(): React.JSX.Element {
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}
     >
+      {/* Fullscreen drag capture shield (prevents iframe from capturing mouse during window drag) */}
+      {isDragging && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99999,
+            cursor: 'grabbing',
+            background: 'transparent',
+            userSelect: 'none'
+          }}
+        />
+      )}
+
       {/* Persistent Top Drag Strip (Always draggable even when controls fade) */}
       <div
         className="pip-drag-zone"
         title={t.pipDragTooltip}
+        onMouseDown={handleDragMouseDown}
         style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
-          height: '14px',
+          height: '28px',
           zIndex: 10000,
-          WebkitAppRegion: 'drag' as any
+          cursor: isDragging ? 'grabbing' : 'grab'
         }}
       />
 
       {/* Subtle top grab pill indicator when controls are hidden */}
-      {!showControls && (
+      {!showControls && !isDragging && (
         <div
           style={{
             position: 'absolute',
-            top: '4px',
+            top: '5px',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '38px',
+            width: '42px',
             height: '4px',
             borderRadius: '2px',
-            background: 'rgba(255, 255, 255, 0.45)',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.6)',
+            background: 'rgba(255, 255, 255, 0.55)',
+            boxShadow: '0 1px 4px rgba(0, 0, 0, 0.7)',
             zIndex: 10001,
             pointerEvents: 'none',
             transition: 'opacity 0.2s ease'
@@ -144,6 +216,7 @@ export default function PipApp(): React.JSX.Element {
       {/* Top Floating Control Bar */}
       <div
         className="pip-drag-zone"
+        onMouseDown={handleDragMouseDown}
         style={{
           position: 'absolute',
           top: 0,
@@ -154,12 +227,12 @@ export default function PipApp(): React.JSX.Element {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 10px 0 12px',
-          background: 'linear-gradient(to bottom, rgba(10, 14, 23, 0.92) 0%, rgba(10, 14, 23, 0.6) 80%, transparent 100%)',
+          background: 'linear-gradient(to bottom, rgba(10, 14, 23, 0.94) 0%, rgba(10, 14, 23, 0.7) 80%, transparent 100%)',
           zIndex: 9999,
-          opacity: showControls ? 1 : 0,
+          opacity: showControls || isDragging ? 1 : 0,
           transition: 'opacity 0.25s ease',
-          pointerEvents: showControls ? 'auto' : 'none',
-          WebkitAppRegion: 'drag' as any
+          pointerEvents: showControls || isDragging ? 'auto' : 'none',
+          cursor: isDragging ? 'grabbing' : 'grab'
         }}
       >
         {/* Drag Handle & Title area */}
@@ -173,17 +246,17 @@ export default function PipApp(): React.JSX.Element {
             flex: 1,
             minWidth: 0,
             marginRight: '12px',
-            WebkitAppRegion: 'drag' as any,
             padding: '4px 6px',
-            borderRadius: '6px'
+            borderRadius: '6px',
+            cursor: isDragging ? 'grabbing' : 'grab'
           }}
         >
           <GripHorizontal
-            size={16}
+            size={18}
             style={{
               color: 'var(--accent, #00d8f1)',
               flexShrink: 0,
-              opacity: 0.85
+              opacity: 0.9
             }}
           />
           <span
@@ -204,11 +277,12 @@ export default function PipApp(): React.JSX.Element {
         {/* Action Buttons */}
         <div
           className="pip-no-drag"
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            WebkitAppRegion: 'no-drag' as any
+            cursor: 'default'
           }}
         >
           <button
@@ -277,7 +351,16 @@ export default function PipApp(): React.JSX.Element {
       </div>
 
       {/* Video Content */}
-      <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          pointerEvents: isDragging ? 'none' : 'auto'
+        }}
+      >
         {data.type === 'youtube' && data.videoId ? (
           <iframe
             key={data.videoId}
