@@ -37,7 +37,6 @@ export default defineConfig({
         input: {
           index: resolve('src/renderer/index.html'),
           notifier: resolve('src/renderer/notifier/index.html'),
-          pip: resolve('src/renderer/pip/index.html'),
           tray: resolve('src/renderer/tray/index.html')
         }
       }

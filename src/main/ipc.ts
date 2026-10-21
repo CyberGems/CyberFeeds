@@ -102,6 +102,26 @@ export function setAutoStart(autoStart: boolean, startMinimized: boolean): void 
   } catch { /* ignore */ }
 }
 
+export function openInConfiguredBrowser(url: string): void {
+  let targetUrl = url
+  if (typeof targetUrl === 'string' && targetUrl.includes('old.reddit.com/')) {
+    targetUrl = targetUrl.replace('https://old.reddit.com/', 'https://www.reddit.com/')
+                         .replace('http://old.reddit.com/', 'https://www.reddit.com/')
+  }
+  const settings = db.getSettings()
+  if (settings.customBrowserPath) {
+    const { execFile } = require('child_process')
+    execFile(settings.customBrowserPath, [targetUrl], (err: any) => {
+      if (err) {
+        console.error('Failed to open custom browser:', err)
+        shell.openExternal(targetUrl)
+      }
+    })
+  } else {
+    shell.openExternal(targetUrl)
+  }
+}
+
 function uuid(): string { return crypto.randomUUID() }
 
 // Content extractor worker (persistent, reused across requests)
@@ -679,19 +699,7 @@ export function registerIpc(): void {
   // ─── Shell ────────────────────────────────────────────────────────────────
 
   ipcMain.handle('shell:openExternal', async (_, url: string) => {
-    let targetUrl = url
-    if (typeof targetUrl === 'string' && targetUrl.includes('old.reddit.com/')) {
-      targetUrl = targetUrl.replace('https://old.reddit.com/', 'https://www.reddit.com/')
-                           .replace('http://old.reddit.com/', 'https://www.reddit.com/')
-    }
-    const settings = db.getSettings()
-    if (settings.customBrowserPath) {
-      const { execFile } = require('child_process')
-      return new Promise<void>((resolve) => {
-        execFile(settings.customBrowserPath, [targetUrl], () => resolve())
-      })
-    }
-    return shell.openExternal(targetUrl)
+    return openInConfiguredBrowser(url)
   })
 
   ipcMain.handle('app:detectBrowsers', async () => {
@@ -944,18 +952,6 @@ export function registerIpc(): void {
       return { ok: false, error: String(err) }
     }
   })
-
-  function openInConfiguredBrowser(url: string): void {
-    const settings = db.getSettings()
-    if (settings.customBrowserPath) {
-      const { execFile } = require('child_process')
-      execFile(settings.customBrowserPath, [url], (err) => {
-        if (err) console.error('Failed to open custom browser:', err)
-      })
-    } else {
-      shell.openExternal(url)
-    }
-  }
 
   // ─── Native Context Menu ─────────────────────────────────────────────────
   const menuIconCache = new Map<string, Electron.NativeImage>()

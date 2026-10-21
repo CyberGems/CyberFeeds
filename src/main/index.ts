@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, screen, ipcMain, session } from 'electron'
+import { app, BrowserWindow, screen, ipcMain, session } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { is } from '@electron-toolkit/utils'
@@ -12,13 +12,12 @@ import {
   cleanupOldArticles
 } from './db'
 import { startPolling, setOnNewArticles } from './polling'
-import { registerIpc, setAutoStart } from './ipc'
+import { registerIpc, setAutoStart, openInConfiguredBrowser } from './ipc'
 import { initUpdater } from './updater'
 import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './notifications'
 import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import { initAutoBackup } from './auto-backup'
-import { initPipIpc, closePipWindow } from './pip'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
 
@@ -327,9 +326,9 @@ function createMainWindow(): BrowserWindow {
     ipcMain.removeListener('ui-ready', onUiReady)
   })
 
-  // Open external links in browser
+  // Open external links in configured browser (including links clicked inside embedded iframes like YouTube)
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    openInConfiguredBrowser(url)
     return { action: 'deny' }
   })
 
@@ -487,9 +486,6 @@ app.whenReady().then(() => {
   // Auto-backup scheduler
   initAutoBackup()
 
-  // Picture-in-Picture IPC
-  initPipIpc()
-
   // Auto-update (electron-updater). No-op in dev / unpacked builds.
   initUpdater(settings)
 
@@ -546,7 +542,6 @@ app.on('before-quit', () => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     persistMainWindowState(mainWindow)
   }
-  closePipWindow()
   destroyTray()
 })
 
@@ -590,7 +585,6 @@ ipcMain.handle('window:close-choice', (_e, action: string, remember: boolean) =>
 
   // action === 'quit'
   ;(app as any).isQuitting = true
-  closePipWindow()
   destroyTray()
   app.quit()
   return true

@@ -305,47 +305,7 @@ const api = {
       targetLang: string
     } | null>,
 
-  // Picture-in-Picture
-  pip: {
-    open: (payload: import('../shared/types').PipVideoPayload) =>
-      ipcRenderer.invoke('pip:open', payload) as Promise<{ ok: boolean }>,
-    close: () => ipcRenderer.invoke('pip:close') as Promise<{ ok: boolean }>,
-    togglePin: () => ipcRenderer.invoke('pip:togglePin') as Promise<boolean>,
-    returnToReader: (currentTime?: number) =>
-      ipcRenderer.invoke('pip:returnToReader', { currentTime }) as Promise<{ ok: boolean }>,
-    moveBy: (dx: number, dy: number) =>
-      ipcRenderer.invoke('pip:moveBy', { dx, dy }) as Promise<{ ok: boolean }>,
-    getData: () =>
-      ipcRenderer.invoke('pip:getData') as Promise<
-        import('../shared/types').PipVideoPayload | null
-      >,
-    getStatus: () =>
-      ipcRenderer.invoke('pip:getStatus') as Promise<{
-        active: boolean
-        articleId?: string
-        isPinned: boolean
-      }>,
-    onStatusChange: (
-      cb: (data: { active: boolean; articleId?: string; currentTime?: number }) => void
-    ) => {
-      const handler = (
-        _: unknown,
-        data: { active: boolean; articleId?: string; currentTime?: number }
-      ) => cb(data)
-      ipcRenderer.on('pip:status-changed', handler)
-      return () => {
-        ipcRenderer.removeListener('pip:status-changed', handler)
-      }
-    },
-    onUpdateData: (cb: (payload: import('../shared/types').PipVideoPayload) => void) => {
-      const handler = (_: unknown, payload: import('../shared/types').PipVideoPayload) =>
-        cb(payload)
-      ipcRenderer.on('pip:update-data', handler)
-      return () => {
-        ipcRenderer.removeListener('pip:update-data', handler)
-      }
-    }
-  },
+
 
   // System
   getUserInfo: () => ipcRenderer.invoke('system:getUserInfo') as Promise<{ username: string }>,
