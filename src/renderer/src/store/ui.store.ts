@@ -40,6 +40,9 @@ interface UIState {
   setAboutAutoCheck: (v: boolean) => void
   setDetectedUserName: (v: string) => void
   setTopbarMenuOpen: (v: boolean) => void
+  cleanupNotice: { deletedArticles: number; purgedTrash: number; manual?: boolean } | null
+  setCleanupNotice: (notice: { deletedArticles: number; purgedTrash: number; manual?: boolean } | null) => void
+  dismissCleanupNotice: () => void
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -61,10 +64,13 @@ export const useUIStore = create<UIState>((set) => ({
   aboutAutoCheck: false,
   detectedUserName: '',
   topbarMenuOpen: false,
+  cleanupNotice: null,
 
   setDetectedUserName: (name) => set({ detectedUserName: name }),
   setTopbarMenuOpen: (open) => set({ topbarMenuOpen: open }),
   setQuickFilter: (filter) => set({ quickFilter: filter }),
+  setCleanupNotice: (notice) => set({ cleanupNotice: notice }),
+  dismissCleanupNotice: () => set({ cleanupNotice: null }),
 
   selectFeed: (id, options) =>
     set((state) => ({

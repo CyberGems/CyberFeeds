@@ -11,7 +11,7 @@ import {
   backfillFavicons,
   cleanupOldArticles
 } from './db'
-import { startPolling, setOnNewArticles } from './polling'
+import { startPolling, setOnNewArticles, setOnAutoCleanup } from './polling'
 import { registerIpc, setAutoStart, openInConfiguredBrowser } from './ipc'
 import { initUpdater } from './updater'
 import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './notifications'
@@ -471,9 +471,24 @@ app.whenReady().then(() => {
     }
   })
 
+  // Wire auto-cleanup notifications from background polling
+  setOnAutoCleanup((res) => {
+    rebuildTrayMenu()
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('cleanup:completed', res)
+    }
+  })
+
   // Auto cleanup on startup
   if (settings.autoCleanup && settings.cleanupReadDays > 0) {
-    cleanupOldArticles(settings.cleanupReadDays)
+    const res = cleanupOldArticles(settings.cleanupReadDays, settings.cleanupScope || 'all')
+    if (settings.cleanupShowBanner !== false && (res.deletedArticles > 0 || res.purgedTrash > 0)) {
+      mainWindow.webContents.once('did-finish-load', () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('cleanup:completed', res)
+        }
+      })
+    }
   }
 
   // Start polling

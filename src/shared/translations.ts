@@ -599,9 +599,18 @@ export const translations = {
         explanation:
           'Optimize your database by removing old data. Note: Articles marked with a star (Favorites) are never deleted.',
         trashRetention: 'Trash items are automatically permanently deleted after 30 days.',
-        deleteOlder: 'Delete read articles older than (days)',
+        scopeLabel: 'Articles to clean',
+        scopeAll: 'All (read and unread)',
+        scopeRead: 'Read only',
+        scopeUnread: 'Unread only',
+        deleteOlder: 'Delete articles older than (days)',
         autoClean: 'Auto clean on startup',
-        runCleanBtn: 'Run Clean Up Now'
+        showBanner: 'Show notification banner when cleanup completes',
+        runCleanBtn: 'Run Clean Up Now',
+        runningClean: 'Cleaning database...',
+        cleanSuccess: 'Clean up completed: {count} old articles deleted and {trash} from trash. Database optimized.',
+        cleanSuccessNoTrash: 'Clean up completed: {count} old articles deleted. Database optimized.',
+        cleanNoArticles: 'No old articles found to delete. Your library is already up to date.'
       },
       keyboard: {
         title: 'Keyboard Shortcuts',
@@ -1494,9 +1503,18 @@ export const translations = {
           'Optimiza tu base de datos eliminando datos antiguos. Nota: Los artículos marcados con estrella (Favoritos) nunca se eliminan.',
         trashRetention:
           'Los artículos de la papelera se eliminan definitivamente automáticamente después de 30 días.',
-        deleteOlder: 'Eliminar artículos leídos anteriores a (días)',
+        scopeLabel: 'Artículos a eliminar',
+        scopeAll: 'Todos (leídos y sin leer)',
+        scopeRead: 'Solo leídos',
+        scopeUnread: 'Solo sin leer',
+        deleteOlder: 'Eliminar artículos anteriores a (días)',
         autoClean: 'Limpieza automática al iniciar',
-        runCleanBtn: 'Ejecutar limpieza ahora'
+        showBanner: 'Mostrar aviso al completarse la limpieza',
+        runCleanBtn: 'Ejecutar limpieza ahora',
+        runningClean: 'Limpiando base de datos...',
+        cleanSuccess: 'Limpieza completada: se eliminaron {count} artículos antiguos y {trash} de la papelera. Base de datos optimizada.',
+        cleanSuccessNoTrash: 'Limpieza completada: se eliminaron {count} artículos antiguos. Base de datos optimizada.',
+        cleanNoArticles: 'No se encontraron artículos antiguos para eliminar. Tu biblioteca ya está al día.'
       },
       keyboard: {
         title: 'Atajos de teclado',

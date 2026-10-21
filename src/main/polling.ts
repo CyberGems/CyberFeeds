@@ -32,9 +32,14 @@ export interface PollOptions {
 }
 
 let onNewArticlesCallback: ((feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void) | null = null
+let onAutoCleanupCallback: ((res: { deletedArticles: number; purgedTrash: number }) => void) | null = null
 
 export function setOnNewArticles(cb: (feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void): void {
   onNewArticlesCallback = cb
+}
+
+export function setOnAutoCleanup(cb: (res: { deletedArticles: number; purgedTrash: number }) => void): void {
+  onAutoCleanupCallback = cb
 }
 
 function getWorkerPath(): string {
@@ -169,16 +174,20 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
       const settings = db.getSettings()
       if (settings.autoCleanup && settings.cleanupReadDays > 0) {
         try {
-          console.log(`[Polling] Running auto-cleanup (days: ${settings.cleanupReadDays})`)
-          db.cleanupOldArticles(settings.cleanupReadDays)
+          console.log(`[Polling] Running auto-cleanup (days: ${settings.cleanupReadDays}, scope: ${settings.cleanupScope || 'all'})`)
+          const res = db.cleanupOldArticles(settings.cleanupReadDays, settings.cleanupScope || 'all')
+          if (settings.cleanupShowBanner !== false && (res.deletedArticles > 0 || res.purgedTrash > 0)) {
+            onAutoCleanupCallback?.(res)
+          }
         } catch (err) {
           console.error('[Polling] Cleanup error:', err)
         }
-      }
-      try {
-        db.purgeOldTrash(db.TRASH_RETENTION_DAYS)
-      } catch (err) {
-        console.error('[Polling] Trash cleanup error:', err)
+      } else {
+        try {
+          db.purgeOldTrash(db.TRASH_RETENTION_DAYS)
+        } catch (err) {
+          console.error('[Polling] Trash cleanup error:', err)
+        }
       }
       complete()
       if (pendingPoll) console.log('[Polling] Starting pending poll...')

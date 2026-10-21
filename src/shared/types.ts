@@ -60,6 +60,8 @@ export interface NotificationHistoryItem {
   createdAt: number
 }
 
+export type CleanupScope = 'all' | 'read' | 'unread'
+
 export interface AppSettings {
   theme: 'dark' | 'grayscale' | 'light'
   layout: 'three-panel' | 'two-panel' | 'one-panel' | 'horizontal-split'
@@ -75,6 +77,8 @@ export interface AppSettings {
   unreadOnly: boolean
   compactArticleList: boolean
   cleanupReadDays: number
+  cleanupScope: CleanupScope
+  cleanupShowBanner: boolean
   autoCleanup: boolean
   readerFallback: boolean
   readingFontSize: number
@@ -241,6 +245,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   unreadOnly: false,
   compactArticleList: false,
   cleanupReadDays: 30,
+  cleanupScope: 'all',
+  cleanupShowBanner: true,
   autoCleanup: false,
   readerFallback: true,
   readingFontSize: 16,

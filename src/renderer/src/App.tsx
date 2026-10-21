@@ -26,6 +26,7 @@ import DoctorPanel from './components/DoctorPanel'
 import CloseDialog from './components/CloseDialog'
 import Tooltip from './components/Tooltip'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
+import { CleanupBanner } from './components/CleanupBanner'
 import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
 
 export type UpdateStatus =
@@ -54,7 +55,9 @@ export default function App(): JSX.Element {
     search,
     pendingFeedId,
     closePanel,
-    quickFilter
+    quickFilter,
+    cleanupNotice,
+    dismissCleanupNotice
   } = useUIStore()
   const { load: loadSettings, settings } = useSettingsStore()
   const { t } = useTranslation()
@@ -395,6 +398,19 @@ export default function App(): JSX.Element {
     return () => unsub?.()
   }, [])
 
+  // Auto-cleanup listener from main process
+  useEffect(() => {
+    const unsub = window.api.onCleanupCompleted?.((data) => {
+      useFeedsStore.getState().loadAll()
+      useArticlesStore.getState().refresh()
+      const showBanner = useSettingsStore.getState().settings.cleanupShowBanner !== false
+      if (showBanner && (data.deletedArticles > 0 || data.purgedTrash > 0)) {
+        useUIStore.getState().setCleanupNotice(data)
+      }
+    })
+    return () => unsub?.()
+  }, [])
+
   // Native text context menu for editable fields (modals, settings, search, etc.)
   useEffect(() => {
     const isEditableTextField = (target: EventTarget | null): boolean => {
@@ -534,6 +550,9 @@ export default function App(): JSX.Element {
   return (
     <div id="root">
       <TopBar />
+      {cleanupNotice && (
+        <CleanupBanner notice={cleanupNotice} onDismiss={dismissCleanupNotice} />
+      )}
       <div className="app-layout">
         {showSidebar && <Sidebar />}
         {showSidebar && (

@@ -4,7 +4,7 @@ import {
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
   Languages, RefreshCw, Search, ExternalLink, Power, LayoutDashboard, Type,
   Clock, Volume2, BellOff, Save, Wrench, Monitor, BookOpen, Sparkles,
-  Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive, Layers
+  Filter, Ban, Star, Plus, ShieldCheck, History, HardDrive, Layers, CheckCircle
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -18,10 +18,12 @@ import {
   type AppSettings,
   type KeyboardShortcuts,
   type AutoBackupFileInfo,
-  type AutoBackupFrequency
+  type AutoBackupFrequency,
+  type CleanupScope
 } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useFeedsStore } from '../store/feeds.store'
+import { useArticlesStore } from '../store/articles.store'
 import { FeedFavicon } from './ArticleList'
 import {
   INTERFACE_SCALE_MAX,
@@ -273,6 +275,8 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [newMuteInput, setNewMuteInput] = useState('')
   const [autoBackupsList, setAutoBackupsList] = useState<AutoBackupFileInfo[]>([])
   const [loadingAutoBackups, setLoadingAutoBackups] = useState(false)
+  const [isCleaning, setIsCleaning] = useState(false)
+  const [cleanupStatus, setCleanupStatus] = useState<{ deletedArticles: number; purgedTrash: number } | null>(null)
   const [runningAutoBackup, setRunningAutoBackup] = useState(false)
   const [actionFile, setActionFile] = useState<string | null>(null)
   const [appVersion, setAppVersion] = useState('')
@@ -2367,6 +2371,20 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </CardTitle>
                 <p className="settings-card-hint">{t.settings.maintenance.explanation}</p>
                 <p className="settings-card-hint">{t.settings.maintenance.trashRetention}</p>
+
+                <div className="form-group" style={{ marginTop: 14 }}>
+                  <label className="form-label">{t.settings.maintenance.scopeLabel}</label>
+                  <select
+                    className="form-select"
+                    value={local.cleanupScope ?? 'all'}
+                    onChange={(e) => update({ cleanupScope: e.target.value as CleanupScope })}
+                  >
+                    <option value="all">{t.settings.maintenance.scopeAll}</option>
+                    <option value="read">{t.settings.maintenance.scopeRead}</option>
+                    <option value="unread">{t.settings.maintenance.scopeUnread}</option>
+                  </select>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">{t.settings.maintenance.deleteOlder}</label>
                   <input
@@ -2374,26 +2392,123 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     type="number"
                     min={1}
                     value={local.cleanupReadDays}
-                    onChange={e => update({ cleanupReadDays: Number(e.target.value) }, 300)}
+                    onChange={(e) => update({ cleanupReadDays: Math.max(1, Number(e.target.value)) }, 300)}
                   />
                 </div>
-                <label className="toggle">
-                  <div
-                    className={`toggle-track ${local.autoCleanup ? 'on' : ''}`}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '14px 0 16px 0' }}>
+                  <label
+                    className="toggle"
+                    style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
                     onClick={() => update({ autoCleanup: !local.autoCleanup })}
                   >
-                    <div className="toggle-thumb" />
+                    <div className={`toggle-track ${local.autoCleanup ? 'on' : ''}`}>
+                      <div className="toggle-thumb" />
+                    </div>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                      {t.settings.maintenance.autoClean}
+                    </span>
+                  </label>
+
+                  <label
+                    className="toggle"
+                    style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => update({ cleanupShowBanner: local.cleanupShowBanner === false ? true : false })}
+                  >
+                    <div className={`toggle-track ${local.cleanupShowBanner !== false ? 'on' : ''}`}>
+                      <div className="toggle-thumb" />
+                    </div>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                      {t.settings.maintenance.showBanner}
+                    </span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    disabled={isCleaning}
+                    style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    onClick={async () => {
+                      setIsCleaning(true)
+                      try {
+                        const res = await window.api.cleanup(local.cleanupReadDays, local.cleanupScope ?? 'all')
+                        if (res?.ok) {
+                          setCleanupStatus({ deletedArticles: res.deletedArticles, purgedTrash: res.purgedTrash })
+                          await Promise.all([
+                            useFeedsStore.getState().loadAll(),
+                            useArticlesStore.getState().refresh()
+                          ])
+                          if (local.cleanupShowBanner !== false) {
+                            useUIStore.getState().setCleanupNotice({
+                              deletedArticles: res.deletedArticles,
+                              purgedTrash: res.purgedTrash,
+                              manual: true
+                            })
+                          }
+                        }
+                      } catch (err) {
+                        console.error('Failed to cleanup database:', err)
+                      } finally {
+                        setIsCleaning(false)
+                      }
+                    }}
+                  >
+                    {isCleaning && <RefreshCw size={13} className="spin" />}
+                    {isCleaning ? t.settings.maintenance.runningClean : t.settings.maintenance.runCleanBtn}
+                  </button>
+                </div>
+
+                {cleanupStatus && (
+                  <div
+                    style={{
+                      marginTop: 14,
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius)',
+                      background: 'rgba(63, 185, 80, 0.12)',
+                      border: '1px solid rgba(63, 185, 80, 0.3)',
+                      color: 'var(--text-primary)',
+                      fontSize: 13,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 10
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CheckCircle size={16} style={{ color: 'var(--green)', flexShrink: 0 }} />
+                      <span>
+                        {cleanupStatus.deletedArticles > 0 && cleanupStatus.purgedTrash > 0
+                          ? t.settings.maintenance.cleanSuccess
+                              .replace('{count}', cleanupStatus.deletedArticles.toLocaleString())
+                              .replace('{trash}', cleanupStatus.purgedTrash.toLocaleString())
+                          : cleanupStatus.deletedArticles > 0
+                            ? t.settings.maintenance.cleanSuccessNoTrash.replace(
+                                '{count}',
+                                cleanupStatus.deletedArticles.toLocaleString()
+                              )
+                            : t.settings.maintenance.cleanNoArticles}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCleanupStatus(null)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-secondary)',
+                        cursor: 'pointer',
+                        padding: 4,
+                        display: 'inline-flex',
+                        alignItems: 'center'
+                      }}
+                      title={t.common.close}
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
-                  <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.settings.maintenance.autoClean}</span>
-                </label>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  style={{ fontSize: 12, marginTop: 4 }}
-                  onClick={() => window.api.cleanup(local.cleanupReadDays)}
-                >
-                  {t.settings.maintenance.runCleanBtn}
-                </button>
+                )}
               </div>
 
               <div className="settings-card">

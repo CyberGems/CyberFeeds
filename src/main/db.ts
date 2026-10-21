@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { app } from 'electron'
 import path from 'path'
-import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState } from './types'
+import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState, CleanupScope } from './types'
 import { DEFAULT_SETTINGS } from './types'
 import { articleHasVideo } from '../shared/youtube'
 
@@ -750,14 +750,38 @@ export function getArticleById(id: string): Article | undefined {
   `).get(id) as Article | undefined
 }
 
-export function cleanupOldArticles(days: number): void {
+export function cleanupOldArticles(
+  days: number,
+  scope: CleanupScope = 'all'
+): { deletedArticles: number; purgedTrash: number } {
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
-  db.prepare('DELETE FROM articles WHERE deletedAt IS NULL AND read = 1 AND starred = 0 AND pubDate < ?').run(cutoff)
+  let query = 'DELETE FROM articles WHERE deletedAt IS NULL AND starred = 0 AND pubDate < ?'
+  if (scope === 'read') {
+    query = 'DELETE FROM articles WHERE deletedAt IS NULL AND read = 1 AND starred = 0 AND pubDate < ?'
+  } else if (scope === 'unread') {
+    query = 'DELETE FROM articles WHERE deletedAt IS NULL AND read = 0 AND starred = 0 AND pubDate < ?'
+  }
+  const result = db.prepare(query).run(cutoff)
+  const purgedTrash = purgeOldTrash(TRASH_RETENTION_DAYS)
+
+  if (result.changes > 0 || purgedTrash > 0) {
+    try {
+      db.pragma('wal_checkpoint(TRUNCATE)')
+    } catch (err) {
+      console.warn('[DB] wal_checkpoint warning:', err)
+    }
+  }
+
+  return {
+    deletedArticles: result.changes,
+    purgedTrash
+  }
 }
 
-export function purgeOldTrash(days: number): void {
+export function purgeOldTrash(days: number): number {
   const cutoff = Date.now() - days * 24 * 60 * 60 * 1000
-  db.prepare('DELETE FROM articles WHERE deletedAt IS NOT NULL AND deletedAt < ?').run(cutoff)
+  const result = db.prepare('DELETE FROM articles WHERE deletedAt IS NOT NULL AND deletedAt < ?').run(cutoff)
+  return result.changes
 }
 
 export function getTodayArticles(): Article[] {

@@ -106,7 +106,12 @@ const api = {
 
   // App
   getVersions: () => ipcRenderer.invoke('app:getVersions'),
-  cleanup: (days: number) => ipcRenderer.invoke('app:cleanup', days),
+  cleanup: (days?: number, scope?: import('../shared/types').CleanupScope) =>
+    ipcRenderer.invoke('app:cleanup', days, scope) as Promise<{
+      ok: boolean
+      deletedArticles: number
+      purgedTrash: number
+    }>,
   exportBackup: () => ipcRenderer.invoke('app:exportBackup'),
   importBackup: () => ipcRenderer.invoke('app:importBackup'),
   runAutoBackup: () =>
@@ -137,6 +142,13 @@ const api = {
   scanFeeds: () => ipcRenderer.invoke('app:scanFeeds'),
 
   // Event listeners
+  onCleanupCompleted: (cb: (data: { deletedArticles: number; purgedTrash: number }) => void) => {
+    const handler = (_: unknown, data: { deletedArticles: number; purgedTrash: number }): void => cb(data)
+    ipcRenderer.on('cleanup:completed', handler)
+    return () => {
+      ipcRenderer.removeListener('cleanup:completed', handler)
+    }
+  },
   onArticlesUpdated: (cb: (data: { feedId: string; count: number }) => void) => {
     const handler = (_: unknown, data: { feedId: string; count: number }) => cb(data)
     ipcRenderer.on('articles:updated', handler)

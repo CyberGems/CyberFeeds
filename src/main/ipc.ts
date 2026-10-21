@@ -775,11 +775,13 @@ export function registerIpc(): void {
     return results
   })
 
-  ipcMain.handle('app:cleanup', (_, days: number) => {
-    db.cleanupOldArticles(days)
-    db.purgeOldTrash(db.TRASH_RETENTION_DAYS)
+  ipcMain.handle('app:cleanup', (_, days?: number, scope?: import('./types').CleanupScope) => {
+    const settings = db.getSettings()
+    const effectiveDays = typeof days === 'number' && days > 0 ? days : (settings.cleanupReadDays || 30)
+    const effectiveScope = scope || settings.cleanupScope || 'all'
+    const result = db.cleanupOldArticles(effectiveDays, effectiveScope)
     rebuildTrayMenu()
-    return { ok: true }
+    return { ok: true, ...result }
   })
 
   ipcMain.handle('app:exportBackup', async (event) => {
