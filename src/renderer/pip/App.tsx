@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { Pin, PinOff, ExternalLink, X } from 'lucide-react'
+import { Pin, PinOff, ExternalLink, X, GripHorizontal } from 'lucide-react'
 import type { PipVideoPayload } from '../../shared/types'
 import { translations } from '../../shared/translations'
 
@@ -106,8 +106,44 @@ export default function PipApp(): React.JSX.Element {
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       }}
     >
+      {/* Persistent Top Drag Strip (Always draggable even when controls fade) */}
+      <div
+        className="pip-drag-zone"
+        title={t.pipDragTooltip}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '14px',
+          zIndex: 10000,
+          WebkitAppRegion: 'drag' as any
+        }}
+      />
+
+      {/* Subtle top grab pill indicator when controls are hidden */}
+      {!showControls && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '4px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '38px',
+            height: '4px',
+            borderRadius: '2px',
+            background: 'rgba(255, 255, 255, 0.45)',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.6)',
+            zIndex: 10001,
+            pointerEvents: 'none',
+            transition: 'opacity 0.2s ease'
+          }}
+        />
+      )}
+
       {/* Top Floating Control Bar */}
       <div
+        className="pip-drag-zone"
         style={{
           position: 'absolute',
           top: 0,
@@ -117,8 +153,8 @@ export default function PipApp(): React.JSX.Element {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 10px 0 14px',
-          background: 'linear-gradient(to bottom, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%)',
+          padding: '0 10px 0 12px',
+          background: 'linear-gradient(to bottom, rgba(10, 14, 23, 0.92) 0%, rgba(10, 14, 23, 0.6) 80%, transparent 100%)',
           zIndex: 9999,
           opacity: showControls ? 1 : 0,
           transition: 'opacity 0.25s ease',
@@ -126,24 +162,39 @@ export default function PipApp(): React.JSX.Element {
           WebkitAppRegion: 'drag' as any
         }}
       >
-        {/* Title area */}
+        {/* Drag Handle & Title area */}
         <div
+          className="pip-drag-handle"
+          title={t.pipDragTooltip}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            overflow: 'hidden',
-            marginRight: '12px'
+            flex: 1,
+            minWidth: 0,
+            marginRight: '12px',
+            WebkitAppRegion: 'drag' as any,
+            padding: '4px 6px',
+            borderRadius: '6px'
           }}
         >
+          <GripHorizontal
+            size={16}
+            style={{
+              color: 'var(--accent, #00d8f1)',
+              flexShrink: 0,
+              opacity: 0.85
+            }}
+          />
           <span
             style={{
               fontSize: '12px',
               fontWeight: 600,
-              color: 'rgba(255, 255, 255, 0.92)',
+              color: 'rgba(255, 255, 255, 0.94)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              pointerEvents: 'none'
             }}
           >
             {data.title || 'CyberFeeds'}
@@ -152,6 +203,7 @@ export default function PipApp(): React.JSX.Element {
 
         {/* Action Buttons */}
         <div
+          className="pip-no-drag"
           style={{
             display: 'flex',
             alignItems: 'center',

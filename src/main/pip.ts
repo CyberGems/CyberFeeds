@@ -38,6 +38,26 @@ function getTargetDisplay(): Electron.Display {
   return screen.getDisplayNearestPoint(cursorPoint) || screen.getPrimaryDisplay()
 }
 
+function clampToDisplay(
+  b: { x: number; y: number; width: number; height: number },
+  display: Electron.Display
+): { x: number; y: number; width: number; height: number } {
+  const wa = display.workArea || display.bounds
+  const margin = 24
+  const width = Math.min(wa.width - margin * 2, Math.max(320, b.width))
+  const height = Math.min(wa.height - margin * 2, Math.max(180, b.height))
+
+  const minX = wa.x + margin
+  const maxX = wa.x + wa.width - width - margin
+  const minY = wa.y + margin
+  const maxY = wa.y + wa.height - height - margin
+
+  const x = Math.max(minX, Math.min(maxX, b.x))
+  const y = Math.max(minY, Math.min(maxY, b.y))
+
+  return { x, y, width, height }
+}
+
 function resolveInitialBounds(): { x: number; y: number; width: number; height: number } {
   const targetDisplay = getTargetDisplay()
   const wa = targetDisplay.workArea || targetDisplay.bounds
@@ -45,7 +65,7 @@ function resolveInitialBounds(): { x: number; y: number; width: number; height: 
   const defaultWidth = 520
 
   // Clamp desired dimensions to work area
-  const width = Math.min(wa.width - 32, Math.max(320, lastBounds ? lastBounds.width : defaultWidth))
+  const width = Math.min(wa.width - 48, Math.max(320, lastBounds ? lastBounds.width : defaultWidth))
   const height = Math.round((width * 9) / 16)
 
   // If lastBounds exists AND is located within the target display's work area, preserve user position
@@ -56,31 +76,47 @@ function resolveInitialBounds(): { x: number; y: number; width: number; height: 
     lastBounds.y >= wa.y &&
     lastBounds.y + height <= wa.y + wa.height
   ) {
-    return {
-      x: lastBounds.x,
-      y: lastBounds.y,
-      width,
-      height
-    }
+    return clampToDisplay(
+      {
+        x: lastBounds.x,
+        y: lastBounds.y,
+        width,
+        height
+      },
+      targetDisplay
+    )
   }
 
   // Default to bottom-right corner of target display work area
   const margin = 24
-  return {
-    x: wa.x + wa.width - width - margin,
-    y: wa.y + wa.height - height - margin,
-    width,
-    height
-  }
+  return clampToDisplay(
+    {
+      x: wa.x + wa.width - width - margin,
+      y: wa.y + wa.height - height - margin,
+      width,
+      height
+    },
+    targetDisplay
+  )
 }
 
 export function createOrUpdatePipWindow(payload: PipVideoPayload): void {
   currentPayload = payload
 
+  const targetDisplay = getTargetDisplay()
+
   if (pipWindow && !pipWindow.isDestroyed()) {
     pipWindow.webContents.send('pip:update-data', payload)
     if (!pipWindow.isVisible()) {
       pipWindow.show()
+    }
+    const curBounds = pipWindow.getBounds()
+    const curDisplay =
+      (typeof screen.getDisplayMatching === 'function' && screen.getDisplayMatching(curBounds)) ||
+      screen.getDisplayNearestPoint(curBounds)
+    if (curDisplay && curDisplay.id !== targetDisplay.id) {
+      const newBounds = clampToDisplay(curBounds, targetDisplay)
+      pipWindow.setBounds(newBounds)
     }
     pipWindow.focus()
     notifyMainWindow(true, payload.articleId)
@@ -108,7 +144,18 @@ export function createOrUpdatePipWindow(payload: PipVideoPayload): void {
     }
   })
 
-  pipWindow.setAspectRatio(16 / 9)
+  // Prevent Windows DPI mismatch by strictly clamping rendered bounds to target display
+  const actual = pipWindow.getBounds()
+  const clamped = clampToDisplay(actual, targetDisplay)
+  if (
+    actual.x !== clamped.x ||
+    actual.y !== clamped.y ||
+    actual.width !== clamped.width ||
+    actual.height !== clamped.height
+  ) {
+    pipWindow.setBounds(clamped)
+  }
+
   pipWindow.setAlwaysOnTop(isPinned, 'floating')
 
   pipWindow.on('resize', () => {

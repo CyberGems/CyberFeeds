@@ -5343,7 +5343,22 @@ input[type="radio"] {
   animation: tooltipPop 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ─── PiP Action Buttons ─────────────────────────────────────────────────── */
+/* ─── PiP Action Buttons & Drag Zone ─────────────────────────────────────── */
+.pip-drag-zone,
+.pip-drag-handle {
+  cursor: grab !important;
+  user-select: none;
+}
+.pip-drag-zone:active,
+.pip-drag-handle:active {
+  cursor: grabbing !important;
+}
+.pip-drag-handle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.pip-no-drag {
+  -webkit-app-region: no-drag;
+}
 .pip-action-btn {
   transition: all 0.15s ease, transform 0.1s ease !important;
 }

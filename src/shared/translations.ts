@@ -246,6 +246,7 @@ export const translations = {
       pipCloseFloating: 'Close floating player',
       pipAlwaysOnTop: 'Always on top',
       pipPinTooltip: 'Toggle always on top',
+      pipDragTooltip: 'Drag to move floating window',
       autoPlayYouTube: 'Auto-play in CyberFeeds',
       autoPlayYouTubeTooltip: 'Automatically open YouTube videos in the CyberFeeds player',
       videoFallbackTitle: 'External video',
@@ -1138,6 +1139,7 @@ export const translations = {
       pipCloseFloating: 'Cerrar reproductor flotante',
       pipAlwaysOnTop: 'Siempre visible',
       pipPinTooltip: 'Alternar siempre visible',
+      pipDragTooltip: 'Arrastrar para mover ventana flotante',
       autoPlayYouTube: 'Reproducir en CyberFeeds',
       autoPlayYouTubeTooltip:
         'Abrir videos de YouTube automáticamente en el reproductor de CyberFeeds',
