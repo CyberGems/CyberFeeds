@@ -127,14 +127,17 @@ export const translations = {
       statusCard: {
         syncingLabel: 'Syncing',
         syncingTitle: 'Fetching articles...',
-        syncingYouTubeDesc: 'Connecting to YouTube and processing the latest videos. They will be ready shortly.',
+        syncingYouTubeDesc:
+          'Connecting to YouTube and processing the latest videos. They will be ready shortly.',
         syncingRedditDesc: 'Connecting to Reddit and retrieving the newest posts.',
         syncingDesc: 'Downloading and organizing recent content from this feed.',
         issueLabel: 'Connection issue',
         issueTitle: 'Could not fetch articles',
-        issueYouTubeDesc: 'YouTube might be temporarily rate-limiting requests or the channel URL requires checking.',
+        issueYouTubeDesc:
+          'YouTube might be temporarily rate-limiting requests or the channel URL requires checking.',
         issueRedditDesc: 'Reddit may be temporarily unreachable or rate-limiting requests.',
-        issueGenericDesc: 'Could not connect to the feed source. Please check your connection or retry.',
+        issueGenericDesc:
+          'Could not connect to the feed source. Please check your connection or retry.',
         retryBtn: 'Retry sync',
         filterLabel: 'Active filters',
         filterTitle: 'No articles match your criteria',
@@ -152,7 +155,8 @@ export const translations = {
         checkNewBtn: 'Check for new articles'
       },
       emptyLibraryTitle: 'Start your reading',
-      emptyLibraryDescription: 'Add your first RSS or Atom feed, or import an OPML list to get started.',
+      emptyLibraryDescription:
+        'Add your first RSS or Atom feed, or import an OPML list to get started.',
       trash: 'Trash',
       emptyTrash: 'Empty trash',
       loadingFeed: 'Fetching the latest articles...',
@@ -190,10 +194,12 @@ export const translations = {
           'Are you sure you want to move all articles in the current list to the trash? You can restore them from Trash.',
         deleteAllBtn: 'Move to Trash',
         emptyTrashTitle: 'Empty Trash',
-        emptyTrashMsg: 'Are you sure you want to permanently delete all articles in the trash? This action cannot be undone.',
+        emptyTrashMsg:
+          'Are you sure you want to permanently delete all articles in the trash? This action cannot be undone.',
         emptyTrashBtn: 'Empty Trash',
         deletePermanentlyTitle: 'Delete Article Permanently',
-        deletePermanentlyMsg: 'Are you sure you want to permanently delete "{title}"? This action cannot be undone.',
+        deletePermanentlyMsg:
+          'Are you sure you want to permanently delete "{title}"? This action cannot be undone.',
         deletePermanentlyBtn: 'Delete Permanently',
         restoreAllTrashTitle: 'Restore All Trash Articles',
         restoreAllTrashMsg: 'Are you sure you want to restore all articles from the trash?',
@@ -243,7 +249,8 @@ export const translations = {
       autoPlayYouTube: 'Auto-play in CyberFeeds',
       autoPlayYouTubeTooltip: 'Automatically open YouTube videos in the CyberFeeds player',
       videoFallbackTitle: 'External video',
-      videoFallbackDesc: 'This media source requires opening directly in your browser due to host restrictions.',
+      videoFallbackDesc:
+        'This media source requires opening directly in your browser due to host restrictions.',
       videoFallbackBtn: 'Watch video in browser',
       searchInArticle: 'Find in article',
       searchBtn: 'Find',
@@ -313,8 +320,10 @@ export const translations = {
           m2: '2 minutes',
           m5: '5 minutes'
         },
-        pollOnlyWhenUnfocused: 'Only fetch articles automatically if the application is not focused',
-        pollOnlyWhenUnfocusedHint: 'Keeps your place in the list while you read. Automatic fetching resumes when CyberFeeds is in the background or unfocused.',
+        pollOnlyWhenUnfocused:
+          'Only fetch articles automatically if the application is not focused',
+        pollOnlyWhenUnfocusedHint:
+          'Keeps your place in the list while you read. Automatic fetching resumes when CyberFeeds is in the background or unfocused.',
         theme: 'Theme',
         themes: {
           dark: 'CyberFeeds',
@@ -345,37 +354,45 @@ export const translations = {
         pickTooltip: 'Browse for browser executable',
         searchTitle: 'Article Search',
         instantSearch: 'Instant search while typing',
-        instantSearchHint: 'When disabled, press Enter in the search bar to execute the search (recommended for large libraries with thousands of articles).',
+        instantSearchHint:
+          'When disabled, press Enter in the search bar to execute the search (recommended for large libraries with thousands of articles).',
         readingTitle: 'Article Reader',
         selectionToolbar: 'Floating text selection toolbar',
-        selectionToolbarHint: 'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.',
+        selectionToolbarHint:
+          'Show a floating toolbar with Search, Copy, and Translate actions when selecting text in articles.',
         autoPlayYouTube: 'Auto-play YouTube videos in CyberFeeds',
         autoPlayYouTubeHint: 'Automatically embed and play YouTube videos when viewing articles.',
         personalizationTitle: 'Personalization & Welcome',
         userName: 'Your name',
         userNamePlaceholder: 'e.g. User',
-        userNameHint: 'Displayed in welcoming greetings across the app. Leave blank to show only the greeting without a name.',
+        userNameHint:
+          'Displayed in welcoming greetings across the app. Leave blank to show only the greeting without a name.',
         leaveNameEmpty: 'Leave empty',
         useDefaultUserName: "Use 'User'",
         clearName: 'Clear name',
         showWelcomeGreeting: 'Show welcoming greetings',
-        showWelcomeGreetingHint: 'Displays a dynamic status with greeting in the titlebar and welcome screen.',
+        showWelcomeGreetingHint:
+          'Displays a dynamic status with greeting in the titlebar and welcome screen.',
         showSuitePromo: 'Show suite recommendations',
-        showSuitePromoHint: 'Shows the More from CyberGems strip in About and the suite entry in the tray menu.',
+        showSuitePromoHint:
+          'Shows the More from CyberGems strip in About and the suite entry in the tray menu.',
         suitePromoTitle: 'CyberGems Suite',
         articleTabsTitle: 'Article Tabs & Session',
         articleTabsSession: 'On startup',
-        articleTabsSessionHint: 'Choose whether to restore previously open article tabs or start with a clean workspace.',
+        articleTabsSessionHint:
+          'Choose whether to restore previously open article tabs or start with a clean workspace.',
         articleTabsSessionRestore: 'Restore previous session',
         articleTabsSessionClean: 'Start clean'
       },
       filters: {
         title: 'Filters & Rules',
         priorityTitle: 'Priority Topics (Highlights)',
-        priorityDesc: 'Articles matching any of these keywords are highlighted with a star badge and can be filtered with 1 click in the article list.',
+        priorityDesc:
+          'Articles matching any of these keywords are highlighted with a star badge and can be filtered with 1 click in the article list.',
         priorityPlaceholder: 'Add keyword (e.g. release, AI, security) and press Enter...',
         muteTitle: 'Noise & Mute Rules',
-        muteDesc: 'Suppress articles matching unwanted keywords to keep your reading clean and focused.',
+        muteDesc:
+          'Suppress articles matching unwanted keywords to keep your reading clean and focused.',
         mutePlaceholder: 'Add keyword (e.g. sponsored, deal, crypto) and press Enter...',
         muteAction: 'Action on match:',
         muteActionHide: 'Hide article from list',
@@ -397,16 +414,21 @@ export const translations = {
           detailed: 'Detailed',
           compact: 'Compact'
         },
-        displayModeHint: 'Automatic shows full cards with text and images, adapting to compact mode if screen space is very limited.',
+        displayModeHint:
+          'Automatic shows full cards with text and images, adapting to compact mode if screen space is very limited.',
         displayModeHints: {
-          automatic: 'Shows full cards with preview text and images, automatically adapting to compact mode only if screen space is very limited.',
-          detailed: 'Always shows full cards with title, article preview text, featured image, and action buttons with labels.',
-          compact: 'Shows slim cards with only the title and action icons, hiding preview text and images to take minimal space.'
+          automatic:
+            'Shows full cards with preview text and images, automatically adapting to compact mode only if screen space is very limited.',
+          detailed:
+            'Always shows full cards with title, article preview text, featured image, and action buttons with labels.',
+          compact:
+            'Shows slim cards with only the title and action icons, hiding preview text and images to take minimal space.'
         },
         preloadImages: 'Show only when image is fully loaded',
         disableOnFullscreen: 'Disable during fullscreen apps (games, videos)',
         closeOnViewInApp: 'Close all cards when viewing in the app',
-        closeOnViewInAppHint: 'If off, only the notification you open is dismissed; the rest stay on screen.',
+        closeOnViewInAppHint:
+          'If off, only the notification you open is dismissed; the rest stay on screen.',
         displayMonitor: 'Display / Monitor',
         activeDisplay: 'Active monitor (where cursor is)',
         singleDisplay: 'Single display detected ({width}×{height})',
@@ -421,11 +443,14 @@ export const translations = {
         },
         duration: 'Duration (seconds)',
         alwaysPauseOnHover: 'Always pause immediately on mouse hover',
-        alwaysPauseOnHoverHint: 'Immediately pauses notifications whenever the mouse is over them, even if stationary. When off (default), notifications only pause when you move the mouse over them to interact.',
+        alwaysPauseOnHoverHint:
+          'Immediately pauses notifications whenever the mouse is over them, even if stationary. When off (default), notifications only pause when you move the mouse over them to interact.',
         maxStack: 'Max notifications in stack',
-        maxStackHint: 'The height limit may show fewer cards at once; the rest remain available by scrolling.',
+        maxStackHint:
+          'The height limit may show fewer cards at once; the rest remain available by scrolling.',
         historyLimit: 'Notification history limit',
-        historyLimitHint: 'Maximum notifications to store in history. Older seen notifications are pruned first. Set to Unlimited to keep all.',
+        historyLimitHint:
+          'Maximum notifications to store in history. Older seen notifications are pruned first. Set to Unlimited to keep all.',
         unlimited: 'Unlimited',
         defaultPreset: 'Default',
         maxHeight: 'Maximum popup height (% of screen)',
@@ -477,22 +502,27 @@ export const translations = {
         opmlExportFailTitle: 'Failed to export OPML',
         opmlExportFailMsg: 'Could not export the OPML file: {error}',
         storageSection: 'Storage & Diagnostics',
-        storageExplanation: 'Open CyberFeeds data or run diagnostics when you need to inspect the local library.',
+        storageExplanation:
+          'Open CyberFeeds data or run diagnostics when you need to inspect the local library.',
         openDataFolder: 'Open Data Folder',
         dangerSection: 'Danger Zone',
         resetSettingsTitle: 'Reset All Settings',
-        resetSettingsExplanation: 'Reset preferences to their default values. Feeds and articles will not be touched.',
+        resetSettingsExplanation:
+          'Reset preferences to their default values. Feeds and articles will not be touched.',
         resetSettingsButton: 'Reset Settings',
         resetSettingsConfirmTitle: 'Reset all settings?',
-        resetSettingsConfirmMsg: 'All CyberFeeds preferences will return to defaults. Your feeds and articles will not be modified.',
+        resetSettingsConfirmMsg:
+          'All CyberFeeds preferences will return to defaults. Your feeds and articles will not be modified.',
         resetSettingsConfirmBtn: 'Reset Settings',
         resetSettingsFailTitle: 'Could not reset settings',
         resetSettingsFailMsg: 'Could not reset settings: {error}',
         deleteFeedsTitle: 'Delete All Feeds',
-        deleteFeedsExplanation: 'Permanently remove all feeds and their articles. Empty folders will be kept.',
+        deleteFeedsExplanation:
+          'Permanently remove all feeds and their articles. Empty folders will be kept.',
         deleteFeedsButton: 'Delete All Feeds',
         deleteFeedsConfirmTitle: 'Delete all feeds?',
-        deleteFeedsConfirmMsg: 'Permanently remove {count} feeds and all their articles. Empty folders will be kept. This action cannot be undone.',
+        deleteFeedsConfirmMsg:
+          'Permanently remove {count} feeds and all their articles. Empty folders will be kept. This action cannot be undone.',
         deleteFeedsConfirmBtn: 'Delete All Feeds',
         deleteFeedsSuccessTitle: 'Feeds Deleted',
         deleteFeedsSuccessMsg: '{count} feeds and their articles were removed.',
@@ -531,7 +561,8 @@ export const translations = {
           monthly: 'Monthly (every 30 days)'
         },
         maxBackups: 'Max backups to keep',
-        maxBackupsHint: 'Oldest automatic backup files will be safely rotated when new ones are created.',
+        maxBackupsHint:
+          'Oldest automatic backup files will be safely rotated when new ones are created.',
         backupLocation: 'Backup folder',
         defaultLocation: 'Default directory',
         customLocation: 'Custom directory',
@@ -618,7 +649,8 @@ export const translations = {
       desc: 'Your personal RSS reader. Fast, private, and distraction-free.',
       maintenance: 'System & Updates',
       autoUpdates: 'Automatic update checks',
-      autoUpdatesHint: 'Silently checks on startup and every 6 hours. Downloading and installing always ask first.',
+      autoUpdatesHint:
+        'Silently checks on startup and every 6 hours. Downloading and installing always ask first.',
       openFolder: 'Open data folder',
       checkUpdates: 'Check for updates',
       close: 'Close',
@@ -692,7 +724,8 @@ export const translations = {
       placeholderName: 'Enter custom feed name...',
       previewItemsLabel: 'Preview Items',
       examplesToggle: 'Browse Examples',
-      examplesHint: 'Choose an example to populate the URL and preview it. It will not be added yet.',
+      examplesHint:
+        'Choose an example to populate the URL and preview it. It will not be added yet.',
       exampleCategories: {
         reddit: 'Reddit',
         youtube: 'YouTube',
@@ -764,34 +797,36 @@ export const translations = {
       empty: 'No notifications',
       alreadySeen: 'Already Seen',
       limitReached: 'Limit reached',
-      limitNotice: 'History has reached the configured limit ({limit}). Older seen notifications will be pruned to make room for new ones.',
+      limitNotice:
+        'History has reached the configured limit ({limit}). Older seen notifications will be pruned to make room for new ones.',
       historyFullBadge: '{count} / {limit} MAX'
     },
     mainProcess: {
       tray: {
+        statusVisible: 'Visible',
+        statusMinimized: 'Minimized',
+        statusHidden: 'Hidden',
+        show: 'Show CyberFeeds',
+        hide: 'Hide CyberFeeds',
         showHide: 'Show / Hide',
-        recentArticles: 'Recent articles',
-        noRecentArticles: 'No recent articles',
-        viewAllArticles: 'View all articles...',
-        recentNotifications: 'Recent articles',
-        noRecentNotifications: 'No recent articles',
-        viewAllNotifications: 'View all articles...',
-        notifications: 'Notifications panel...',
-        settings: 'Configuration...',
         updateFeeds: 'Refresh feeds',
         pauseFeeds: 'Pause feeds',
         resumeFeeds: 'Resume feeds',
-        loadingFeeds: 'Loading feeds...',
+        settings: 'Settings...',
         help: 'Help',
-        faq: 'Frequently Asked Questions',
+        back: 'Back',
+        docs: 'Online documentation',
+        faq: 'Frequently asked questions',
         changelog: 'Changelog',
-        homepage: 'Website',
+        website: 'Website',
         donate: 'Donate',
-        about: 'About...',
-        checkUpdates: 'Check for Update...',
-        quit: 'Exit',
+        issues: 'Report an issue',
+        about: 'About CyberFeeds...',
+        checkUpdates: 'Check for updates...',
         suite: 'More from CyberGems',
-        viewAllApps: 'More details online...'
+        suiteAll: 'More details online...',
+        quit: 'Exit CyberFeeds',
+        headerTooltip: 'About CyberFeeds'
       },
       webviewCtx: {
         copyTitle: 'Copy title',
@@ -815,7 +850,8 @@ export const translations = {
       welcomeBack: 'Welcome back',
       editName: 'Edit display name',
       emptyTitle: 'Your reading space',
-      emptySubtitle: 'Select an article from the list to begin reading, or use the keyboard shortcuts to browse.',
+      emptySubtitle:
+        'Select an article from the list to begin reading, or use the keyboard shortcuts to browse.',
       allCaughtUp: 'No unread articles',
       allCaughtUpDesc: 'There are no unread articles in your feeds.',
       unreadArticlesCount: '{count} unread articles',
@@ -838,7 +874,8 @@ export const translations = {
     },
     closeDialog: {
       title: 'Close window',
-      description: 'What would you like to do when closing the window? Minimizing to tray keeps CyberFeeds in the background; quitting closes it completely.',
+      description:
+        'What would you like to do when closing the window? Minimizing to tray keeps CyberFeeds in the background; quitting closes it completely.',
       minimizeToTray: 'Minimize to tray',
       minimizeToTrayDesc: 'Keeps CyberFeeds in the background',
       quit: 'Quit',
@@ -977,23 +1014,29 @@ export const translations = {
       statusCard: {
         syncingLabel: 'Sincronizando',
         syncingTitle: 'Obteniendo artículos...',
-        syncingYouTubeDesc: 'Conectando con YouTube y procesando los últimos vídeos. Estarán listos en unos instantes.',
+        syncingYouTubeDesc:
+          'Conectando con YouTube y procesando los últimos vídeos. Estarán listos en unos instantes.',
         syncingRedditDesc: 'Conectando con Reddit y recuperando las publicaciones más recientes.',
         syncingDesc: 'Descargando y organizando el contenido reciente de esta fuente.',
         issueLabel: 'Problema de conexión',
         issueTitle: 'No se pudieron obtener artículos',
-        issueYouTubeDesc: 'YouTube podría estar limitando temporalmente las solicitudes o la URL del canal requiere verificación.',
-        issueRedditDesc: 'Reddit podría no estar disponible temporalmente o tener un límite de velocidad.',
-        issueGenericDesc: 'No se pudo conectar con el servidor del feed. Comprueba la conexión o reintenta.',
+        issueYouTubeDesc:
+          'YouTube podría estar limitando temporalmente las solicitudes o la URL del canal requiere verificación.',
+        issueRedditDesc:
+          'Reddit podría no estar disponible temporalmente o tener un límite de velocidad.',
+        issueGenericDesc:
+          'No se pudo conectar con el servidor del feed. Comprueba la conexión o reintenta.',
         retryBtn: 'Reintentar sincronización',
         filterLabel: 'Filtros activos',
         filterTitle: 'Sin artículos con estos criterios',
         filterDesc: 'Prueba a cambiar tus términos de búsqueda o limpiar los filtros activos.',
         clearFiltersBtn: 'Limpiar filtros',
         emptyTrashTitle: 'La papelera está vacía',
-        emptyTrashDesc: 'Los artículos eliminados aparecerán aquí antes de ser borrados definitivamente.',
+        emptyTrashDesc:
+          'Los artículos eliminados aparecerán aquí antes de ser borrados definitivamente.',
         emptyStarredTitle: 'Sin artículos destacados',
-        emptyStarredDesc: 'Marca artículos con una estrella para guardarlos y consultarlos más tarde.',
+        emptyStarredDesc:
+          'Marca artículos con una estrella para guardarlos y consultarlos más tarde.',
         allCaughtUpLabel: 'Al día',
         allCaughtUpTitle: 'No hay artículos para mostrar',
         emptyYouTubeDesc: 'No se encontraron vídeos recientes en este canal de YouTube.',
@@ -1002,7 +1045,8 @@ export const translations = {
         checkNewBtn: 'Buscar artículos nuevos'
       },
       emptyLibraryTitle: 'Empieza tu lectura',
-      emptyLibraryDescription: 'Añade tu primer feed RSS o Atom, o importa una lista OPML para comenzar.',
+      emptyLibraryDescription:
+        'Añade tu primer feed RSS o Atom, o importa una lista OPML para comenzar.',
       trash: 'Papelera',
       emptyTrash: 'Vaciar papelera',
       loadingFeed: 'Descargando los últimos artículos...',
@@ -1048,10 +1092,12 @@ export const translations = {
           '¿Estás seguro de que deseas eliminar definitivamente "{title}"? Esta acción no se puede deshacer.',
         deletePermanentlyBtn: 'Eliminar definitivamente',
         restoreAllTrashTitle: 'Restaurar todos los artículos de la papelera',
-        restoreAllTrashMsg: '¿Estás seguro de que deseas restaurar todos los artículos de la papelera?',
+        restoreAllTrashMsg:
+          '¿Estás seguro de que deseas restaurar todos los artículos de la papelera?',
         restoreAllTrashBtn: 'Restaurar todos',
         removeAllFavoritesTitle: 'Quitar todos de Favoritos',
-        removeAllFavoritesMsg: '¿Estás seguro de que deseas quitar todos los artículos de Favoritos?',
+        removeAllFavoritesMsg:
+          '¿Estás seguro de que deseas quitar todos los artículos de Favoritos?',
         removeAllFavoritesBtn: 'Quitar todos'
       }
     },
@@ -1093,9 +1139,11 @@ export const translations = {
       pipAlwaysOnTop: 'Siempre visible',
       pipPinTooltip: 'Alternar siempre visible',
       autoPlayYouTube: 'Reproducir en CyberFeeds',
-      autoPlayYouTubeTooltip: 'Abrir videos de YouTube automáticamente en el reproductor de CyberFeeds',
+      autoPlayYouTubeTooltip:
+        'Abrir videos de YouTube automáticamente en el reproductor de CyberFeeds',
       videoFallbackTitle: 'Video externo',
-      videoFallbackDesc: 'Este medio requiere reproducirse en el navegador debido a restricciones del servidor.',
+      videoFallbackDesc:
+        'Este medio requiere reproducirse en el navegador debido a restricciones del servidor.',
       videoFallbackBtn: 'Ver video en el navegador',
       searchInArticle: 'Buscar en el artículo',
       searchBtn: 'Buscar',
@@ -1165,8 +1213,10 @@ export const translations = {
           m2: '2 minutos',
           m5: '5 minutos'
         },
-        pollOnlyWhenUnfocused: 'Sólo obtener artículos automáticamente si la aplicación no está enfocada',
-        pollOnlyWhenUnfocusedHint: 'Conserva tu posición en la lista mientras lees. La obtención automática se reanuda cuando CyberFeeds pasa a segundo plano o pierde el foco.',
+        pollOnlyWhenUnfocused:
+          'Sólo obtener artículos automáticamente si la aplicación no está enfocada',
+        pollOnlyWhenUnfocusedHint:
+          'Conserva tu posición en la lista mientras lees. La obtención automática se reanuda cuando CyberFeeds pasa a segundo plano o pierde el foco.',
         theme: 'Tema',
         themes: {
           dark: 'CyberFeeds',
@@ -1197,37 +1247,46 @@ export const translations = {
         pickTooltip: 'Buscar ejecutable del navegador',
         searchTitle: 'Búsqueda de artículos',
         instantSearch: 'Búsqueda instantánea al teclear',
-        instantSearchHint: 'Cuando está desactivada, presiona Enter en la barra para buscar (recomendado para librerías con miles de artículos).',
+        instantSearchHint:
+          'Cuando está desactivada, presiona Enter en la barra para buscar (recomendado para librerías con miles de artículos).',
         readingTitle: 'Lector de artículos',
         selectionToolbar: 'Barra flotante al seleccionar texto',
-        selectionToolbarHint: 'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.',
+        selectionToolbarHint:
+          'Muestra una barra flotante con opciones de Buscar, Copiar y Traducir al seleccionar texto en los artículos.',
         autoPlayYouTube: 'Reproducir videos de YouTube en CyberFeeds',
-        autoPlayYouTubeHint: 'Incrusta y reproduce videos de YouTube automáticamente al ver artículos.',
+        autoPlayYouTubeHint:
+          'Incrusta y reproduce videos de YouTube automáticamente al ver artículos.',
         personalizationTitle: 'Personalización y bienvenida',
         userName: 'Tu nombre',
         userNamePlaceholder: 'ej. Usuario',
-        userNameHint: 'Se muestra en los saludos en la app. Déjalo en blanco para mostrar solo el saludo sin nombre.',
+        userNameHint:
+          'Se muestra en los saludos en la app. Déjalo en blanco para mostrar solo el saludo sin nombre.',
         leaveNameEmpty: 'Dejar vacío',
         useDefaultUserName: "Usar 'Usuario'",
         clearName: 'Borrar nombre',
         showWelcomeGreeting: 'Mostrar saludos de bienvenida',
-        showWelcomeGreetingHint: 'Muestra un estado dinámico con saludo en la barra superior y pantalla de bienvenida.',
+        showWelcomeGreetingHint:
+          'Muestra un estado dinámico con saludo en la barra superior y pantalla de bienvenida.',
         showSuitePromo: 'Mostrar recomendaciones de la suite',
-        showSuitePromoHint: 'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.',
+        showSuitePromoHint:
+          'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.',
         suitePromoTitle: 'Suite CyberGems',
         articleTabsTitle: 'Pestañas de artículos y sesión',
         articleTabsSession: 'Al iniciar',
-        articleTabsSessionHint: 'Elige si deseas restaurar las pestañas de artículos abiertas anteriormente o empezar con un espacio limpio.',
+        articleTabsSessionHint:
+          'Elige si deseas restaurar las pestañas de artículos abiertas anteriormente o empezar con un espacio limpio.',
         articleTabsSessionRestore: 'Restaurar sesión anterior',
         articleTabsSessionClean: 'Iniciar en limpio'
       },
       filters: {
         title: 'Filtros y reglas',
         priorityTitle: 'Temas prioritarios (destacados)',
-        priorityDesc: 'Los artículos que coincidan con estas palabras se destacarán con una estrella y se podrán filtrar con 1 clic en la lista.',
+        priorityDesc:
+          'Los artículos que coincidan con estas palabras se destacarán con una estrella y se podrán filtrar con 1 clic en la lista.',
         priorityPlaceholder: 'Añade una palabra (ej. release, IA, seguridad) y presiona Enter...',
         muteTitle: 'Reglas de ruido y silenciado',
-        muteDesc: 'Suprime artículos que coincidan con palabras no deseadas para mantener tus lecturas limpias y enfocadas.',
+        muteDesc:
+          'Suprime artículos que coincidan con palabras no deseadas para mantener tus lecturas limpias y enfocadas.',
         mutePlaceholder: 'Añade una palabra (ej. patrocinado, sorteo, cripto) y presiona Enter...',
         muteAction: 'Acción al coincidir:',
         muteActionHide: 'Ocultar artículo de la lista',
@@ -1249,16 +1308,21 @@ export const translations = {
           detailed: 'Detallado',
           compact: 'Compacto'
         },
-        displayModeHint: 'Automático muestra las tarjetas completas con texto e imágenes, adaptándose a compacto si el espacio es muy reducido.',
+        displayModeHint:
+          'Automático muestra las tarjetas completas con texto e imágenes, adaptándose a compacto si el espacio es muy reducido.',
         displayModeHints: {
-          automatic: 'Muestra las tarjetas completas con texto e imágenes, adaptándose automáticamente a modo compacto solo si el espacio en pantalla es muy reducido.',
-          detailed: 'Muestra siempre las tarjetas completas con título, texto del artículo, imagen destacada y botones de acción con texto.',
-          compact: 'Muestra tarjetas reducidas con solo el título e iconos de acción, sin texto de vista previa ni imágenes, ocupando el mínimo espacio.'
+          automatic:
+            'Muestra las tarjetas completas con texto e imágenes, adaptándose automáticamente a modo compacto solo si el espacio en pantalla es muy reducido.',
+          detailed:
+            'Muestra siempre las tarjetas completas con título, texto del artículo, imagen destacada y botones de acción con texto.',
+          compact:
+            'Muestra tarjetas reducidas con solo el título e iconos de acción, sin texto de vista previa ni imágenes, ocupando el mínimo espacio.'
         },
         preloadImages: 'Mostrar solo cuando la imagen esté cargada',
         disableOnFullscreen: 'Desactivar en aplicaciones a pantalla completa (juegos, videos)',
         closeOnViewInApp: 'Cerrar todas las tarjetas al ver en la app',
-        closeOnViewInAppHint: 'Si está desactivado, solo se descarta la notificación que abres; las demás siguen visibles.',
+        closeOnViewInAppHint:
+          'Si está desactivado, solo se descarta la notificación que abres; las demás siguen visibles.',
         displayMonitor: 'Pantalla / Monitor',
         activeDisplay: 'Monitor activo (donde está el cursor)',
         singleDisplay: 'Se detectó una sola pantalla ({width}×{height})',
@@ -1273,15 +1337,19 @@ export const translations = {
         },
         duration: 'Duración (segundos)',
         alwaysPauseOnHover: 'Pausar siempre de inmediato al detectar el ratón',
-        alwaysPauseOnHoverHint: 'Pausa la notificación de inmediato si el ratón está encima, incluso si ya estaba quieto en esa posición. Desactivado (predeterminado): la cuenta regresiva continúa si el ratón ya estaba quieto y solo se pausa si lo mueves sobre ella.',
+        alwaysPauseOnHoverHint:
+          'Pausa la notificación de inmediato si el ratón está encima, incluso si ya estaba quieto en esa posición. Desactivado (predeterminado): la cuenta regresiva continúa si el ratón ya estaba quieto y solo se pausa si lo mueves sobre ella.',
         maxStack: 'Máximo de notificaciones en la pila',
-        maxStackHint: 'El límite de altura puede mostrar menos tarjetas a la vez; las demás quedan disponibles al desplazarte.',
+        maxStackHint:
+          'El límite de altura puede mostrar menos tarjetas a la vez; las demás quedan disponibles al desplazarte.',
         historyLimit: 'Límite del historial de notificaciones',
-        historyLimitHint: 'Cantidad máxima de notificaciones para conservar en el historial. Las más antiguas ya vistas se descartan primero. Selecciona Sin límite para conservar todas.',
+        historyLimitHint:
+          'Cantidad máxima de notificaciones para conservar en el historial. Las más antiguas ya vistas se descartan primero. Selecciona Sin límite para conservar todas.',
         unlimited: 'Sin límite',
         defaultPreset: 'Predeterminado',
         maxHeight: 'Altura máxima de la ventana (% de pantalla)',
-        maxHeightHint: 'Mantiene la ventana y sus controles superiores dentro de la pantalla seleccionada.',
+        maxHeightHint:
+          'Mantiene la ventana y sus controles superiores dentro de la pantalla seleccionada.',
         snoozeDuration: 'Duración de posponer',
         soundEnabled: 'Habilitar sonido',
         alertSound: 'Sonido de alerta',
@@ -1297,7 +1365,8 @@ export const translations = {
         openInBrowser: 'Abrir en el navegador',
         openBehaviorHint: 'El navegador es el configurado en General.',
         ignoredFeeds: 'Feeds ignorados',
-        ignoredFeedsHint: 'Estos feeds se siguen actualizando; simplemente no enviarán notificaciones.',
+        ignoredFeedsHint:
+          'Estos feeds se siguen actualizando; simplemente no enviarán notificaciones.',
         ignoredFeedsEmpty: 'Aún no hay feeds',
         mutedCount: '{count} silenciados',
         mutedCountOne: '1 silenciado'
@@ -1306,16 +1375,17 @@ export const translations = {
         title: 'Tamaños de texto individuales',
         interfaceScaleTitle: 'Escala de interfaz',
         interfaceScale: 'Escala de interfaz: {size}%',
-        interfaceScaleHint: 'Escala toda la aplicación. Ajuste cada área de texto por separado abajo.',
+        interfaceScaleHint:
+          'Escala toda la aplicación. Ajuste cada área de texto por separado abajo.',
         sidebar: 'Barra lateral: {size}px',
         articleList: 'Lista de artículos: {size}px',
         reader: 'Lector: {size}px',
         readerPreview: 'Así se verá el texto de los artículos.',
-        explanation:
-          'Ajuste por separado la barra lateral, la lista de artículos y el lector.'
+        explanation: 'Ajuste por separado la barra lateral, la lista de artículos y el lector.'
       },
       backupData: {
-        explanation: 'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.',
+        explanation:
+          'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.',
         backupsSection: 'Copias de seguridad',
         feedListsSection: 'Listas de feeds',
         opmlExplanation: 'Importa o exporta tus feeds y carpetas como un archivo OPML.',
@@ -1330,22 +1400,27 @@ export const translations = {
         opmlExportFailTitle: 'Error al exportar OPML',
         opmlExportFailMsg: 'No se pudo exportar el archivo OPML: {error}',
         storageSection: 'Almacenamiento y diagnóstico',
-        storageExplanation: 'Abre los datos de CyberFeeds o ejecuta diagnósticos cuando necesites revisar la biblioteca local.',
+        storageExplanation:
+          'Abre los datos de CyberFeeds o ejecuta diagnósticos cuando necesites revisar la biblioteca local.',
         openDataFolder: 'Abrir carpeta de datos',
         dangerSection: 'Zona de peligro',
         resetSettingsTitle: 'Restablecer todos los ajustes',
-        resetSettingsExplanation: 'Restaura las preferencias a sus valores predeterminados. Tus feeds y artículos no se tocarán.',
+        resetSettingsExplanation:
+          'Restaura las preferencias a sus valores predeterminados. Tus feeds y artículos no se tocarán.',
         resetSettingsButton: 'Restablecer ajustes',
         resetSettingsConfirmTitle: '¿Restablecer todos los ajustes?',
-        resetSettingsConfirmMsg: 'Todas las preferencias de CyberFeeds volverán a sus valores predeterminados. Tus feeds y artículos no se modificarán.',
+        resetSettingsConfirmMsg:
+          'Todas las preferencias de CyberFeeds volverán a sus valores predeterminados. Tus feeds y artículos no se modificarán.',
         resetSettingsConfirmBtn: 'Restablecer ajustes',
         resetSettingsFailTitle: 'No se pudieron restablecer los ajustes',
         resetSettingsFailMsg: 'No se pudieron restablecer los ajustes: {error}',
         deleteFeedsTitle: 'Eliminar todos los feeds',
-        deleteFeedsExplanation: 'Elimina permanentemente todos los feeds y sus artículos. Las carpetas vacías se conservarán.',
+        deleteFeedsExplanation:
+          'Elimina permanentemente todos los feeds y sus artículos. Las carpetas vacías se conservarán.',
         deleteFeedsButton: 'Eliminar todos los feeds',
         deleteFeedsConfirmTitle: '¿Eliminar todos los feeds?',
-        deleteFeedsConfirmMsg: 'Se eliminarán permanentemente {count} feeds y todos sus artículos. Las carpetas vacías se conservarán. Esta acción no se puede deshacer.',
+        deleteFeedsConfirmMsg:
+          'Se eliminarán permanentemente {count} feeds y todos sus artículos. Las carpetas vacías se conservarán. Esta acción no se puede deshacer.',
         deleteFeedsConfirmBtn: 'Eliminar todos los feeds',
         deleteFeedsSuccessTitle: 'Feeds eliminados',
         deleteFeedsSuccessMsg: 'Se eliminaron {count} feeds y sus artículos.',
@@ -1385,7 +1460,8 @@ export const translations = {
           monthly: 'Mensual (cada 30 días)'
         },
         maxBackups: 'Máximo de copias a conservar',
-        maxBackupsHint: 'Los respaldos automáticos más antiguos se rotarán automáticamente al crear nuevos.',
+        maxBackupsHint:
+          'Los respaldos automáticos más antiguos se rotarán automáticamente al crear nuevos.',
         backupLocation: 'Carpeta de respaldos',
         defaultLocation: 'Directorio predeterminado',
         customLocation: 'Directorio personalizado',
@@ -1428,7 +1504,8 @@ export const translations = {
         title: 'Mantenimiento',
         explanation:
           'Optimiza tu base de datos eliminando datos antiguos. Nota: Los artículos marcados con estrella (Favoritos) nunca se eliminan.',
-        trashRetention: 'Los artículos de la papelera se eliminan definitivamente automáticamente después de 30 días.',
+        trashRetention:
+          'Los artículos de la papelera se eliminan definitivamente automáticamente después de 30 días.',
         deleteOlder: 'Eliminar artículos leídos anteriores a (días)',
         autoClean: 'Limpieza automática al iniciar',
         runCleanBtn: 'Ejecutar limpieza ahora'
@@ -1473,7 +1550,8 @@ export const translations = {
       desc: 'Tu lector de RSS personal. Rápido, privado y sin distracciones.',
       maintenance: 'Sistema y Actualizaciones',
       autoUpdates: 'Comprobación automática de actualizaciones',
-      autoUpdatesHint: 'Comprueba en silencio al iniciar y cada 6 horas. Descargar e instalar siempre piden tu confirmación.',
+      autoUpdatesHint:
+        'Comprueba en silencio al iniciar y cada 6 horas. Descargar e instalar siempre piden tu confirmación.',
       openFolder: 'Abrir carpeta de datos',
       checkUpdates: 'Buscar actualizaciones',
       close: 'Cerrar',
@@ -1620,34 +1698,36 @@ export const translations = {
       empty: 'Sin notificaciones',
       alreadySeen: 'Ya vistas',
       limitReached: 'Límite alcanzado',
-      limitNotice: 'El historial ha alcanzado el límite configurado ({limit}). Las notificaciones más antiguas ya vistas se irán descartando para admitir nuevas.',
+      limitNotice:
+        'El historial ha alcanzado el límite configurado ({limit}). Las notificaciones más antiguas ya vistas se irán descartando para admitir nuevas.',
       historyFullBadge: '{count} / {limit} MÁX'
     },
     mainProcess: {
       tray: {
+        statusVisible: 'Visible',
+        statusMinimized: 'Minimizado',
+        statusHidden: 'Oculto',
+        show: 'Mostrar CyberFeeds',
+        hide: 'Ocultar CyberFeeds',
         showHide: 'Mostrar / Ocultar',
-        recentArticles: 'Artículos recientes',
-        noRecentArticles: 'Sin artículos recientes',
-        viewAllArticles: 'Ver todos los artículos...',
-        recentNotifications: 'Artículos recientes',
-        noRecentNotifications: 'Sin artículos recientes',
-        viewAllNotifications: 'Ver todos los artículos...',
-        notifications: 'Panel de notificaciones...',
-        settings: 'Configuración...',
         updateFeeds: 'Actualizar feeds',
         pauseFeeds: 'Pausar feeds',
         resumeFeeds: 'Reactivar feeds',
-        loadingFeeds: 'Cargando feeds...',
+        settings: 'Configuración...',
         help: 'Ayuda',
+        back: 'Volver',
+        docs: 'Documentación en línea',
         faq: 'Preguntas frecuentes',
-        changelog: 'Changelog',
-        homepage: 'Sitio web',
+        changelog: 'Registro de cambios',
+        website: 'Sitio web',
         donate: 'Donar',
-        about: 'Acerca de...',
+        issues: 'Reportar un problema',
+        about: 'Acerca de CyberFeeds...',
         checkUpdates: 'Buscar actualizaciones...',
-        quit: 'Salir',
         suite: 'Más de CyberGems',
-        viewAllApps: 'Más detalles online...'
+        suiteAll: 'Más detalles online...',
+        quit: 'Salir de CyberFeeds',
+        headerTooltip: 'Acerca de CyberFeeds'
       },
       webviewCtx: {
         copyTitle: 'Copiar título',
@@ -1671,7 +1751,8 @@ export const translations = {
       welcomeBack: 'Te damos la bienvenida',
       editName: 'Editar nombre mostrado',
       emptyTitle: 'Su espacio de lectura',
-      emptySubtitle: 'Seleccione un artículo de la lista para comenzar a leer, o utilice los atajos de teclado para navegar.',
+      emptySubtitle:
+        'Seleccione un artículo de la lista para comenzar a leer, o utilice los atajos de teclado para navegar.',
       allCaughtUp: 'No hay artículos sin leer',
       allCaughtUpDesc: 'No hay artículos sin leer en sus feeds.',
       unreadArticlesCount: '{count} artículos sin leer',
@@ -1679,7 +1760,8 @@ export const translations = {
       unreadArticleLabel: 'artículo sin leer',
       unreadArticlesLabel: 'artículos sin leer',
       activeFeeds: '{count} fuentes activas',
-      keyboardHint: 'Pulse J / K para navegar entre artículos, Enter para leer o M para marcar como leído.',
+      keyboardHint:
+        'Pulse J / K para navegar entre artículos, Enter para leer o M para marcar como leído.',
       quickActions: 'Atajos de teclado',
       navigateArticles: 'Navegar por artículos',
       nextArticle: 'Artículo siguiente',
@@ -1694,7 +1776,8 @@ export const translations = {
     },
     closeDialog: {
       title: 'Cerrar ventana',
-      description: '¿Qué te gustaría hacer al cerrar la ventana? Minimizar a la bandeja mantiene CyberFeeds en segundo plano; salir la cierra por completo.',
+      description:
+        '¿Qué te gustaría hacer al cerrar la ventana? Minimizar a la bandeja mantiene CyberFeeds en segundo plano; salir la cierra por completo.',
       minimizeToTray: 'Minimizar a la bandeja',
       minimizeToTrayDesc: 'Mantiene CyberFeeds en segundo plano',
       quit: 'Salir',
@@ -1705,4 +1788,3 @@ export const translations = {
     }
   }
 }
-

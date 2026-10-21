@@ -90,8 +90,8 @@ export interface AppSettings {
   readingMaxWidth: number
   readingTheme: 'default' | 'sepia' | 'dark'
   interfaceScale: number
-  sidebarFontSize: number   // px — controls sidebar items font size
-  listFontSize: number       // px — controls article list font size
+  sidebarFontSize: number // px — controls sidebar items font size
+  listFontSize: number // px — controls article list font size
   notifications: NotificationSettings
   pollingEnabled: boolean
   fetchOnStartup: boolean
@@ -153,9 +153,15 @@ export type NotificationDisplayMode = 'automatic' | 'detailed' | 'compact'
 
 export interface NotificationSettings {
   enabled: boolean
-  position: 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
+  position:
+    | 'top-left'
+    | 'top-center'
+    | 'top-right'
+    | 'bottom-left'
+    | 'bottom-center'
+    | 'bottom-right'
   displayId: number
-  displayBounds?: { x: number; y: number; width: number; height: number }  // For stable display matching
+  displayBounds?: { x: number; y: number; width: number; height: number } // For stable display matching
   marginX: number
   marginY: number
   maxWidth: number
@@ -213,6 +219,19 @@ export interface KeyboardShortcuts {
   notifications: KeyboardShortcut
   settings: KeyboardShortcut
   fetch: KeyboardShortcut
+}
+
+export interface TrayMenuSnapshot {
+  version: string
+  windowState: 'visible' | 'minimized' | 'hidden'
+  hotkey: string | null
+  fetchHotkey: string | null
+  settingsHotkey: string | null
+  pollingEnabled: boolean
+  isPolling: boolean
+  language: 'es' | 'en'
+  theme: string
+  showSuitePromo: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

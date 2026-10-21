@@ -1,11 +1,11 @@
-import { Tray, Menu, app, BrowserWindow, nativeImage, globalShortcut, screen, shell, net } from 'electron'
-import fs from 'fs'
+import { Tray, app, BrowserWindow, nativeImage, globalShortcut, screen, ipcMain } from 'electron'
 import path from 'path'
+import { is } from '@electron-toolkit/utils'
 import { pollFeeds } from './polling'
 import { restoreMainWindow } from './index'
 import * as db from './db'
 import { translations } from '../shared/translations'
-import type { KeyboardShortcuts } from '../shared/types'
+import type { KeyboardShortcuts, TrayMenuSnapshot } from '../shared/types'
 
 let tray: Tray | null = null
 let _mainWindow: BrowserWindow | null = null
@@ -19,193 +19,10 @@ let currentScaleFactor = 0
 let cachedIdleImage: Electron.NativeImage | null = null
 const cachedFrames: Electron.NativeImage[] = []
 
-const trayFaviconCache = new Map<string, Electron.NativeImage>()
-let menuRebuildTimer: NodeJS.Timeout | null = null
-
-const trayMenuIconCache = new Map<string, Electron.NativeImage>()
-
-// Raster PNGs are more reliable than SVG data URLs in Windows native menus.
-// Sources are 64px, then reduced to the display's physical 16 logical pixels.
-function getTrayMenuIcon(filename: string): Electron.NativeImage {
-  let scale = screen.getPrimaryDisplay().scaleFactor
-  try {
-    if (tray && !tray.isDestroyed()) {
-      const bounds = tray.getBounds()
-      scale = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y }).scaleFactor
-    }
-  } catch {
-    // Keep the primary display scale as a safe fallback.
-  }
-  const size = Math.max(16, Math.round(16 * scale))
-  const cacheKey = `${filename}:${size}`
-  const cached = trayMenuIconCache.get(cacheKey)
-  if (cached) return cached
-
-  const source = nativeImage.createFromPath(
-    path.join(__dirname, '../../resources', 'menu-icons', filename)
-  )
-  const image = source.isEmpty()
-    ? nativeImage.createEmpty()
-    : source.resize({ width: size, height: size, quality: 'best' })
-  trayMenuIconCache.set(cacheKey, image)
-  return image
-}
-
-// Submenú "Más de CyberGems": lista canónica en resources/suite/suite.json
-// (copia local generada con _Website/scripts/build-suite-json.mjs; sin red).
-// Si el archivo falta, respaldo con las 4 hermanas principales.
-type SuiteEntry = { slug: string; name: string; site: string }
-interface SuiteJsonEntry {
-  slug?: unknown
-  name?: unknown
-  site?: unknown
-}
-
-// Same short, bilingual descriptions used by the CyberNotes suite menu.
-const SUITE_SHORT_DESCRIPTIONS: Record<string, { es: string; en: string }> = {
-  cyberclock: { es: 'Reloj de escritorio', en: 'Desktop Clock' },
-  cyberfeeds: { es: 'Lector RSS', en: 'RSS Reader' },
-  cyberlauncher: { es: 'Lanzador de apps', en: 'App Launcher' },
-  cybermanager: { es: 'Administrador de tareas', en: 'Task Manager' },
-  cybernotes: { es: 'Notas', en: 'Note Taking' },
-  cyberpaste: { es: 'Portapapeles', en: 'Clipboard Manager' },
-  cybersnap: { es: 'Captura de pantalla', en: 'Screen Capture' },
-  cybertray: { es: 'Accesos directos', en: 'Shortcut Manager' },
-  cyberviewer: { es: 'Visor de imágenes', en: 'Image Viewer' },
-  cyberwall: { es: 'Firewall', en: 'Firewall' }
-}
-
-function getSuiteShortDescription(slug: string, language: 'en' | 'es'): string {
-  return SUITE_SHORT_DESCRIPTIONS[slug]?.[language] ?? ''
-}
-
-let suiteAppsCache: SuiteEntry[] | null = null
-function loadSuiteApps(): SuiteEntry[] {
-  if (suiteAppsCache) return suiteAppsCache
-  const fallback: SuiteEntry[] = [
-    { slug: 'cybernotes', name: 'CyberNotes', site: 'https://cybergems.org/apps/cybernotes/' },
-    { slug: 'cyberpaste', name: 'CyberPaste', site: 'https://cybergems.org/apps/cyberpaste/' },
-    { slug: 'cybersnap', name: 'CyberSnap', site: 'https://cybergems.org/apps/cybersnap/' },
-    { slug: 'cyberviewer', name: 'CyberViewer', site: 'https://cybergems.org/apps/cyberviewer/' }
-  ]
-  try {
-    const resourcesDir = path.join(__dirname, '../../resources')
-    const raw = fs.readFileSync(path.join(resourcesDir, 'suite', 'suite.json'), 'utf8')
-    const parsed = JSON.parse(raw) as { apps?: SuiteJsonEntry[] }
-    if (Array.isArray(parsed?.apps) && parsed.apps.length > 0) {
-      const list: SuiteEntry[] = parsed.apps
-        .filter((a) => a && typeof a.slug === 'string' && typeof a.name === 'string')
-        .map((a) => ({
-          slug: a.slug as string,
-          name: String(a.name),
-          site: typeof a.site === 'string' && a.site ? a.site : `https://cybergems.org/apps/${a.slug}/`
-        }))
-      suiteAppsCache = list
-      return list
-    }
-  } catch {
-    /* respaldo */
-  }
-  suiteAppsCache = fallback
-  return suiteAppsCache
-}
-
-const suiteIconCache = new Map<string, Electron.NativeImage>()
-function loadSuiteIcon(slug: string): Electron.NativeImage | undefined {
-  const cached = suiteIconCache.get(slug)
-  if (cached) return cached.isEmpty() ? undefined : cached
-  try {
-    const resourcesDir = path.join(__dirname, '../../resources')
-    const img = nativeImage.createFromPath(path.join(resourcesDir, 'suite', `${slug}.png`))
-    if (!img.isEmpty()) {
-      const resized = img.resize({ width: 16, height: 16, quality: 'best' })
-      suiteIconCache.set(slug, resized)
-      return resized
-    }
-  } catch {
-    /* sin icono */
-  }
-  return undefined
-}
-
-function scheduleMenuRebuild(): void {
-  if (menuRebuildTimer) clearTimeout(menuRebuildTimer)
-  menuRebuildTimer = setTimeout(() => {
-    menuRebuildTimer = null
-    buildMenu()
-  }, 150)
-}
-
-function getTrayIcon(iconUrl?: string): Electron.NativeImage | undefined {
-  if (!iconUrl) return undefined
-  if (trayFaviconCache.has(iconUrl)) {
-    return trayFaviconCache.get(iconUrl)
-  }
-
-  if (iconUrl.startsWith('data:')) {
-    try {
-      const img = nativeImage.createFromDataURL(iconUrl)
-      if (!img.isEmpty()) {
-        const resized = img.resize({ width: 16, height: 16, quality: 'best' })
-        trayFaviconCache.set(iconUrl, resized)
-        return resized
-      }
-    } catch {
-      // ignore
-    }
-    return undefined
-  }
-
-  if (iconUrl.startsWith('http://') || iconUrl.startsWith('https://')) {
-    void fetchTrayFavicon(iconUrl)
-  }
-  return undefined
-}
-
-async function fetchTrayFavicon(url: string): Promise<void> {
-  if (trayFaviconCache.has(url)) return
-  try {
-    const res = await net.fetch(url)
-    if (res.ok) {
-      const buf = Buffer.from(await res.arrayBuffer())
-      const img = nativeImage.createFromBuffer(buf)
-      if (!img.isEmpty()) {
-        const resized = img.resize({ width: 16, height: 16, quality: 'best' })
-        trayFaviconCache.set(url, resized)
-        scheduleMenuRebuild()
-      }
-    }
-  } catch {
-    // Ignore fetch failure
-  }
-}
-
-function formatTrayArticleTitle(item: {
-  title: string
-  feedTitle?: string
-  feedName?: string
-  read?: number
-}): string {
-  const maxTitleLen = 46
-  const maxFeedLen = 16
-  const cleanTitle = (item.title || '').replace(/\s+/g, ' ').trim()
-  const truncatedTitle =
-    cleanTitle.length > maxTitleLen ? cleanTitle.slice(0, maxTitleLen) + '…' : cleanTitle
-
-  const feedName = item.feedTitle || item.feedName
-  let raw = truncatedTitle
-  if (feedName) {
-    const cleanFeed = feedName.replace(/\s+/g, ' ').trim()
-    const truncatedFeed =
-      cleanFeed.length > maxFeedLen ? cleanFeed.slice(0, maxFeedLen) + '…' : cleanFeed
-    raw = `[${truncatedFeed}] ${truncatedTitle}`
-  }
-  if (item.read === 0) {
-    raw = `• ${raw}`
-  }
-  // Escape ampersands so Windows doesn't interpret them as shortcut mnemonics
-  return raw.replace(/&/g, '&&')
-}
+let trayWindow: BrowserWindow | null = null
+let trayAnchor: { x: number; y: number } | null = null
+let currentTraySize = { width: 292, height: 380 }
+let ipcRegistered = false
 
 function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
   const resourcesDir = path.join(__dirname, '../../resources')
@@ -223,15 +40,22 @@ function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
     if (cachedFrames[frameNumber]) {
       return cachedFrames[frameNumber]
     }
-    const hiRes = nativeImage.createFromPath(path.join(resourcesDir, `tray-frame-${frameNumber}.png`))
+    const hiRes = nativeImage.createFromPath(
+      path.join(resourcesDir, `tray-frame-${frameNumber}.png`)
+    )
     if (!hiRes.isEmpty()) {
       const resized = hiRes.resize({ width: px, height: px, quality: 'best' })
       cachedFrames[frameNumber] = resized
       return resized
     }
-    const trayPng = nativeImage.createFromPath(path.join(resourcesDir, `tray-frame-${frameNumber}-32.png`))
+    const trayPng = nativeImage.createFromPath(
+      path.join(resourcesDir, `tray-frame-${frameNumber}-32.png`)
+    )
     if (!trayPng.isEmpty()) {
-      const resized = trayPng.getSize().width === px ? trayPng : trayPng.resize({ width: px, height: px, quality: 'best' })
+      const resized =
+        trayPng.getSize().width === px
+          ? trayPng
+          : trayPng.resize({ width: px, height: px, quality: 'best' })
       cachedFrames[frameNumber] = resized
       return resized
     }
@@ -248,7 +72,8 @@ function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
   const trayPng = nativeImage.createFromPath(path.join(resourcesDir, 'tray.png'))
   if (!trayPng.isEmpty()) {
     const { width } = trayPng.getSize()
-    cachedIdleImage = width === px ? trayPng : trayPng.resize({ width: px, height: px, quality: 'best' })
+    cachedIdleImage =
+      width === px ? trayPng : trayPng.resize({ width: px, height: px, quality: 'best' })
     return cachedIdleImage
   }
 
@@ -261,7 +86,7 @@ function updateTrayTooltip(busy: boolean): void {
   const version = app.getVersion()
   if (busy) {
     const lang = db.getSettings().language || 'en'
-    const loadingText = translations[lang]?.mainProcess?.tray?.loadingFeeds || 'Loading feeds...'
+    const loadingText = translations[lang]?.mainProcess?.tray?.updateFeeds || 'Loading feeds...'
     try {
       tray.setToolTip(`CyberFeeds v${version}: ${loadingText}`)
     } catch {
@@ -314,7 +139,6 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
         pulseStep++
         if (pulseStep >= activePulse.length) {
           pulseStep = 0
-          // Feeds predominantly receive incoming data (~65% inward), with occasional outgoing queries (~35% outward)
           activePulse = Math.random() < 0.65 ? INWARD_PULSE : OUTWARD_PULSE
         }
         currentFrame = activePulse[pulseStep]
@@ -347,46 +171,332 @@ export function setTrayActivity(source: 'polling' | 'batch', active: boolean): v
   }
 }
 
+function getMainWindowState(): 'visible' | 'minimized' | 'hidden' {
+  if (!_mainWindow || _mainWindow.isDestroyed()) return 'hidden'
+  if (_mainWindow.isMinimized()) return 'minimized'
+  if (!_mainWindow.isVisible()) return 'hidden'
+  return 'visible'
+}
+
+function getTrayMenuSnapshot(): TrayMenuSnapshot {
+  const version = app.getVersion()
+  const settings = db.getSettings()
+  const shortcuts = settings.shortcuts as KeyboardShortcuts
+  const winState = getMainWindowState()
+
+  return {
+    version,
+    windowState: winState,
+    hotkey: shortcuts?.showHide?.enabled ? shortcuts.showHide.accelerator : null,
+    fetchHotkey: shortcuts?.fetch?.enabled ? shortcuts.fetch.accelerator : null,
+    settingsHotkey: shortcuts?.settings?.enabled ? shortcuts.settings.accelerator : null,
+    pollingEnabled: settings.pollingEnabled !== false,
+    isPolling: activeActivities.has('polling'),
+    language: settings.language === 'es' ? 'es' : 'en',
+    theme: settings.theme || 'dark',
+    showSuitePromo: settings.showSuitePromo !== false
+  }
+}
+
+function applyTrayWindowGeometry(
+  anchorX: number,
+  anchorY: number,
+  width: number,
+  height: number
+): void {
+  if (!trayWindow || trayWindow.isDestroyed()) return
+
+  const point = { x: anchorX, y: anchorY }
+  const display = screen.getDisplayNearestPoint(point) || screen.getPrimaryDisplay()
+  const { workArea: wa, bounds: db } = display
+
+  const shadowPad = 12
+  const gap = 4
+
+  const cardW = width - 2 * shadowPad
+  const cardH = height - 2 * shadowPad
+
+  let cardX: number
+  let cardY: number
+
+  // Detect taskbar position
+  const isTaskbarBottom = wa.y + wa.height < db.y + db.height
+  const isTaskbarTop = wa.y > db.y
+  const isTaskbarLeft = wa.x > db.x
+  const isTaskbarRight = wa.x + wa.width < db.x + db.width
+
+  if (isTaskbarBottom) {
+    cardY = wa.y + wa.height - cardH - gap
+    cardX = anchorX - Math.round(cardW / 2)
+  } else if (isTaskbarTop) {
+    cardY = wa.y + gap
+    cardX = anchorX - Math.round(cardW / 2)
+  } else if (isTaskbarLeft) {
+    cardX = wa.x + gap
+    cardY = anchorY - Math.round(cardH / 2)
+  } else if (isTaskbarRight) {
+    cardX = wa.x + wa.width - cardW - gap
+    cardY = anchorY - Math.round(cardH / 2)
+  } else {
+    // Hidden taskbar fallback
+    if (anchorY > wa.y + wa.height / 2) {
+      cardY = anchorY - cardH - gap
+    } else {
+      cardY = anchorY + gap
+    }
+    cardX = anchorX - Math.round(cardW / 2)
+  }
+
+  // Clamp within work area bounds
+  cardX = Math.min(wa.x + wa.width - cardW, Math.max(wa.x, cardX))
+  cardY = Math.min(wa.y + wa.height - cardH, Math.max(wa.y, cardY))
+
+  const winX = cardX - shadowPad
+  const winY = cardY - shadowPad
+
+  trayWindow.setBounds({
+    x: winX,
+    y: winY,
+    width,
+    height
+  })
+}
+
+function ensureTrayWindow(): BrowserWindow {
+  if (trayWindow && !trayWindow.isDestroyed()) {
+    return trayWindow
+  }
+
+  trayWindow = new BrowserWindow({
+    width: currentTraySize.width,
+    height: currentTraySize.height,
+    show: false,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    backgroundColor: '#00000000',
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+      webSecurity: false,
+      backgroundThrottling: false
+    }
+  })
+
+  trayWindow.webContents.setBackgroundThrottling(false)
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
+  } else {
+    trayWindow.loadFile(path.join(__dirname, '../renderer/tray/index.html'))
+  }
+
+  trayWindow.on('blur', () => {
+    hideTrayMenu()
+  })
+
+  trayWindow.on('closed', () => {
+    trayWindow = null
+  })
+
+  return trayWindow
+}
+
+function showTrayMenu(): void {
+  const win = ensureTrayWindow()
+  if (win.isDestroyed()) return
+
+  let anchorX = 0
+  let anchorY = 0
+
+  if (tray && !tray.isDestroyed()) {
+    try {
+      const bounds = tray.getBounds()
+      if (bounds.width > 0 && bounds.height > 0) {
+        anchorX = Math.round(bounds.x + bounds.width / 2)
+        anchorY = Math.round(bounds.y + bounds.height / 2)
+      }
+    } catch {
+      // fallback
+    }
+  }
+
+  if (anchorX === 0 && anchorY === 0) {
+    const cursor = screen.getCursorScreenPoint()
+    anchorX = cursor.x
+    anchorY = cursor.y
+  }
+
+  trayAnchor = { x: anchorX, y: anchorY }
+  applyTrayWindowGeometry(anchorX, anchorY, currentTraySize.width, currentTraySize.height)
+
+  win.show()
+  win.focus()
+  win.webContents.send('tray:show')
+}
+
+export function hideTrayMenu(): void {
+  if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
+    trayWindow.hide()
+  }
+}
+
+function toggleTrayMenu(): void {
+  if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
+    hideTrayMenu()
+  } else {
+    showTrayMenu()
+  }
+}
+
+function handleTrayAction(action: string): void {
+  switch (action) {
+    case 'toggle': {
+      hideTrayMenu()
+      if (!_mainWindow || _mainWindow.isDestroyed()) return
+      if (getMainWindowState() === 'visible') {
+        _mainWindow.hide()
+      } else {
+        restoreMainWindow()
+      }
+      break
+    }
+    case 'poll': {
+      hideTrayMenu()
+      pollFeeds()
+      break
+    }
+    case 'togglePolling': {
+      const current = db.getSettings()
+      const pollingEnabled = !current.pollingEnabled
+      db.saveSettings({ ...current, pollingEnabled })
+      if (_mainWindow && !_mainWindow.isDestroyed()) {
+        _mainWindow.webContents.send('settings:pollingToggled', pollingEnabled)
+      }
+      if (trayWindow && !trayWindow.isDestroyed()) {
+        trayWindow.webContents.send('tray:show')
+      }
+      break
+    }
+    case 'settings': {
+      hideTrayMenu()
+      if (!_mainWindow || _mainWindow.isDestroyed()) return
+      restoreMainWindow()
+      _mainWindow.webContents.send('app:openSettings')
+      break
+    }
+    case 'about': {
+      hideTrayMenu()
+      if (!_mainWindow || _mainWindow.isDestroyed()) return
+      restoreMainWindow()
+      _mainWindow.webContents.send('app:openAbout', { checkUpdates: false })
+      break
+    }
+    case 'checkUpdates': {
+      hideTrayMenu()
+      if (!_mainWindow || _mainWindow.isDestroyed()) return
+      restoreMainWindow()
+      _mainWindow.webContents.send('app:openAbout', { checkUpdates: true })
+      break
+    }
+    case 'quit': {
+      hideTrayMenu()
+      app.quit()
+      break
+    }
+  }
+}
+
+function registerTrayIpc(): void {
+  if (ipcRegistered) return
+  ipcRegistered = true
+
+  ipcMain.handle('tray:getState', () => {
+    return getTrayMenuSnapshot()
+  })
+
+  ipcMain.handle('tray:action', (_event, action: string) => {
+    handleTrayAction(action)
+  })
+
+  ipcMain.handle('tray:hide', () => {
+    hideTrayMenu()
+  })
+
+  ipcMain.handle('tray:reportSize', (_event, size: { width: number; height: number }) => {
+    if (!size || typeof size.width !== 'number' || typeof size.height !== 'number') return
+    currentTraySize = {
+      width: Math.max(260, Math.min(450, Math.round(size.width))),
+      height: Math.max(200, Math.min(800, Math.round(size.height)))
+    }
+    if (trayAnchor) {
+      applyTrayWindowGeometry(
+        trayAnchor.x,
+        trayAnchor.y,
+        currentTraySize.width,
+        currentTraySize.height
+      )
+    }
+  })
+}
+
 export function createTray(mainWindow: BrowserWindow): Tray {
   tray = new Tray(loadTrayFrame())
   _mainWindow = mainWindow
 
-  buildMenu()
+  registerTrayIpc()
   registerGlobalShortcuts()
-
   updateTrayTooltip(false)
 
+  // Preload hidden tray window
+  ensureTrayWindow()
+
+  // Left click on tray: toggle main window (and dismiss tray menu)
   tray.on('click', () => {
+    hideTrayMenu()
     const win = _mainWindow
     if (!win || win.isDestroyed()) return
-    if (win.isVisible()) {
+    if (getMainWindowState() === 'visible') {
       win.hide()
     } else {
       restoreMainWindow()
     }
   })
 
+  // Double click: restore main window
   tray.on('double-click', () => {
+    hideTrayMenu()
     restoreMainWindow()
   })
 
+  // Right click: toggle floating tray menu card
   tray.on('right-click', () => {
-    buildMenu()
+    toggleTrayMenu()
   })
 
-  // Rebuild menu automatically when window is shown or hidden to update label
-  mainWindow.on('show', () => {
-    buildMenu()
-  })
-  mainWindow.on('hide', () => {
-    buildMenu()
-  })
+  // Re-broadcast state when main window visibility changes
+  const notifyState = (): void => {
+    if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
+      trayWindow.webContents.send('tray:show')
+    }
+  }
+
+  mainWindow.on('show', notifyState)
+  mainWindow.on('hide', notifyState)
+  mainWindow.on('minimize', notifyState)
+  mainWindow.on('restore', notifyState)
 
   return tray
 }
 
 export function rebuildTrayMenu(): void {
-  scheduleMenuRebuild()
+  if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
+    trayWindow.webContents.send('tray:show')
+  }
 }
 
 export function rebuildGlobalShortcuts(): void {
@@ -404,7 +514,7 @@ function registerGlobalShortcuts(): void {
     globalShortcut.register(shortcuts.showHide.accelerator, () => {
       const win = _mainWindow
       if (!win || win.isDestroyed()) return
-      if (win.isVisible()) {
+      if (getMainWindowState() === 'visible') {
         win.hide()
       } else {
         restoreMainWindow()
@@ -442,13 +552,10 @@ function registerGlobalShortcuts(): void {
 }
 
 function unregisterGlobalShortcuts(): void {
-  // Unregister anything we believe we registered during this runtime.
   for (const accelerator of registeredGlobalShortcuts) {
     globalShortcut.unregister(accelerator)
   }
 
-  // Extra safety: also try to unregister the current DB shortcuts.
-  // This prevents stale registrations surviving across hot-reloads/resets.
   try {
     const shortcuts = db.getSettings().shortcuts as KeyboardShortcuts
     const candidates = [
@@ -468,274 +575,25 @@ function unregisterGlobalShortcuts(): void {
   registeredGlobalShortcuts = []
 }
 
-
-function buildMenu(): void {
-  if (!tray || tray.isDestroyed()) return
-  const version = app.getVersion()
-  const settings = db.getSettings()
-  const lang = settings.language || 'en'
-  const suiteLanguage = lang === 'es' ? 'es' : 'en'
-  const t = translations[lang].mainProcess.tray
-  const shortcuts = settings.shortcuts as KeyboardShortcuts
-
-  const recentArticles = db.getArticles({ limit: 15 })
-  const unreadCount = db.getArticleCount({ unreadOnly: true })
-  const unseenCount = db.getUnseenNotificationCount()
-  const recentLabel =
-    unreadCount > 0 ? `${t.recentArticles} (${unreadCount})` : t.recentArticles
-
-  const resourcesDir = path.join(__dirname, '../../resources')
-  const iconsDir = path.join(resourcesDir, 'menu-icons')
-  const iconShowHide = getTrayMenuIcon('show-hide.png')
-  const iconFetch = getTrayMenuIcon('refresh.png')
-  const iconPause = getTrayMenuIcon('pause.png')
-  const iconPlay = getTrayMenuIcon('play-green.png')
-  const iconRecentArticles = getTrayMenuIcon('recent-articles.png')
-  const iconNotifications = getTrayMenuIcon('notifications.png')
-  const iconSettings = getTrayMenuIcon('settings.png')
-  const iconHelp = getTrayMenuIcon('help.png')
-  const iconFaq = getTrayMenuIcon('faq.png')
-  const iconChangelog = getTrayMenuIcon('changelog.png')
-  const iconHome = getTrayMenuIcon('homepage.png')
-  const iconDonate = getTrayMenuIcon('donate.png')
-  const iconAbout = getTrayMenuIcon('about.png')
-  const iconUpdate = getTrayMenuIcon('update.png')
-  const iconSuite = getTrayMenuIcon('suite.png')
-  const iconQuit = getTrayMenuIcon('quit.png')
-
-  const brandIcon = nativeImage.createFromPath(path.join(iconsDir, 'brand.png'))
-  const iconBrand = brandIcon.isEmpty()
-    ? nativeImage.createFromPath(path.join(resourcesDir, 'tray.png')).resize({ width: 16, height: 16, quality: 'best' })
-    : brandIcon
-
-  const isVisible = _mainWindow && !_mainWindow.isDestroyed() && _mainWindow.isVisible()
-  const parts = t.showHide.split(' / ')
-  const dynamicLabel = isVisible
-    ? (parts[1] || 'Hide')
-    : (parts[0] || 'Show')
-
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: `CyberFeeds v${version}`,
-      icon: iconBrand,
-      click: () => {
-        const win = _mainWindow
-        if (!win || win.isDestroyed()) return
-        restoreMainWindow()
-        win.webContents.send('app:openAbout', { checkUpdates: false })
-      }
-    },
-    { type: 'separator' },
-    {
-      label: dynamicLabel,
-      icon: iconShowHide,
-      accelerator: shortcuts.showHide.enabled ? shortcuts.showHide.accelerator : undefined,
-      click: () => {
-        const win = _mainWindow
-        if (!win || win.isDestroyed()) return
-        if (win.isVisible()) {
-          win.hide()
-        } else {
-          restoreMainWindow()
-        }
-      }
-    },
-    {
-      label: t.updateFeeds,
-      icon: iconFetch,
-      accelerator: shortcuts.fetch.enabled ? shortcuts.fetch.accelerator : undefined,
-      click: () => { pollFeeds() }
-    },
-    {
-      label: settings.pollingEnabled ? t.pauseFeeds : t.resumeFeeds,
-      icon: settings.pollingEnabled ? iconPause : iconPlay,
-      click: () => {
-        const current = db.getSettings()
-        const pollingEnabled = !current.pollingEnabled
-        db.saveSettings({ ...current, pollingEnabled })
-        buildMenu()
-        if (_mainWindow && !_mainWindow.isDestroyed()) {
-          _mainWindow.webContents.send('settings:pollingToggled', pollingEnabled)
-        }
-      }
-    },
-    {
-      label: recentLabel,
-      icon: iconRecentArticles,
-      submenu:
-        recentArticles.length === 0
-          ? [
-              {
-                label: t.noRecentArticles,
-                enabled: false
-              }
-            ]
-          : [
-              ...recentArticles.map((article) => ({
-                label: formatTrayArticleTitle({
-                  title: article.title,
-                  feedTitle: article.feedTitle,
-                  read: article.read
-                }),
-                icon: getTrayIcon(article.feedIcon),
-                click: () => {
-                  const win = _mainWindow
-                  if (!win || win.isDestroyed()) return
-                  restoreMainWindow()
-                  win.webContents.send('app:openArticle', {
-                    feedId: article.feedId,
-                    articleId: article.id
-                  })
-                }
-              })),
-              { type: 'separator' as const },
-              {
-                label: t.viewAllArticles,
-                icon: iconRecentArticles,
-                click: () => {
-                  const win = _mainWindow
-                  if (!win || win.isDestroyed()) return
-                  restoreMainWindow()
-                  win.webContents.send('app:openArticle', {
-                    feedId: 'all',
-                    articleId: ''
-                  })
-                }
-              }
-            ]
-    },
-    {
-      label: unseenCount > 0 ? `${t.notifications} (${unseenCount})` : t.notifications,
-      icon: iconNotifications,
-      accelerator: shortcuts.notifications.enabled ? shortcuts.notifications.accelerator : undefined,
-      click: () => {
-        const win = _mainWindow
-        if (!win || win.isDestroyed()) return
-        restoreMainWindow()
-        win.webContents.send('app:openHistory')
-      }
-    },
-    {
-      label: t.settings,
-      icon: iconSettings,
-      accelerator: shortcuts.settings.enabled ? shortcuts.settings.accelerator : undefined,
-      click: () => {
-        const win = _mainWindow
-        if (!win || win.isDestroyed()) return
-        restoreMainWindow()
-        win.webContents.send('app:openSettings')
-      }
-    },
-    {
-      label: t.help,
-      icon: iconHelp,
-      submenu: [
-        {
-          label: t.help,
-          icon: iconHelp,
-          click: () => { void shell.openExternal('https://github.com/CyberGems/CyberFeeds/wiki') }
-        },
-        {
-          label: t.faq,
-          icon: iconFaq,
-          click: () => { void shell.openExternal('https://github.com/CyberGems/CyberFeeds/wiki/FAQ') }
-        },
-        {
-          label: t.changelog,
-          icon: iconChangelog,
-          click: () => { void shell.openExternal('https://github.com/CyberGems/CyberFeeds/releases') }
-        },
-        {
-          label: t.homepage,
-          icon: iconHome,
-          click: () => { void shell.openExternal('https://cybergems.org') }
-        },
-        {
-          label: t.donate,
-          icon: iconDonate,
-          click: () => { void shell.openExternal('https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate') }
-        },
-        { type: 'separator' },
-        {
-          label: t.about,
-          icon: iconAbout,
-          click: () => {
-            const win = _mainWindow
-            if (!win || win.isDestroyed()) return
-            restoreMainWindow()
-            win.webContents.send('app:openAbout', { checkUpdates: false })
-          }
-        },
-        {
-          label: t.checkUpdates,
-          icon: iconUpdate,
-          click: () => {
-            const win = _mainWindow
-            if (!win || win.isDestroyed()) return
-            restoreMainWindow()
-            win.webContents.send('app:openAbout', { checkUpdates: true })
-          }
-        }
-      ]
-    },
-    ...(settings.showSuitePromo !== false
-      ? [
-          {
-            label: t.suite,
-            icon: iconSuite,
-            submenu: [
-              ...loadSuiteApps()
-                .filter((a) => a.slug !== 'cyberfeeds')
-                .map((a) => {
-                  const description = getSuiteShortDescription(a.slug, suiteLanguage)
-                  return {
-                    label: description ? `${a.name} — ${description}` : a.name,
-                    icon: loadSuiteIcon(a.slug),
-                    click: () => {
-                      void shell.openExternal(a.site)
-                    }
-                  }
-                }),
-              { type: 'separator' as const },
-              {
-                label: t.viewAllApps,
-                click: () => {
-                  void shell.openExternal('https://cybergems.org/#apps')
-                }
-              }
-            ]
-          }
-        ]
-      : []),
-    { type: 'separator' },
-    {
-      label: t.quit,
-      icon: iconQuit,
-      click: () => { app.quit() }
-    }
-  ])
-  try {
-    tray.setContextMenu(contextMenu)
-  } catch {
-    /* ignore if destroyed */
-  }
-}
-
 export function destroyTray(): void {
   if (animTimer) {
     clearInterval(animTimer)
     animTimer = null
   }
-  if (menuRebuildTimer) {
-    clearTimeout(menuRebuildTimer)
-    menuRebuildTimer = null
-  }
   unregisterGlobalShortcuts()
+  if (trayWindow && !trayWindow.isDestroyed()) {
+    try {
+      trayWindow.destroy()
+    } catch {
+      /* ignore */
+    }
+    trayWindow = null
+  }
   if (tray && !tray.isDestroyed()) {
     try {
       tray.destroy()
     } catch {
-      /* ignore if destroyed */
+      /* ignore */
     }
   }
   tray = null

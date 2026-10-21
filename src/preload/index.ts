@@ -15,7 +15,8 @@ const api = {
 
   // Feeds
   getFeeds: () => ipcRenderer.invoke('feeds:getAll'),
-  addFeed: (url: string, folderId: string, customTitle?: string) => ipcRenderer.invoke('feeds:add', url, folderId, customTitle),
+  addFeed: (url: string, folderId: string, customTitle?: string) =>
+    ipcRenderer.invoke('feeds:add', url, folderId, customTitle),
   deleteAllFeeds: () => ipcRenderer.invoke('feeds:deleteAll'),
   previewFeed: (url: string) => ipcRenderer.invoke('feeds:preview', url),
   updateFeed: (id: string, changes: object) => ipcRenderer.invoke('feeds:update', id, changes),
@@ -37,18 +38,22 @@ const api = {
   getArticles: (query: object) => ipcRenderer.invoke('articles:get', query),
   getArticleCount: (query: object) => ipcRenderer.invoke('articles:getCount', query),
   getTrashCount: () => ipcRenderer.invoke('articles:getTrashCount'),
-  getUnreadCounts: () => ipcRenderer.invoke('articles:getUnreadCounts') as Promise<{
-    unread: Record<string, number>
-    total: Record<string, number>
-    starred: number
-    all: number
-  }>,
+  getUnreadCounts: () =>
+    ipcRenderer.invoke('articles:getUnreadCounts') as Promise<{
+      unread: Record<string, number>
+      total: Record<string, number>
+      starred: number
+      all: number
+    }>,
   getTodayArticles: () => ipcRenderer.invoke('articles:getToday'),
   markRead: (id: string, read: boolean) => ipcRenderer.invoke('articles:markRead', id, read),
   markAllRead: (feedId?: string) => ipcRenderer.invoke('articles:markAllRead', feedId),
-  markAllFilteredRead: (starredOnly?: boolean) => ipcRenderer.invoke('articles:markAllFilteredRead', starredOnly),
-  deleteAllActiveArticles: (starredOnly?: boolean) => ipcRenderer.invoke('articles:deleteAllActive', starredOnly),
-  deleteAllFilteredArticles: (query?: object) => ipcRenderer.invoke('articles:deleteAllFiltered', query),
+  markAllFilteredRead: (starredOnly?: boolean) =>
+    ipcRenderer.invoke('articles:markAllFilteredRead', starredOnly),
+  deleteAllActiveArticles: (starredOnly?: boolean) =>
+    ipcRenderer.invoke('articles:deleteAllActive', starredOnly),
+  deleteAllFilteredArticles: (query?: object) =>
+    ipcRenderer.invoke('articles:deleteAllFiltered', query),
   unstarAllArticles: () => ipcRenderer.invoke('articles:unstarAll'),
   starArticle: (id: string, starred: boolean) => ipcRenderer.invoke('articles:star', id, starred),
   deleteArticle: (id: string) => ipcRenderer.invoke('articles:delete', id),
@@ -73,7 +78,8 @@ const api = {
 
   // Notifications
   getNotificationHistory: (limit?: number) => ipcRenderer.invoke('notifications:getHistory', limit),
-  getNotificationHistoryCount: () => ipcRenderer.invoke('notifications:getTotalCount') as Promise<number>,
+  getNotificationHistoryCount: () =>
+    ipcRenderer.invoke('notifications:getTotalCount') as Promise<number>,
   clearNotificationHistory: () => ipcRenderer.invoke('notifications:clearHistory'),
   markNotificationsChecked: (ts?: number) => ipcRenderer.invoke('notifications:markChecked', ts),
   previewNotification: (notifSettings?: object, playSound?: boolean) =>
@@ -87,10 +93,13 @@ const api = {
   openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   copyImageToClipboard: (imageUrl: string) => ipcRenderer.invoke('clipboard:copyImage', imageUrl),
   copyImageAt: (x: number, y: number) => ipcRenderer.invoke('clipboard:copyImageAt', x, y),
-  writeImageBuffer: (buffer: ArrayBuffer) => ipcRenderer.invoke('clipboard:writeImageBuffer', buffer),
+  writeImageBuffer: (buffer: ArrayBuffer) =>
+    ipcRenderer.invoke('clipboard:writeImageBuffer', buffer),
   pickBrowser: () => ipcRenderer.invoke('app:pickBrowser'),
   detectBrowsers: () =>
-    ipcRenderer.invoke('app:detectBrowsers') as Promise<import('../shared/types').DetectedBrowser[]>,
+    ipcRenderer.invoke('app:detectBrowsers') as Promise<
+      import('../shared/types').DetectedBrowser[]
+    >,
 
   // Displays
   getDisplays: () => ipcRenderer.invoke('displays:getAll'),
@@ -100,14 +109,30 @@ const api = {
   cleanup: (days: number) => ipcRenderer.invoke('app:cleanup', days),
   exportBackup: () => ipcRenderer.invoke('app:exportBackup'),
   importBackup: () => ipcRenderer.invoke('app:importBackup'),
-  runAutoBackup: () => ipcRenderer.invoke('autoBackup:runNow') as Promise<{ ok: boolean; filePath?: string; error?: string }>,
-  listAutoBackups: () => ipcRenderer.invoke('autoBackup:list') as Promise<import('../shared/types').AutoBackupFileInfo[]>,
+  runAutoBackup: () =>
+    ipcRenderer.invoke('autoBackup:runNow') as Promise<{
+      ok: boolean
+      filePath?: string
+      error?: string
+    }>,
+  listAutoBackups: () =>
+    ipcRenderer.invoke('autoBackup:list') as Promise<
+      import('../shared/types').AutoBackupFileInfo[]
+    >,
   pickBackupFolder: () => ipcRenderer.invoke('autoBackup:pickFolder') as Promise<string | null>,
-  openBackupFolder: () => ipcRenderer.invoke('autoBackup:openFolder') as Promise<{ ok: boolean; path?: string }>,
-  restoreAutoBackup: (filePath: string) => ipcRenderer.invoke('autoBackup:restore', filePath) as Promise<{ ok: boolean; error?: string }>,
-  deleteAutoBackup: (filePath: string) => ipcRenderer.invoke('autoBackup:delete', filePath) as Promise<{ ok: boolean; error?: string }>,
+  openBackupFolder: () =>
+    ipcRenderer.invoke('autoBackup:openFolder') as Promise<{ ok: boolean; path?: string }>,
+  restoreAutoBackup: (filePath: string) =>
+    ipcRenderer.invoke('autoBackup:restore', filePath) as Promise<{ ok: boolean; error?: string }>,
+  deleteAutoBackup: (filePath: string) =>
+    ipcRenderer.invoke('autoBackup:delete', filePath) as Promise<{ ok: boolean; error?: string }>,
   showInputContextMenu: () => ipcRenderer.invoke('showInputContextMenu'),
-  showReadOnlyContextMenu: (linkUrl?: string, selectedText?: string, imageUrl?: string, titleText?: string) => ipcRenderer.invoke('showReadOnlyContextMenu', linkUrl, selectedText, imageUrl, titleText),
+  showReadOnlyContextMenu: (
+    linkUrl?: string,
+    selectedText?: string,
+    imageUrl?: string,
+    titleText?: string
+  ) => ipcRenderer.invoke('showReadOnlyContextMenu', linkUrl, selectedText, imageUrl, titleText),
   openDataFolder: () => ipcRenderer.invoke('app:openDataFolder'),
   scanFeeds: () => ipcRenderer.invoke('app:scanFeeds'),
 
@@ -115,47 +140,66 @@ const api = {
   onArticlesUpdated: (cb: (data: { feedId: string; count: number }) => void) => {
     const handler = (_: unknown, data: { feedId: string; count: number }) => cb(data)
     ipcRenderer.on('articles:updated', handler)
-    return () => { ipcRenderer.removeListener('articles:updated', handler) }
+    return () => {
+      ipcRenderer.removeListener('articles:updated', handler)
+    }
   },
   onOpenArticle: (cb: (feedId: string, articleId: string) => void) => {
-    const handler = (_: unknown, data: { feedId: string; articleId: string }) => cb(data.feedId, data.articleId)
+    const handler = (_: unknown, data: { feedId: string; articleId: string }) =>
+      cb(data.feedId, data.articleId)
     ipcRenderer.on('app:openArticle', handler)
-    return () => { ipcRenderer.removeListener('app:openArticle', handler) }
+    return () => {
+      ipcRenderer.removeListener('app:openArticle', handler)
+    }
   },
   onOpenSettings: (cb: (tab?: string) => void) => {
     const handler = (_: unknown, tab?: string) => cb(tab)
     ipcRenderer.on('app:openSettings', handler)
-    return () => { ipcRenderer.removeListener('app:openSettings', handler) }
+    return () => {
+      ipcRenderer.removeListener('app:openSettings', handler)
+    }
   },
   onOpenAbout: (cb: (opts?: { checkUpdates?: boolean }) => void) => {
     const handler = (_: unknown, opts?: { checkUpdates?: boolean }): void => cb(opts)
     ipcRenderer.on('app:openAbout', handler)
-    return () => { ipcRenderer.removeListener('app:openAbout', handler) }
+    return () => {
+      ipcRenderer.removeListener('app:openAbout', handler)
+    }
   },
   onNewNotification: (cb: (item: any) => void) => {
     const handler = (_: unknown, item: any) => cb(item)
     ipcRenderer.on('notifications:new', handler)
-    return () => { ipcRenderer.removeListener('notifications:new', handler) }
+    return () => {
+      ipcRenderer.removeListener('notifications:new', handler)
+    }
   },
   onNewNotificationBatch: (cb: (payload: NotificationBatchPayload) => void) => {
     const handler = (_: unknown, payload: NotificationBatchPayload) => cb(payload)
     ipcRenderer.on('notifications:batch', handler)
-    return () => { ipcRenderer.removeListener('notifications:batch', handler) }
+    return () => {
+      ipcRenderer.removeListener('notifications:batch', handler)
+    }
   },
   onOpenHistory: (cb: () => void) => {
     const handler = (): void => cb()
     ipcRenderer.on('app:openHistory', handler)
-    return () => { ipcRenderer.removeListener('app:openHistory', handler) }
+    return () => {
+      ipcRenderer.removeListener('app:openHistory', handler)
+    }
   },
   onPollingToggled: (cb: (pollingEnabled: boolean) => void) => {
     const handler = (_: unknown, pollingEnabled: boolean) => cb(pollingEnabled)
     ipcRenderer.on('settings:pollingToggled', handler)
-    return () => { ipcRenderer.removeListener('settings:pollingToggled', handler) }
+    return () => {
+      ipcRenderer.removeListener('settings:pollingToggled', handler)
+    }
   },
   onSettingsChanged: (cb: (settings: object) => void) => {
     const handler = (_: unknown, settings: object) => cb(settings)
     ipcRenderer.on('settings:changed', handler)
-    return () => { ipcRenderer.removeListener('settings:changed', handler) }
+    return () => {
+      ipcRenderer.removeListener('settings:changed', handler)
+    }
   },
 
   // Updates
@@ -165,7 +209,9 @@ const api = {
   onUpdateStatus: (cb: (status: object) => void) => {
     const handler = (_: unknown, status: object): void => cb(status)
     ipcRenderer.on('update:status', handler)
-    return () => { ipcRenderer.removeListener('update:status', handler) }
+    return () => {
+      ipcRenderer.removeListener('update:status', handler)
+    }
   },
 
   // Notifier specific
@@ -174,21 +220,41 @@ const api = {
   markNotificationRead: (articleId: string) => ipcRenderer.send('notifier:markRead', articleId),
   snoozeNotifications: (minutes: number) => ipcRenderer.send('notifier:snooze', minutes),
   muteFeedNotifications: (feedId: string) => ipcRenderer.send('notifier:muteFeed', feedId),
-  openInApp: (feedId: string, articleId: string) => ipcRenderer.send('notifier:openInApp', feedId, articleId),
+  openInApp: (feedId: string, articleId: string) =>
+    ipcRenderer.send('notifier:openInApp', feedId, articleId),
   openHistoryInApp: () => ipcRenderer.send('notifier:openHistory'),
   openSettingsInApp: (tab?: string) => ipcRenderer.send('notifier:openSettings', tab),
   resizeNotifier: (height: number) => ipcRenderer.send('notifier:resize', height),
   setHover: (isHovering: boolean) => ipcRenderer.send('notifier:hover', isHovering),
   pickSoundFile: () => ipcRenderer.invoke('notifications:pickSoundFile'),
-  onNotifierStack: (cb: (stack: object[], settings: object, language?: string, unseenCount?: number, displayMode?: string) => void) => {
-    const handler = (_: unknown, stack: object[], settings: object, language?: string, unseenCount?: number, displayMode?: string) => cb(stack, settings, language, unseenCount, displayMode)
+  onNotifierStack: (
+    cb: (
+      stack: object[],
+      settings: object,
+      language?: string,
+      unseenCount?: number,
+      displayMode?: string
+    ) => void
+  ) => {
+    const handler = (
+      _: unknown,
+      stack: object[],
+      settings: object,
+      language?: string,
+      unseenCount?: number,
+      displayMode?: string
+    ) => cb(stack, settings, language, unseenCount, displayMode)
     ipcRenderer.on('notifier:stack', handler)
-    return () => { ipcRenderer.removeListener('notifier:stack', handler) }
+    return () => {
+      ipcRenderer.removeListener('notifier:stack', handler)
+    }
   },
   onNotifierClear: (cb: () => void) => {
     const handler = () => cb()
     ipcRenderer.on('notifier:clear', handler)
-    return () => { ipcRenderer.removeListener('notifier:clear', handler) }
+    return () => {
+      ipcRenderer.removeListener('notifier:clear', handler)
+    }
   },
 
   // Window controls (for custom titlebar)
@@ -247,9 +313,15 @@ const api = {
     togglePin: () => ipcRenderer.invoke('pip:togglePin') as Promise<boolean>,
     returnToReader: () => ipcRenderer.invoke('pip:returnToReader') as Promise<{ ok: boolean }>,
     getData: () =>
-      ipcRenderer.invoke('pip:getData') as Promise<import('../shared/types').PipVideoPayload | null>,
+      ipcRenderer.invoke('pip:getData') as Promise<
+        import('../shared/types').PipVideoPayload | null
+      >,
     getStatus: () =>
-      ipcRenderer.invoke('pip:getStatus') as Promise<{ active: boolean; articleId?: string; isPinned: boolean }>,
+      ipcRenderer.invoke('pip:getStatus') as Promise<{
+        active: boolean
+        articleId?: string
+        isPinned: boolean
+      }>,
     onStatusChange: (cb: (data: { active: boolean; articleId?: string }) => void) => {
       const handler = (_: unknown, data: { active: boolean; articleId?: string }) => cb(data)
       ipcRenderer.on('pip:status-changed', handler)
@@ -258,7 +330,8 @@ const api = {
       }
     },
     onUpdateData: (cb: (payload: import('../shared/types').PipVideoPayload) => void) => {
-      const handler = (_: unknown, payload: import('../shared/types').PipVideoPayload) => cb(payload)
+      const handler = (_: unknown, payload: import('../shared/types').PipVideoPayload) =>
+        cb(payload)
       ipcRenderer.on('pip:update-data', handler)
       return () => {
         ipcRenderer.removeListener('pip:update-data', handler)
@@ -267,7 +340,24 @@ const api = {
   },
 
   // System
-  getUserInfo: () => ipcRenderer.invoke('system:getUserInfo') as Promise<{ username: string }>
+  getUserInfo: () => ipcRenderer.invoke('system:getUserInfo') as Promise<{ username: string }>,
+
+  // Tray Menu
+  trayMenu: {
+    getState: () =>
+      ipcRenderer.invoke('tray:getState') as Promise<import('../shared/types').TrayMenuSnapshot>,
+    action: (action: string) => ipcRenderer.invoke('tray:action', action),
+    hide: () => ipcRenderer.invoke('tray:hide'),
+    reportSize: (size: { width: number; height: number }) =>
+      ipcRenderer.invoke('tray:reportSize', size),
+    onShow: (cb: () => void): (() => void) => {
+      const handler = (): void => cb()
+      ipcRenderer.on('tray:show', handler)
+      return (): void => {
+        ipcRenderer.removeListener('tray:show', handler)
+      }
+    }
+  }
 }
 
 if (process.contextIsolated) {
