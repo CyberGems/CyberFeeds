@@ -1949,8 +1949,9 @@ const ArticleItem = memo(
     }, [priorityKeywords, article.title, article.snippet])
 
     const hasVideo = React.useMemo(() => {
+      if (typeof article.hasVideo === 'number') return article.hasVideo === 1
       return articleHasVideo(article)
-    }, [article.link, article.content, article.snippet])
+    }, [article.hasVideo, article.link, article.content, article.snippet])
 
     return (
       <div

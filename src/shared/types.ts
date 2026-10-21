@@ -43,6 +43,7 @@ export interface Article {
   deletedAt?: number | null
   guid: string
   thumbnail?: string
+  hasVideo?: number
 }
 
 

@@ -3,6 +3,7 @@ import { app } from 'electron'
 import path from 'path'
 import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState } from './types'
 import { DEFAULT_SETTINGS } from './types'
+import { articleHasVideo } from '../shared/youtube'
 
 let db: Database.Database
 
@@ -70,6 +71,18 @@ function migrate(): void {
       db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('mig_poll_unfocused_v2', '1')
     }
   } catch { /* ignore */ }
+  try { db.exec('ALTER TABLE articles ADD COLUMN hasVideo INTEGER NOT NULL DEFAULT 0') } catch { /* already exists */ }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_articles_has_video ON articles(hasVideo, pubDate DESC)') } catch { /* already exists */ }
+  try {
+    const migVideo = db.prepare('SELECT value FROM settings WHERE key = ?').get('mig_articles_has_video_v1')
+    if (!migVideo) {
+      const videoClause = buildVideoClause()
+      db.prepare(`UPDATE articles SET hasVideo = 1 WHERE deletedAt IS NULL ${videoClause.sql}`).run(...videoClause.params)
+      db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run('mig_articles_has_video_v1', '1')
+    }
+  } catch (err) {
+    console.warn('[DB] Failed to run mig_articles_has_video_v1:', err)
+  }
 }
 
 function createSchema(): void {
@@ -141,6 +154,7 @@ function createSchema(): void {
     CREATE INDEX IF NOT EXISTS idx_articles_unread ON articles(read, pubDate DESC);
     CREATE INDEX IF NOT EXISTS idx_articles_starred ON articles(starred, pubDate DESC);
     CREATE INDEX IF NOT EXISTS idx_articles_guid ON articles(guid);
+    CREATE INDEX IF NOT EXISTS idx_articles_has_video ON articles(hasVideo, pubDate DESC);
 
     INSERT OR IGNORE INTO window_state (id, width, height, maximized) VALUES (1, 1280, 800, 0);
   `)
@@ -443,9 +457,7 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
   }
 
   if (hasVideo) {
-    const videoClause = buildVideoClause()
-    sql += videoClause.sql
-    params.push(...videoClause.params)
+    sql += ' AND a.hasVideo = 1'
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {
@@ -517,9 +529,7 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
   }
 
   if (hasVideo) {
-    const videoClause = buildVideoClause()
-    sql += videoClause.sql
-    params.push(...videoClause.params)
+    sql += ' AND a.hasVideo = 1'
   }
 
   if (priorityKeywords && priorityKeywords.length > 0) {
@@ -591,8 +601,8 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
   const isAutoReadMute = currentSettings.filters?.muteAction === 'autoRead' && muteKeywords.length > 0
 
   const stmt = db.prepare(`
-    INSERT OR IGNORE INTO articles (id, feedId, title, link, pubDate, content, snippet, author, thumbnail, read, starred, guid)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+    INSERT OR IGNORE INTO articles (id, feedId, title, link, pubDate, content, snippet, author, thumbnail, read, starred, guid, hasVideo)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)
   `)
   const inserted: Omit<Article, 'feedTitle' | 'feedIcon'>[] = []
   db.transaction(() => {
@@ -606,6 +616,7 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
               (a.snippet && a.snippet.toLowerCase().includes(kw))
           )
         const initialRead = shouldAutoRead ? 1 : 0
+        const hasVid = articleHasVideo(a) ? 1 : 0
         const result = stmt.run(
           a.id,
           a.feedId,
@@ -617,7 +628,8 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
           a.author ?? null,
           a.thumbnail ?? null,
           initialRead,
-          a.guid
+          a.guid,
+          hasVid
         )
         if (result.changes > 0) inserted.push(a)
       } catch (err: any) {
