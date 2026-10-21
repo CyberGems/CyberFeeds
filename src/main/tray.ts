@@ -197,12 +197,43 @@ function getTrayMenuSnapshot(): TrayMenuSnapshot {
   }
 }
 
+let trayMenuLastShown = 0
+let trayMenuHideTimer: NodeJS.Timeout | null = null
+
 function calculateTrayMenuGeometry(
-  cursor: { x: number; y: number },
+  iconBounds: any,
   windowW: number,
   windowH: number
 ): { x: number; y: number; width: number; height: number } {
-  const display = screen.getDisplayNearestPoint(cursor) || screen.getPrimaryDisplay()
+  let b = (iconBounds && typeof iconBounds.x === 'number' && (iconBounds.width || iconBounds.height))
+    ? { x: iconBounds.x, y: iconBounds.y, width: iconBounds.width || 0, height: iconBounds.height || 0 }
+    : null
+  if (!b && tray && !tray.isDestroyed()) {
+    try {
+      const tb = tray.getBounds()
+      if (tb && (tb.width > 0 || tb.height > 0)) b = tb
+    } catch {
+      b = null
+    }
+  }
+  if (!b || (!b.width && !b.height)) {
+    let p: { x: number; y: number } = { x: 0, y: 0 }
+    try {
+      p = screen.getCursorScreenPoint()
+    } catch {
+      p = { x: 0, y: 0 }
+    }
+    b = { x: p.x, y: p.y, width: 0, height: 0 }
+  }
+
+  const cx = b.x + b.width / 2
+  const cy = b.y + b.height / 2
+  let display: Electron.Display
+  try {
+    display = screen.getDisplayNearestPoint({ x: cx, y: cy })
+  } catch {
+    display = screen.getPrimaryDisplay()
+  }
   const work = display.workArea || display.bounds
 
   const gap = 4
@@ -210,45 +241,32 @@ function calculateTrayMenuGeometry(
   const cardW = windowW - 2 * shadowPad
   const cardH = windowH - 2 * shadowPad
 
-  const cx = cursor.x
-  const cy = cursor.y
-
-  // Distances from cursor to the 4 edges of the work area
+  let cardX: number, cardY: number
   const dLeft = cx - work.x
-  const dRight = work.x + work.width - cx
+  const dRight = (work.x + work.width) - cx
   const dTop = cy - work.y
-  const dBottom = work.y + work.height - cy
+  const dBottom = (work.y + work.height) - cy
 
-  let cardX: number
-  let cardY: number
-
-  // Bottom taskbar (most common)
   if (dBottom <= dLeft && dBottom <= dRight && dBottom <= dTop) {
     cardX = cx - cardW / 2
-    cardY = work.y + work.height - cardH - gap
-  }
-  // Top taskbar
-  else if (dTop <= dLeft && dTop <= dRight) {
+    cardY = (b.height > 0 ? b.y - cardH : work.y + work.height - cardH) - gap
+  } else if (dTop <= dLeft && dTop <= dRight) {
     cardX = cx - cardW / 2
-    cardY = work.y + gap
-  }
-  // Left vertical taskbar
-  else if (dLeft <= dRight) {
-    cardX = work.x + gap
+    cardY = (b.height > 0 ? b.y + b.height : work.y) + gap
+  } else if (dLeft <= dRight) {
+    cardX = (b.width > 0 ? b.x + b.width : work.x) + gap
     cardY = cy - cardH / 2
-  }
-  // Right vertical taskbar
-  else {
-    cardX = work.x + work.width - cardW - gap
+  } else {
+    cardX = (b.width > 0 ? b.x - cardW : work.x + work.width - cardW) - gap
     cardY = cy - cardH / 2
   }
 
   let windowX = cardX - shadowPad
   let windowY = cardY - shadowPad
 
-  // Strictly clamp outer window inside workArea to keep shadow and card cleanly visible
-  windowX = Math.min(Math.max(windowX, work.x), work.x + work.width - windowW)
-  windowY = Math.min(Math.max(windowY, work.y), work.y + work.height - windowH)
+  windowX = Math.min(Math.max(windowX, work.x + 2), work.x + work.width - windowW - 2)
+  const screenBottom = (display.bounds ? display.bounds.y + display.bounds.height : work.y + work.height) - 2
+  windowY = Math.min(Math.max(windowY, work.y + 2), screenBottom - windowH)
 
   return {
     x: Math.round(windowX),
@@ -295,7 +313,12 @@ function ensureTrayWindow(): BrowserWindow {
   }
 
   trayWindow.on('blur', () => {
-    hideTrayMenu()
+    if (trayMenuHideTimer) return
+    if (Date.now() - trayMenuLastShown < 250) return
+    trayMenuHideTimer = setTimeout(() => {
+      trayMenuHideTimer = null
+      hideTrayMenu()
+    }, 120)
   })
 
   trayWindow.on('closed', () => {
@@ -305,33 +328,42 @@ function ensureTrayWindow(): BrowserWindow {
   return trayWindow
 }
 
-function showTrayMenu(): void {
+function showTrayMenu(eventBounds?: any): void {
+  if (trayMenuHideTimer) {
+    clearTimeout(trayMenuHideTimer)
+    trayMenuHideTimer = null
+  }
   const win = ensureTrayWindow()
   if (win.isDestroyed()) return
 
-  const cursor = screen.getCursorScreenPoint()
-  const geo = calculateTrayMenuGeometry(cursor, currentTraySize.width, currentTraySize.height)
+  const geo = calculateTrayMenuGeometry(eventBounds, currentTraySize.width, currentTraySize.height)
 
   win.setBounds(geo)
 
   const snapshot = getTrayMenuSnapshot()
   win.webContents.send('tray:show', snapshot)
 
-  win.show()
+  trayMenuLastShown = Date.now()
+  if (!win.isVisible()) win.show()
   win.focus()
+  win.setBounds(geo)
 }
 
 export function hideTrayMenu(): void {
+  if (trayMenuHideTimer) {
+    clearTimeout(trayMenuHideTimer)
+    trayMenuHideTimer = null
+  }
   if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
     trayWindow.hide()
   }
 }
 
-function toggleTrayMenu(): void {
+function toggleTrayMenu(eventBounds?: any): void {
   if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
     hideTrayMenu()
   } else {
-    showTrayMenu()
+    showTrayMenu(eventBounds)
   }
 }
 
@@ -434,11 +466,6 @@ function registerTrayIpc(): void {
     }
 
     currentTraySize = { width: newWidth, height: newHeight }
-    if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
-      const cursor = screen.getCursorScreenPoint()
-      const geo = calculateTrayMenuGeometry(cursor, currentTraySize.width, currentTraySize.height)
-      trayWindow.setBounds(geo)
-    }
   })
 }
 
@@ -472,8 +499,8 @@ export function createTray(mainWindow: BrowserWindow): Tray {
   })
 
   // Right click: toggle floating tray menu card
-  tray.on('right-click', () => {
-    toggleTrayMenu()
+  tray.on('right-click', (_event, bounds) => {
+    toggleTrayMenu(bounds)
   })
 
   // Re-broadcast state when main window visibility changes

@@ -475,7 +475,6 @@ body {
   line-height: 1;
   color: var(--text-muted);
   opacity: 0.9;
-  transform: translateY(1px);
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .topbar-welcome-icon svg {
@@ -1958,7 +1957,6 @@ mark.reader-search-match.reader-search-active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transform: translateY(1px);
 }
 
 .welcome-time-icon.morning {
