@@ -350,6 +350,7 @@ const api = {
     hide: () => ipcRenderer.invoke('tray:hide'),
     reportSize: (size: { width: number; height: number }) =>
       ipcRenderer.invoke('tray:reportSize', size),
+    openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
     onShow: (cb: () => void): (() => void) => {
       const handler = (): void => cb()
       ipcRenderer.on('tray:show', handler)

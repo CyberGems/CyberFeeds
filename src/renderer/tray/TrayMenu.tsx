@@ -168,10 +168,16 @@ export function TrayMenu(): React.JSX.Element {
   }
 
   const openExternal = (url: string): void => {
-    void window.api.trayMenu.openExternal(url)
-    window.setTimeout(() => {
-      void window.api.trayMenu.hide()
-    }, 200)
+    try {
+      if (typeof window.api?.openExternal === 'function') {
+        void window.api.openExternal(url)
+      } else if (typeof window.api?.trayMenu?.openExternal === 'function') {
+        void window.api.trayMenu.openExternal(url)
+      }
+    } catch (e) {
+      console.error('Failed to open external URL:', e)
+    }
+    void window.api?.trayMenu?.hide()
   }
 
   useEffect(() => {
@@ -484,7 +490,7 @@ export function TrayMenu(): React.JSX.Element {
                 aria-label="CyberGems"
                 onClick={() => openExternal(HELP_URLS.website)}
               >
-                <span className="tray-brand-gem">💎</span>
+                <Gem size={15} className="tray-brand-mark" />
                 <span className="tray-brand-name">CyberGems</span>
               </button>
             </div>

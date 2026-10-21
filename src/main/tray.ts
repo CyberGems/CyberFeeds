@@ -387,6 +387,11 @@ function handleTrayAction(action: string): void {
       if (!_mainWindow || _mainWindow.isDestroyed()) return
       restoreMainWindow()
       _mainWindow.webContents.send('app:openSettings')
+      setTimeout(() => {
+        if (_mainWindow && !_mainWindow.isDestroyed()) {
+          _mainWindow.webContents.send('app:openSettings')
+        }
+      }, 80)
       break
     }
     case 'about': {
@@ -394,6 +399,11 @@ function handleTrayAction(action: string): void {
       if (!_mainWindow || _mainWindow.isDestroyed()) return
       restoreMainWindow()
       _mainWindow.webContents.send('app:openAbout', { checkUpdates: false })
+      setTimeout(() => {
+        if (_mainWindow && !_mainWindow.isDestroyed()) {
+          _mainWindow.webContents.send('app:openAbout', { checkUpdates: false })
+        }
+      }, 80)
       break
     }
     case 'checkUpdates': {
@@ -401,6 +411,11 @@ function handleTrayAction(action: string): void {
       if (!_mainWindow || _mainWindow.isDestroyed()) return
       restoreMainWindow()
       _mainWindow.webContents.send('app:openAbout', { checkUpdates: true })
+      setTimeout(() => {
+        if (_mainWindow && !_mainWindow.isDestroyed()) {
+          _mainWindow.webContents.send('app:openAbout', { checkUpdates: true })
+        }
+      }, 80)
       break
     }
     case 'quit': {

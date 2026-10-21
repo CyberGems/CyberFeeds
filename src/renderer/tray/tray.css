@@ -468,8 +468,20 @@ body {
   color: var(--tray-text-hi);
 }
 
-.tray-brand-gem {
+.tray-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
   color: var(--tray-accent);
+  filter: drop-shadow(0 0 3px rgba(var(--tray-accent-rgb), 0.35));
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tray-brand-link:hover .tray-brand-mark {
+  transform: scale(1.22);
 }
 
 /* Compact sub-view rows */
