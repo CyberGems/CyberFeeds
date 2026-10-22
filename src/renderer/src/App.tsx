@@ -28,6 +28,7 @@ import Tooltip from './components/Tooltip'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
 import { CleanupBanner } from './components/CleanupBanner'
 import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
+import { getReceivedAt } from '@shared/notification-time'
 
 export type UpdateStatus =
   | { state: 'checking' }
@@ -114,7 +115,7 @@ export default function App(): JSX.Element {
     // Seed main-process DB so the notifier badge computes the same unseen count.
     window.api.markNotificationsChecked(lastChecked)
     window.api.getNotificationHistory().then((history) => {
-      const unseen = history.filter((h) => h.createdAt > lastChecked).length
+      const unseen = history.filter((h) => getReceivedAt(h) > lastChecked).length
       useUIStore.setState({ unseenNotificationsCount: unseen })
     })
 

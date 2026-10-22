@@ -941,7 +941,8 @@ async function showSettingsPreview(
     body: previewT?.previewBody || 'Your notifications will appear like this.',
     link: '',
     feedName: 'CyberFeeds',
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    receivedAt: Date.now()
   }
 
   displayStack.length = 0

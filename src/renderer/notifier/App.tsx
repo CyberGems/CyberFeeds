@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useReducer, useRef, useState, useCallback }
 import { X, ExternalLink, ChevronDown, Bell, BellOff, Clock, Check, Eye, Settings } from 'lucide-react'
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from '@shared/types'
 import { translations } from '@shared/translations'
+import { getReceivedAt } from '@shared/notification-time'
 import Tooltip from '../src/components/Tooltip'
 
 const SNOOZE_LABELS: Record<number, string> = {
@@ -891,11 +892,11 @@ export default function NotifierApp(): JSX.Element {
               <Tooltip
                 label={t.notifier.receivedAt.replace(
                   '{time}',
-                  formatAbsoluteTime(item.createdAt, lang)
+                  formatAbsoluteTime(getReceivedAt(item), lang)
                 )}
                 placement="bottom"
               >
-                <span className="notif-time">{formatReceivedAt(item.createdAt, t)}</span>
+                <span className="notif-time">{formatReceivedAt(getReceivedAt(item), t)}</span>
               </Tooltip>
             </div>
           </div>

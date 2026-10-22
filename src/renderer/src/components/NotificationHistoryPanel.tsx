@@ -9,6 +9,7 @@ import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 
 import { translations } from '@shared/translations'
+import { getReceivedAt } from '@shared/notification-time'
 
 function timeAgo(ts: number, t: typeof translations.en): string {
   const d = (Date.now() - ts) / 1000
@@ -188,11 +189,11 @@ const NotifCard = memo(function NotifCard({
         <Tooltip
           label={t.notifier.receivedAt.replace(
             '{time}',
-            formatAbsoluteTime(item.createdAt, language)
+            formatAbsoluteTime(getReceivedAt(item), language)
           )}
           placement="bottom"
         >
-          <span className="notif-time">{timeAgo(item.createdAt, t)}</span>
+          <span className="notif-time">{timeAgo(getReceivedAt(item), t)}</span>
         </Tooltip>
       </div>
     </div>
@@ -326,7 +327,7 @@ export default function NotificationHistoryPanel(): JSX.Element {
     const newItems: NotificationHistoryItem[] = []
     const seenItems: NotificationHistoryItem[] = []
     for (const item of history) {
-      if (item.createdAt > lastCheckedTime) newItems.push(item)
+      if (getReceivedAt(item) > lastCheckedTime) newItems.push(item)
       else seenItems.push(item)
     }
     return { newNotifications: newItems, seenNotifications: seenItems }

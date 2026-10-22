@@ -25,6 +25,9 @@ function migrate(): void {
   try { db.exec('ALTER TABLE articles ADD COLUMN thumbnail TEXT') } catch { /* already exists */ }
   try { db.exec('ALTER TABLE articles ADD COLUMN deletedAt INTEGER') } catch { /* already exists */ }
   try { db.exec('ALTER TABLE notification_history ADD COLUMN thumbnail TEXT') } catch { /* already exists */ }
+  // Receipt time of the notification (distinct from the article publication time).
+  // Legacy rows keep NULL and fall back to `createdAt` when queried.
+  try { db.exec('ALTER TABLE notification_history ADD COLUMN receivedAt INTEGER') } catch { /* already exists */ }
   try { db.exec('ALTER TABLE feeds ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0') } catch { /* already exists */ }
   try { db.exec('CREATE INDEX IF NOT EXISTS idx_articles_deleted ON articles(deletedAt)') } catch { /* already exists */ }
   try {
@@ -132,7 +135,8 @@ function createSchema(): void {
       icon TEXT,
       thumbnail TEXT,
       articleId TEXT,
-      createdAt INTEGER NOT NULL
+      createdAt INTEGER NOT NULL,
+      receivedAt INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS settings (
@@ -801,9 +805,13 @@ export function getNotificationHistory(limit?: number): NotificationHistoryItem[
   const effectiveLimit =
     typeof limit === 'number' ? limit : (getSettings().notifications?.historyLimit ?? 1000)
   if (effectiveLimit === 0) {
-    return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC').all() as NotificationHistoryItem[]
+    return db
+      .prepare('SELECT * FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC')
+      .all() as NotificationHistoryItem[]
   }
-  return db.prepare('SELECT * FROM notification_history ORDER BY createdAt DESC LIMIT ?').all(effectiveLimit) as NotificationHistoryItem[]
+  return db
+    .prepare('SELECT * FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC LIMIT ?')
+    .all(effectiveLimit) as NotificationHistoryItem[]
 }
 
 export function getNotificationHistoryTotalCount(): number {
@@ -817,7 +825,7 @@ export function getRecentNotifications(limit = 15): (NotificationHistoryItem & {
     FROM notification_history nh
     LEFT JOIN articles a ON nh.articleId = a.id
     LEFT JOIN feeds f ON a.feedId = f.id
-    ORDER BY nh.createdAt DESC
+    ORDER BY COALESCE(nh.receivedAt, nh.createdAt) DESC
     LIMIT ?
   `).all(limit) as (NotificationHistoryItem & { feedId?: string })[]
 }
@@ -834,8 +842,8 @@ export function pruneNotificationHistory(limit: number): void {
       DELETE FROM notification_history
       WHERE id IN (
         SELECT id FROM notification_history
-        WHERE createdAt <= ?
-        ORDER BY createdAt ASC
+        WHERE COALESCE(receivedAt, createdAt) <= ?
+        ORDER BY COALESCE(receivedAt, createdAt) ASC
         LIMIT ?
       )
     `).run(lastChecked, excess).changes
@@ -845,7 +853,7 @@ export function pruneNotificationHistory(limit: number): void {
       // If there were not enough seen notifications, prune oldest overall to respect the hard limit
       db.prepare(`
         DELETE FROM notification_history WHERE id NOT IN (
-          SELECT id FROM notification_history ORDER BY createdAt DESC LIMIT ?
+          SELECT id FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC LIMIT ?
         )
       `).run(limit)
     }
@@ -859,8 +867,8 @@ export function addNotificationHistory(item: NotificationHistoryItem): void {
 export function addNotificationHistoryBatch(items: NotificationHistoryItem[]): void {
   if (items.length === 0) return
   const stmt = db.prepare(`
-    INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt, receivedAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
   db.transaction(() => {
     for (const item of items) {
@@ -873,7 +881,8 @@ export function addNotificationHistoryBatch(items: NotificationHistoryItem[]): v
         item.icon ?? null,
         item.thumbnail ?? null,
         item.articleId ?? null,
-        item.createdAt
+        item.createdAt,
+        item.receivedAt ?? Date.now()
       )
     }
   })()
@@ -900,7 +909,9 @@ export function setNotificationsLastChecked(ts: number): void {
 /** Count of notifications newer than the last "checked" time, same number as the top-bar badge. */
 export function getUnseenNotificationCount(): number {
   const lastChecked = getNotificationsLastChecked()
-  const row = db.prepare('SELECT COUNT(*) as c FROM notification_history WHERE createdAt > ?').get(lastChecked) as { c: number }
+  const row = db
+    .prepare('SELECT COUNT(*) as c FROM notification_history WHERE COALESCE(receivedAt, createdAt) > ?')
+    .get(lastChecked) as { c: number }
   return row ? row.c : 0
 }
 

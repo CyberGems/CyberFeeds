@@ -457,6 +457,9 @@ app.whenReady().then(() => {
         icon: feedIcon,
         thumbnail: article.thumbnail,
         createdAt: typeof article.pubDate === 'number' && !isNaN(article.pubDate) && article.pubDate > 0 ? article.pubDate : Date.now(),
+        // Receipt time: when we actually discovered/raised the notification.
+        // Publication time can be far in the past for backfilled feeds.
+        receivedAt: Date.now(),
         feedId: feedId,
         articleId: article.id
       }))

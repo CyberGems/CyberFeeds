@@ -46,7 +46,6 @@ export interface Article {
   hasVideo?: number
 }
 
-
 export interface NotificationHistoryItem {
   id: string
   title: string
@@ -57,7 +56,10 @@ export interface NotificationHistoryItem {
   thumbnail?: string
   articleId?: string
   feedId?: string
+  /** Article publication time (epoch ms). */
   createdAt: number
+  /** Notification receipt time (epoch ms). Falls back to `createdAt` for legacy rows. */
+  receivedAt?: number
 }
 
 export type CleanupScope = 'all' | 'read' | 'unread'
