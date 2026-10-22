@@ -8,7 +8,7 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Customizable storage cleanup allows selective article and thumbnail pruning with real-time feedback, tray quick panel geometry is optimized for vertical taskbars and multi-monitor setups, and header greeting icons receive optical alignment.
+New tab mode toggle lets users choose between opening articles in independent tabs or in-place, notification history accurately tracks receipt timestamps independently from publication dates, and polling silences spurious rediscovery notifications.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,36 +17,36 @@ Customizable storage cleanup allows selective article and thumbnail pruning with
 
 ### ✨ Key Features & Highlights
 
-- 🧹 **Granular storage cleanup & maintenance**:
-  - Choose specific cleanup targets including read articles older than a custom threshold, orphaned image thumbnails, and SQLite database compaction (VACUUM).
-  - Real-time reactive feedback banner during operations with clear byte reclaim summaries.
-  - Keeps local storage lean without affecting your bookmarked or favorited articles.
+- 📑 **Configurable tab management & streamlined controls**:
+  - New preference in Settings to toggle opening articles in independent tabs or reading them directly in-place.
+  - Automatically disables startup tab session options when tab mode is turned off and clears lingering tabs.
+  - Removed standalone "Close all tabs" button next to the tab counter to eliminate misclicks with the window close button.
+  - Context menu tab actions are cleanly adapted based on your tab mode preference.
 
-- 💎 **Tray menu & multi-monitor geometry improvements**:
-  - Redesigned cursor-aware anchor geometry prevents positioning errors on vertical taskbars and secondary monitors.
-  - Eliminated window flicker during tray open actions.
-  - Optical alignment refinement on header greeting icons and typography.
+- 🔔 **Accurate notification receipt tracking & polling noise suppression**:
+  - Added dedicated receipt time tracking (`receivedAt`) distinct from article publication time (`createdAt`), ensuring unread badges and history sorting remain accurate even for backfilled feeds.
+  - Background polling now cross-checks article publication dates against feed fetch baselines, preventing auto-cleanup rediscovery cycles from triggering burst notifications for week-old articles.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-La limpieza de almacenamiento personalizable permite depurar selectivamente artículos y miniaturas con respuesta en tiempo real, la geometría del menú de bandeja se optimiza para barras verticales y configuraciones multimonitor, y el icono de bienvenida recibe alineación óptica.
+El nuevo ajuste de modo de pestañas permite elegir entre abrir artículos en pestañas independientes o en el visor, el historial registra con precisión la hora de recepción independiente de la fecha de publicación, y el sondeo suprime notificaciones repetidas tras limpiezas.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 🧹 **Limpieza granular de almacenamiento y mantenimiento**:
-  - Selecciona objetivos específicos de limpieza como artículos leídos antiguos, miniaturas huérfanas y compactación de SQLite (VACUUM).
-  - Notificaciones y banners con retroalimentación en tiempo real del progreso y espacio recuperado.
-  - Mantiene el almacenamiento ligero sin tocar artículos marcados o favoritos.
+- 📑 **Gestión configurable de pestañas y controles más limpios**:
+  - Nueva opción en Ajustes para activar o desactivar la apertura de artículos en pestañas independientes o verlos directamente en el lector.
+  - Deshabilita automáticamente el ajuste de sesión de pestañas al desactivar las pestañas y limpia pestañas activas.
+  - Se retiró el botón suelto de "Cerrar todas las pestañas" junto al contador para evitar clics accidentales con la X de la ventana.
+  - El menú contextual de artículos oculta las acciones de pestañas si el modo está deshabilitado.
 
-- 💎 **Mejoras de geometría en bandeja y soporte multimonitor**:
-  - Geometría adaptada al cursor para evitar problemas en barras de tareas verticales y monitores secundarios.
-  - Eliminación del parpadeo visual al abrir el menú de la bandeja.
-  - Ajustes de alineación óptica en el icono de bienvenida de la barra superior.
+- 🔔 **Registro preciso de hora de recepción y supresión de notificaciones antiguas**:
+  - Registro de hora de recepción (`receivedAt`) separado de la fecha de publicación (`createdAt`), manteniendo exacto el contador no visto y el orden del historial.
+  - El sondeo periódico filtra artículos re-descubiertos tras limpiezas automáticas, evitando ráfagas de notificaciones para artículos de hace días.
 
 </details>
 
