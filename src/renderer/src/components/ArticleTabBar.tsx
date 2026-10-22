@@ -1,6 +1,7 @@
 import React, { memo, useRef, useState, useEffect, useCallback, useMemo } from 'react'
 import { X, ExternalLink, Link2, XSquare, ChevronLeft, ChevronRight, ChevronDown, Search } from 'lucide-react'
 import { useTabsStore, type ArticleTab } from '../store/tabs.store'
+import { useSettingsStore } from '../store/settings.store'
 import { FeedFavicon } from './ArticleList'
 import Tooltip from './Tooltip'
 import { useTranslation } from '../hooks/useTranslation'
@@ -22,6 +23,7 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     closeAllTabs,
     reorderTabs
   } = useTabsStore()
+  const openArticlesInTabs = useSettingsStore((s) => s.settings.openArticlesInTabs !== false)
   const { t } = useTranslation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const counterBtnRef = useRef<HTMLButtonElement>(null)
@@ -194,7 +196,7 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     setDragOverIndex(null)
   }
 
-  if (tabs.length === 0) {
+  if (tabs.length === 0 || !openArticlesInTabs) {
     return null
   }
 

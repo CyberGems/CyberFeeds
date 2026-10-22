@@ -1710,7 +1710,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                     <ExternalLink size={14} />
                     {t.articleList.contextMenu.openInBrowser}
                   </div>
-                  {!isTrash && !article.deletedAt && (
+                  {!isTrash && !article.deletedAt && settings.openArticlesInTabs !== false && (
                     <>
                       <div
                         className="ctx-item"
@@ -1881,29 +1881,35 @@ const ArticleItem = memo(
 
         if (selected) {
           onSelect(null)
-          useTabsStore.getState().closeTab(article.id)
+          if (settings.openArticlesInTabs !== false) {
+            useTabsStore.getState().closeTab(article.id)
+          }
           return
         }
 
-        useTabsStore.getState().openTab(
-          {
-            id: article.id,
-            title: article.title,
-            feedId: article.feedId,
-            feedTitle: article.feedTitle,
-            feedIcon: article.feedIcon,
-            url: article.link
-          },
-          true
-        )
+        if (settings.openArticlesInTabs !== false) {
+          useTabsStore.getState().openTab(
+            {
+              id: article.id,
+              title: article.title,
+              feedId: article.feedId,
+              feedTitle: article.feedTitle,
+              feedIcon: article.feedIcon,
+              url: article.link
+            },
+            true
+          )
+        } else {
+          onSelect(article.id)
+        }
         if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
       },
-      [article, isTrash, markRead, onSelect, selected]
+      [article, isTrash, markRead, onSelect, selected, settings.openArticlesInTabs]
     )
 
     const handleAuxClick = useCallback(
       (e: React.MouseEvent) => {
-        if (e.button === 1) {
+        if (e.button === 1 && settings.openArticlesInTabs !== false) {
           e.preventDefault()
           e.stopPropagation()
           useTabsStore.getState().openTab(
@@ -1920,7 +1926,7 @@ const ArticleItem = memo(
           if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
         }
       },
-      [article, isTrash, markRead]
+      [article, isTrash, markRead, settings.openArticlesInTabs]
     )
 
     const handleStar = useCallback(

@@ -3259,6 +3259,11 @@ mark.reader-search-match.reader-search-active {
 .form-select {
   cursor: pointer;
 }
+.form-select:disabled,
+.form-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .form-textarea {
   resize: vertical;
   min-height: 80px;

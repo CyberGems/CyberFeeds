@@ -46,7 +46,7 @@ interface TabsState {
 function persistSession(tabs: ArticleTab[], activeTabId: string | null): void {
   try {
     const settings = useSettingsStore.getState().settings
-    if (settings.articleTabsSession === 'clean') {
+    if (settings.openArticlesInTabs === false || settings.articleTabsSession === 'clean') {
       localStorage.removeItem(TABS_SESSION_KEY)
       return
     }
@@ -62,6 +62,14 @@ export const useTabsStore = create<TabsState>((set, get) => ({
   activeTabId: null,
 
   openTab: (article, activate = true) => {
+    const settings = useSettingsStore.getState().settings
+    if (settings.openArticlesInTabs === false) {
+      if (activate) {
+        useUIStore.getState().selectArticle(article.id)
+      }
+      return
+    }
+
     const { tabs, activeTabId } = get()
     const title = article.title?.trim() || 'Untitled'
     const url = article.url || article.link || ''
@@ -187,7 +195,7 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
   restoreSession: async () => {
     const settings = useSettingsStore.getState().settings
-    if (settings.articleTabsSession === 'clean') {
+    if (settings.openArticlesInTabs === false || settings.articleTabsSession === 'clean') {
       localStorage.removeItem(TABS_SESSION_KEY)
       set({ tabs: [], activeTabId: null })
       return

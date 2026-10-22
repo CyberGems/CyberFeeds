@@ -372,6 +372,7 @@ export const translations = {
           'Shows the More from CyberGems strip in About and the suite entry in the tray menu.',
         suitePromoTitle: 'CyberGems Suite',
         articleTabsTitle: 'Article Tabs & Session',
+        openArticlesInTabs: 'Open articles in tabs',
         articleTabsSession: 'On startup',
         articleTabsSessionHint:
           'Choose whether to restore previously open article tabs or start with a clean workspace.',
@@ -1269,6 +1270,7 @@ export const translations = {
           'Muestra la tira Más de CyberGems en Acerca de y la entrada de la suite en el menú de bandeja.',
         suitePromoTitle: 'Suite CyberGems',
         articleTabsTitle: 'Pestañas de artículos y sesión',
+        openArticlesInTabs: 'Abrir artículos en pestañas',
         articleTabsSession: 'Al iniciar',
         articleTabsSessionHint:
           'Elige si deseas restaurar las pestañas de artículos abiertas anteriormente o empezar con un espacio limpio.',

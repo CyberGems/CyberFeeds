@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
+import { useTabsStore } from '../store/tabs.store'
 import { useConfirm } from '../hooks/useConfirm'
 import { useAlert } from '../hooks/useAlert'
 import ConfirmDialog from './ConfirmDialog'
@@ -1220,21 +1221,48 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               <div className="settings-card">
                 <CardTitle icon={Layers} accent={TAB_META.general.accent}>{t.settings.general.articleTabsTitle}</CardTitle>
-                <div style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>
-                  {t.settings.general.articleTabsSession}
-                </div>
-                <div className="form-hint" style={{ marginTop: 0, marginBottom: 10, fontSize: 12, lineHeight: 1.45 }}>
-                  {t.settings.general.articleTabsSessionHint}
-                </div>
-                <select
-                  className="form-select"
-                  value={local.articleTabsSession || 'restore'}
-                  onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
-                  style={{ width: '100%', fontSize: 12 }}
+                <label className="toggle" style={{ marginBottom: 14 }}>
+                  <div
+                    className={`toggle-track ${local.openArticlesInTabs !== false ? 'on' : ''}`}
+                    onClick={() => {
+                      const next = local.openArticlesInTabs === false ? true : false
+                      update({ openArticlesInTabs: next })
+                      if (!next) {
+                        useTabsStore.getState().closeAllTabs()
+                      }
+                    }}
+                  >
+                    <div className="toggle-thumb" />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'var(--text-primary)' }}>
+                    {t.settings.general.openArticlesInTabs}
+                  </span>
+                </label>
+
+                <div
+                  style={{
+                    opacity: local.openArticlesInTabs !== false ? 1 : 0.45,
+                    pointerEvents: local.openArticlesInTabs !== false ? 'auto' : 'none',
+                    transition: 'opacity 0.2s ease'
+                  }}
                 >
-                  <option value="restore">{t.settings.general.articleTabsSessionRestore}</option>
-                  <option value="clean">{t.settings.general.articleTabsSessionClean}</option>
-                </select>
+                  <div style={{ fontSize: 13, color: 'var(--text-primary)', marginBottom: 4 }}>
+                    {t.settings.general.articleTabsSession}
+                  </div>
+                  <div className="form-hint" style={{ marginTop: 0, marginBottom: 10, fontSize: 12, lineHeight: 1.45 }}>
+                    {t.settings.general.articleTabsSessionHint}
+                  </div>
+                  <select
+                    className="form-select"
+                    disabled={local.openArticlesInTabs === false}
+                    value={local.articleTabsSession || 'restore'}
+                    onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
+                    style={{ width: '100%', fontSize: 12 }}
+                  >
+                    <option value="restore">{t.settings.general.articleTabsSessionRestore}</option>
+                    <option value="clean">{t.settings.general.articleTabsSessionClean}</option>
+                  </select>
+                </div>
               </div>
 
               <div className="settings-card">
