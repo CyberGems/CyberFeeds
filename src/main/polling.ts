@@ -2,7 +2,7 @@ import { Worker } from 'worker_threads'
 import path from 'path'
 import { app, BrowserWindow } from 'electron'
 import * as db from './db'
-import type { Feed } from './types'
+import type { Feed, Article } from './types'
 import { setTrayActivity, rebuildTrayMenu } from './tray'
 import { setPollingBatchHold } from './notifications'
 
@@ -31,10 +31,10 @@ export interface PollOptions {
   concurrency?: number
 }
 
-let onNewArticlesCallback: ((feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void) | null = null
+let onNewArticlesCallback: ((feedId: string, insertedArticles: Article[], feedTitle: string, feedIcon?: string, options?: PollOptions, notifiableArticles?: Article[]) => void) | null = null
 let onAutoCleanupCallback: ((res: { deletedArticles: number; purgedTrash: number }) => void) | null = null
 
-export function setOnNewArticles(cb: (feedId: string, insertedArticles: any[], feedTitle: string, feedIcon?: string, options?: PollOptions) => void): void {
+export function setOnNewArticles(cb: (feedId: string, insertedArticles: Article[], feedTitle: string, feedIcon?: string, options?: PollOptions, notifiableArticles?: Article[]) => void): void {
   onNewArticlesCallback = cb
 }
 
@@ -206,6 +206,12 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
       return
     }
 
+    // Capture the previous lastFetched *before* updating — we need it to
+    // distinguish genuinely new articles from re-discoveries caused by
+    // auto-cleanup deleting old articles that the RSS feed still serves.
+    const prevFeed = db.getFeedById(feedId)
+    const prevLastFetched = prevFeed?.lastFetched ?? 0
+
     // Reset error count on success
     db.updateFeed({ id: feedId, errorCount: 0, lastFetched })
 
@@ -214,7 +220,34 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
       console.log(`[Polling] Feed ${feedId}: ${articles.length} found, ${inserted.length} new.`)
       if (inserted.length > 0 && onNewArticlesCallback) {
         const feed = db.getFeedById(feedId)
-        onNewArticlesCallback(feedId, inserted, feed?.title || '', feed?.icon || undefined, pollOptions)
+
+        // Filter out re-discovered articles: if the feed was fetched before,
+        // only notify about articles published after the previous fetch
+        // (with a 5-minute tolerance for clock skew / delayed publishing).
+        // Articles published before that window are re-inserts from cleanup
+        // and should be stored silently.
+        const CLOCK_TOLERANCE_MS = 5 * 60 * 1000
+        const notifiable = prevLastFetched > 0
+          ? inserted.filter(a => {
+              const pub = typeof a.pubDate === 'number' && !isNaN(a.pubDate) ? a.pubDate : lastFetched
+              return pub >= prevLastFetched - CLOCK_TOLERANCE_MS
+            })
+          : inserted // First-ever fetch: no previous baseline to compare
+
+        if (notifiable.length < inserted.length) {
+          console.log(
+            `[Polling] Feed ${feedId}: suppressed ${inserted.length - notifiable.length} re-discovered article notification(s)`
+          )
+        }
+
+        onNewArticlesCallback(
+          feedId,
+          inserted,
+          feed?.title || '',
+          feed?.icon || undefined,
+          pollOptions,
+          notifiable
+        )
       }
     } else {
       console.log(`[Polling] Feed ${feedId}: No articles found.`)

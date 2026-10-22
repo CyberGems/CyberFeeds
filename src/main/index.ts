@@ -445,10 +445,11 @@ app.whenReady().then(() => {
   createTray(mainWindow)
 
   // Wire new-article notifications
-  setOnNewArticles((feedId, inserted, feedTitle, feedIcon, options) => {
+  setOnNewArticles((feedId, inserted, feedTitle, feedIcon, options, notifiable) => {
+    const toNotify = notifiable ?? inserted
     const suppressForFeed = options?.suppressNotificationFeedIds?.includes(feedId) ?? false
-    if (!options?.suppressNotifications && !suppressForFeed && inserted.length > 0) {
-      const items: NotificationHistoryItem[] = inserted.map((article) => ({
+    if (!options?.suppressNotifications && !suppressForFeed && toNotify.length > 0) {
+      const items: NotificationHistoryItem[] = toNotify.map((article) => ({
         id: crypto.randomUUID(),
         title: article.title,
         body: article.snippet,
