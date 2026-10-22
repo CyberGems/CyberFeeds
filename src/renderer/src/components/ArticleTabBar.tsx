@@ -305,17 +305,6 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
             <ChevronDown size={11} className="article-tab-counter-arrow" />
           </button>
         </Tooltip>
-
-        <Tooltip label={t.articleTabs.closeAllTabs} placement="bottom">
-          <button
-            type="button"
-            className="article-tab-bar-action-btn"
-            onClick={closeAllTabs}
-            aria-label={t.articleTabs.closeAllTabs}
-          >
-            <XSquare size={14} />
-          </button>
-        </Tooltip>
       </div>
 
       {showTabList && dropdownPos && (
