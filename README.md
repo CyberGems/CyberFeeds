@@ -95,7 +95,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Modern Suite Toggles**: Interactive pill-switch toggles with tactile checkmarks and theme-reactive accents
 - **Greeting Personalization**: Set your custom name, use the default title, or clear it for pure greetings
 - **Interface Scale**: Quickly adjust the overall interface scale from the welcome panel, with detailed independent interface and reader controls in Settings
-- **Reading Preferences**: Font size, line height, max width, reading theme (Default, Sepia, Dark), and in-app YouTube playback toggle
+- **Reading Preferences**: Font size, line height, max width, and in-app YouTube playback toggle
 - **Bilingual UI**: Full English and Spanish interface
 
 ### 💾 Data Management
