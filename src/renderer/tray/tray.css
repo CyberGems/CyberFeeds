@@ -79,8 +79,6 @@ body {
   box-sizing: border-box;
   max-height: calc(100vh - 24px);
   background: var(--tray-bg);
-  backdrop-filter: blur(28px) saturate(1.8);
-  -webkit-backdrop-filter: blur(28px) saturate(1.8);
   border: 1px solid var(--tray-border);
   border-radius: 16px;
   overflow: hidden;

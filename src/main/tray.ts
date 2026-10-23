@@ -199,6 +199,10 @@ function getTrayMenuSnapshot(): TrayMenuSnapshot {
 
 let trayMenuLastShown = 0
 let trayMenuHideTimer: NodeJS.Timeout | null = null
+let trayMenuShowPending = false
+let trayMenuShowFallback: NodeJS.Timeout | null = null
+let trayMenuRevealTimer: NodeJS.Timeout | null = null
+let trayMenuAnchor: any = null
 
 function calculateTrayMenuGeometry(
   iconBounds: any,
@@ -347,6 +351,27 @@ function ensureTrayWindow(): BrowserWindow {
   return trayWindow
 }
 
+function revealTrayMenuWin(): void {
+  if (!trayWindow || trayWindow.isDestroyed()) return
+  if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
+  trayMenuShowPending = false
+  if (!trayWindow.isVisible()) {
+    try { trayWindow.setOpacity(0) } catch { /* ignore */ }
+    trayWindow.show()
+    if (trayMenuRevealTimer) clearTimeout(trayMenuRevealTimer)
+    trayMenuRevealTimer = setTimeout(() => {
+      trayMenuRevealTimer = null
+      if (trayWindow && !trayWindow.isDestroyed()) {
+        try { trayWindow.setOpacity(1) } catch { /* ignore */ }
+      }
+    }, 40)
+  } else {
+    try { trayWindow.setOpacity(1) } catch { /* ignore */ }
+  }
+  trayWindow.focus()
+  trayMenuLastShown = Date.now()
+}
+
 function showTrayMenu(eventBounds?: any): void {
   if (trayMenuHideTimer) {
     clearTimeout(trayMenuHideTimer)
@@ -355,6 +380,7 @@ function showTrayMenu(eventBounds?: any): void {
   const win = ensureTrayWindow()
   if (win.isDestroyed()) return
 
+  trayMenuAnchor = eventBounds
   const geo = calculateTrayMenuGeometry(eventBounds, currentTraySize.width, currentTraySize.height)
 
   // To avoid flicker: hide first if visible, reposition, then show.
@@ -365,14 +391,20 @@ function showTrayMenu(eventBounds?: any): void {
   }
 
   // Set final position while hidden
-  win.setBounds(geo)
+  const current = win.getBounds()
+  if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
+    win.setBounds(geo)
+  }
+
+  trayMenuShowPending = true
+  if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
+  trayMenuShowFallback = setTimeout(() => {
+    trayMenuShowFallback = null
+    if (trayMenuShowPending) revealTrayMenuWin()
+  }, 500)
 
   const snapshot = getTrayMenuSnapshot()
   win.webContents.send('tray:show', snapshot)
-
-  trayMenuLastShown = Date.now()
-  win.show()
-  win.focus()
 }
 
 export function hideTrayMenu(): void {
@@ -380,8 +412,14 @@ export function hideTrayMenu(): void {
     clearTimeout(trayMenuHideTimer)
     trayMenuHideTimer = null
   }
-  if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
-    trayWindow.hide()
+  if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
+  if (trayMenuRevealTimer) { clearTimeout(trayMenuRevealTimer); trayMenuRevealTimer = null }
+  trayMenuShowPending = false
+  if (trayWindow && !trayWindow.isDestroyed()) {
+    try { trayWindow.setOpacity(1) } catch { /* ignore */ }
+    if (trayWindow.isVisible()) {
+      trayWindow.hide()
+    }
   }
 }
 
@@ -487,11 +525,18 @@ function registerTrayIpc(): void {
     const newWidth = Math.max(260, Math.min(450, Math.round(size.width)))
     const newHeight = Math.max(200, Math.min(800, Math.round(size.height)))
 
-    if (Math.abs(newWidth - currentTraySize.width) < 6 && Math.abs(newHeight - currentTraySize.height) < 6) {
-      return
+    if (Math.abs(newWidth - currentTraySize.width) >= 6 || Math.abs(newHeight - currentTraySize.height) >= 6) {
+      currentTraySize = { width: newWidth, height: newHeight }
     }
 
-    currentTraySize = { width: newWidth, height: newHeight }
+    if (trayMenuShowPending && trayWindow && !trayWindow.isDestroyed()) {
+      const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
+      const current = trayWindow.getBounds()
+      if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
+        trayWindow.setBounds(geo)
+      }
+      revealTrayMenuWin()
+    }
   })
 }
 
