@@ -198,10 +198,11 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
     const { feedId, articles, error, lastFetched } = result
 
     if (error) {
-      // Increment error count
+      // Increment error count (leave lastFetched untouched so a future successful
+      // poll does not treat intervening articles as re-discoveries)
       const feed = db.getFeedById(feedId)
       if (feed) {
-        db.updateFeed({ id: feedId, errorCount: (feed.errorCount || 0) + 1, lastFetched })
+        db.updateFeed({ id: feedId, errorCount: (feed.errorCount || 0) + 1 })
       }
       return
     }
@@ -227,12 +228,17 @@ export async function pollFeeds(feeds?: Feed[], onComplete?: () => void, options
         // Articles published before that window are re-inserts from cleanup
         // and should be stored silently.
         const CLOCK_TOLERANCE_MS = 5 * 60 * 1000
+        const notifiedIds = db.getNotifiedArticleIds(
+          inserted.map(a => a.id),
+          inserted.map(a => a.link).filter(Boolean)
+        )
         const notifiable = prevLastFetched > 0
           ? inserted.filter(a => {
+              if (notifiedIds.has(a.id) || (a.link && notifiedIds.has(a.link))) return false
               const pub = typeof a.pubDate === 'number' && !isNaN(a.pubDate) ? a.pubDate : lastFetched
               return pub >= prevLastFetched - CLOCK_TOLERANCE_MS
             })
-          : inserted // First-ever fetch: no previous baseline to compare
+          : inserted.filter(a => !notifiedIds.has(a.id) && (!a.link || !notifiedIds.has(a.link)))
 
         if (notifiable.length < inserted.length) {
           console.log(

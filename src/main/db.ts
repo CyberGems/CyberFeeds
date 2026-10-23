@@ -896,6 +896,38 @@ export function clearNotificationHistory(): void {
   db.prepare('DELETE FROM notification_history').run()
 }
 
+/**
+ * Returns a Set of IDs from the provided candidate article IDs or links that
+ * already exist in the notification history. Used to prevent re-notifying articles
+ * (e.g. from feeds with no pubDate or re-discovered items).
+ */
+export function getNotifiedArticleIds(candidateIds: string[], candidateLinks: string[]): Set<string> {
+  const notified = new Set<string>()
+  if (candidateIds.length === 0 && candidateLinks.length === 0) return notified
+
+  if (candidateIds.length > 0) {
+    const idPlaceholders = candidateIds.map(() => '?').join(', ')
+    const rows = db
+      .prepare(`SELECT articleId FROM notification_history WHERE articleId IN (${idPlaceholders})`)
+      .all(...candidateIds) as { articleId: string }[]
+    for (const r of rows) {
+      if (r.articleId) notified.add(r.articleId)
+    }
+  }
+
+  if (candidateLinks.length > 0) {
+    const linkPlaceholders = candidateLinks.map(() => '?').join(', ')
+    const rows = db
+      .prepare(`SELECT link FROM notification_history WHERE link IN (${linkPlaceholders})`)
+      .all(...candidateLinks) as { link: string }[]
+    for (const r of rows) {
+      if (r.link) notified.add(r.link)
+    }
+  }
+
+  return notified
+}
+
 /** Timestamp the user last opened the notification history (mirrors the main-window badge). */
 export function getNotificationsLastChecked(): number {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('notificationsLastChecked') as { value: string } | undefined
