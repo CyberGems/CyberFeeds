@@ -1864,19 +1864,21 @@ const ArticleItem = memo(
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault()
           e.stopPropagation()
-          useTabsStore.getState().openTab(
-            {
-              id: article.id,
-              title: article.title,
-              feedId: article.feedId,
-              feedTitle: article.feedTitle,
-              feedIcon: article.feedIcon,
-              url: article.link
-            },
-            false
-          )
-          if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
-          return
+          if (settings.openArticlesInTabs !== false) {
+            useTabsStore.getState().openTab(
+              {
+                id: article.id,
+                title: article.title,
+                feedId: article.feedId,
+                feedTitle: article.feedTitle,
+                feedIcon: article.feedIcon,
+                url: article.link
+              },
+              false
+            )
+            if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
+            return
+          }
         }
 
         if (selected) {
