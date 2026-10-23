@@ -435,12 +435,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   color: var(--text-muted);
   opacity: 0.85;
-  letter-spacing: 0.01em;
+  letter-spacing: -0.01em;
   user-select: none;
   white-space: nowrap;
   transition: opacity 0.2s ease, color 0.2s ease, background-color 0.2s ease;
@@ -459,8 +459,8 @@ body {
 .topbar-welcome-content {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  line-height: 1.2;
+  gap: 6px;
+  line-height: 1;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .topbar-welcome-content.fading {
@@ -472,14 +472,12 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   line-height: 1;
   color: var(--text-muted);
   opacity: 0.9;
-  /* Optical correction: font descenders push the visual text center ~1px
-     below the mathematical center, so nudge the icon down to match. */
-  transform: translateY(0.5px);
+  transform: translateY(-1px);
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .topbar-welcome-icon svg {
@@ -487,7 +485,7 @@ body {
 }
 .topbar-welcome-text {
   display: inline-block;
-  line-height: 1.2;
+  line-height: 1;
 }
 .topbar-welcome:hover .topbar-welcome-icon {
   opacity: 1;
