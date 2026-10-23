@@ -86,7 +86,6 @@ export interface AppSettings {
   readingFontSize: number
   readingLineHeight: number
   readingMaxWidth: number
-  readingTheme: 'default' | 'sepia' | 'dark'
   interfaceScale: number
   sidebarFontSize: number // px — controls sidebar items font size
   listFontSize: number // px — controls article list font size
@@ -255,7 +254,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   readingFontSize: 16,
   readingLineHeight: 1.7,
   readingMaxWidth: 720,
-  readingTheme: 'default',
   interfaceScale: DEFAULT_INTERFACE_SCALE,
   sidebarFontSize: 13,
   listFontSize: 13,
