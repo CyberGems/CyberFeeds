@@ -8,6 +8,7 @@ import { is } from '@electron-toolkit/utils'
 import * as db from './db'
 import { restoreMainWindow } from './index'
 import { translations } from '../shared/translations'
+import { getReceivedAt } from '../shared/notification-time'
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from './types'
 import { setTrayActivity, rebuildTrayMenu } from './tray'
 
@@ -710,9 +711,10 @@ async function flushBatch(): Promise<void> {
     batchStartTime = 0
     const thisBatchId = ++currentBatchId
 
-    // Sort by publication timestamp descending so that the popup presents
-    // the absolute newest/most recent articles across all feeds first
-    fullBatch.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+    // Sort by receipt timestamp descending so that the popup presents
+    // the absolute newest received notifications first (matching card UI timestamps and DB order),
+    // with publication date as tiebreaker.
+    fullBatch.sort((a, b) => getReceivedAt(b) - getReceivedAt(a) || (b.createdAt || 0) - (a.createdAt || 0))
 
     // Cap to at most HARD_CAP items for the notifier window popup (taking newest first)
     const batch = fullBatch.slice(0, HARD_CAP)
