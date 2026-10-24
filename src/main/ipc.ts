@@ -1083,6 +1083,9 @@ export function registerIpc(): void {
   // ─── Keyboard Shortcuts ─────────────────────────────────────────────────────
 
   ipcMain.handle('shortcuts:update', (_, shortcuts) => {
+    if (!shortcuts || typeof shortcuts !== 'object') {
+      return { ok: false, error: 'Invalid payload' }
+    }
     const settings = db.getSettings()
     db.saveSettings({ ...settings, shortcuts })
     rebuildTrayMenu()

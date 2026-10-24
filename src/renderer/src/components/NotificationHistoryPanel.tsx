@@ -275,6 +275,11 @@ export default function NotificationHistoryPanel(): JSX.Element {
       setHistory((prev) => {
         const ids = new Set(batch.map((b) => b.id))
         const merged = [...batch, ...prev.filter((x) => !ids.has(x.id))]
+        merged.sort((a, b) => {
+          const aTime = a.receivedAt || a.createdAt || 0
+          const bTime = b.receivedAt || b.createdAt || 0
+          return bTime - aTime || (b.createdAt || 0) - (a.createdAt || 0)
+        })
         return limit > 0 ? merged.slice(0, limit) : merged
       })
     }

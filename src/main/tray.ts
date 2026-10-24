@@ -628,7 +628,7 @@ function registerGlobalShortcuts(): void {
   unregisterGlobalShortcuts()
 
   if (shortcuts.showHide.enabled && shortcuts.showHide.global) {
-    globalShortcut.register(shortcuts.showHide.accelerator, () => {
+    const ok = globalShortcut.register(shortcuts.showHide.accelerator, () => {
       const win = _mainWindow
       if (!win || win.isDestroyed()) return
       if (getMainWindowState() === 'visible') {
@@ -637,34 +637,50 @@ function registerGlobalShortcuts(): void {
         restoreMainWindow()
       }
     })
-    registeredGlobalShortcuts.push(shortcuts.showHide.accelerator)
+    if (ok) {
+      registeredGlobalShortcuts.push(shortcuts.showHide.accelerator)
+    } else {
+      console.warn(`[Shortcuts] Failed to register global shortcut: ${shortcuts.showHide.accelerator}`)
+    }
   }
 
   if (shortcuts.notifications.enabled && shortcuts.notifications.global) {
-    globalShortcut.register(shortcuts.notifications.accelerator, () => {
+    const ok = globalShortcut.register(shortcuts.notifications.accelerator, () => {
       const win = _mainWindow
       if (!win || win.isDestroyed()) return
       restoreMainWindow()
       win.webContents.send('app:openHistory')
     })
-    registeredGlobalShortcuts.push(shortcuts.notifications.accelerator)
+    if (ok) {
+      registeredGlobalShortcuts.push(shortcuts.notifications.accelerator)
+    } else {
+      console.warn(`[Shortcuts] Failed to register global shortcut: ${shortcuts.notifications.accelerator}`)
+    }
   }
 
   if (shortcuts.settings.enabled && shortcuts.settings.global) {
-    globalShortcut.register(shortcuts.settings.accelerator, () => {
+    const ok = globalShortcut.register(shortcuts.settings.accelerator, () => {
       const win = _mainWindow
       if (!win || win.isDestroyed()) return
       restoreMainWindow()
       win.webContents.send('app:openSettings')
     })
-    registeredGlobalShortcuts.push(shortcuts.settings.accelerator)
+    if (ok) {
+      registeredGlobalShortcuts.push(shortcuts.settings.accelerator)
+    } else {
+      console.warn(`[Shortcuts] Failed to register global shortcut: ${shortcuts.settings.accelerator}`)
+    }
   }
 
   if (shortcuts.fetch.enabled && shortcuts.fetch.global) {
-    globalShortcut.register(shortcuts.fetch.accelerator, () => {
+    const ok = globalShortcut.register(shortcuts.fetch.accelerator, () => {
       pollFeeds()
     })
-    registeredGlobalShortcuts.push(shortcuts.fetch.accelerator)
+    if (ok) {
+      registeredGlobalShortcuts.push(shortcuts.fetch.accelerator)
+    } else {
+      console.warn(`[Shortcuts] Failed to register global shortcut: ${shortcuts.fetch.accelerator}`)
+    }
   }
 }
 

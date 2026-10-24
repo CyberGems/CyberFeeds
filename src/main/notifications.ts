@@ -849,10 +849,6 @@ function stopQueueChecker(): void {
 
 export function showNotificationsBatch(items: NotificationHistoryItem[]): void {
   if (!settings.enabled || items.length === 0) return
-  if (settings.snoozedUntil && Date.now() < settings.snoozedUntil) {
-    console.warn('[Notifier] Notifications suppressed: snoozed until', new Date(settings.snoozedUntil).toISOString())
-    return
-  }
 
   const allowedFeedFilters = settings.feedFilters ?? []
   const keywordFilters = (settings.keywordFilters ?? []).map((k) => k.toLowerCase())
@@ -871,6 +867,12 @@ export function showNotificationsBatch(items: NotificationHistoryItem[]): void {
   // 1. History and main-window badge: insert in a single transaction
   db.addNotificationHistoryBatch(allowed)
   rebuildTrayMenu()
+
+  // If snoozed, suppress visual popups and audio alerts, while keeping entries in history and deduplication
+  if (settings.snoozedUntil && Date.now() < settings.snoozedUntil) {
+    console.log('[Notifier] Notifications popup suppressed: snoozed until', new Date(settings.snoozedUntil).toISOString())
+    return
+  }
 
   // 2. Notify renderer window efficiently via a bounded batch. Keep the full
   // count for the unseen badge, while limiting transient renderer memory.

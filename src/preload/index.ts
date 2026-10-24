@@ -273,6 +273,7 @@ const api = {
   windowMinimize: () => ipcRenderer.send('window:minimize'),
   windowMaximize: () => ipcRenderer.send('window:maximize'),
   windowClose: () => ipcRenderer.send('window:close'),
+  windowHide: () => ipcRenderer.send('window:hide'),
   isMaximized: () => ipcRenderer.invoke('window:is-maximized'),
   onMaximizedChange: (cb: (maximized: boolean) => void) => {
     const handler = (_: unknown, val: boolean) => cb(val)

@@ -3,7 +3,8 @@ import { useFeedsStore } from './store/feeds.store'
 import { useArticlesStore } from './store/articles.store'
 import { useUIStore } from './store/ui.store'
 import { useSettingsStore } from './store/settings.store'
-import { DEFAULT_SETTINGS, type ArticleQuery } from './types'
+import { DEFAULT_SETTINGS, type ArticleQuery, type KeyboardShortcuts } from './types'
+import { matchesAccelerator } from '@shared/shortcuts'
 import { useColumnResize } from './hooks/useColumnResize'
 import { useRowResize } from './hooks/useRowResize'
 import { useOverlayDismiss } from './hooks/useOverlayDismiss'
@@ -437,6 +438,66 @@ export default function App(): JSX.Element {
   // Keyboard shortcuts
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
+      const isEditableTarget = (target: EventTarget | null): boolean => {
+        return (
+          target instanceof HTMLElement &&
+          Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+        )
+      }
+
+      if (!isEditableTarget(e.target)) {
+        const shortcuts = useSettingsStore.getState().settings?.shortcuts as KeyboardShortcuts | undefined
+        if (shortcuts) {
+          if (
+            shortcuts.showHide?.enabled &&
+            !shortcuts.showHide?.global &&
+            matchesAccelerator(e, shortcuts.showHide.accelerator)
+          ) {
+            e.preventDefault()
+            e.stopPropagation()
+            window.api.windowHide()
+            return
+          }
+
+          if (
+            shortcuts.notifications?.enabled &&
+            !shortcuts.notifications?.global &&
+            matchesAccelerator(e, shortcuts.notifications.accelerator)
+          ) {
+            e.preventDefault()
+            e.stopPropagation()
+            useUIStore.setState((s) => ({ activePanel: s.activePanel === 'history' ? null : 'history' }))
+            return
+          }
+
+          if (
+            shortcuts.settings?.enabled &&
+            !shortcuts.settings?.global &&
+            matchesAccelerator(e, shortcuts.settings.accelerator)
+          ) {
+            e.preventDefault()
+            e.stopPropagation()
+            if (activePanel === 'settings') {
+              handleCloseSettings()
+            } else {
+              useUIStore.setState({ activePanel: 'settings' })
+            }
+            return
+          }
+
+          if (
+            shortcuts.fetch?.enabled &&
+            !shortcuts.fetch?.global &&
+            matchesAccelerator(e, shortcuts.fetch.accelerator)
+          ) {
+            e.preventDefault()
+            e.stopPropagation()
+            void window.api.fetchAllFeeds()
+            return
+          }
+        }
+      }
+
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
         if (activePanel) return
         e.preventDefault()

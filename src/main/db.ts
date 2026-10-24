@@ -144,6 +144,17 @@ function createSchema(): void {
       value TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS notified_articles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      articleId TEXT,
+      link TEXT,
+      notifiedAt INTEGER NOT NULL
+    );
+
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_notified_aid ON notified_articles(articleId) WHERE articleId IS NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_notified_link ON notified_articles(link) WHERE link IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_notified_time ON notified_articles(notifiedAt);
+
     CREATE TABLE IF NOT EXISTS window_state (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       x INTEGER,
@@ -161,6 +172,15 @@ function createSchema(): void {
 
     INSERT OR IGNORE INTO window_state (id, width, height, maximized) VALUES (1, 1280, 800, 0);
   `)
+
+  try {
+    db.exec(`
+      INSERT OR IGNORE INTO notified_articles (articleId, link, notifiedAt)
+      SELECT articleId, link, COALESCE(receivedAt, createdAt)
+      FROM notification_history
+      WHERE articleId IS NOT NULL OR link IS NOT NULL;
+    `)
+  } catch { /* ignore */ }
 
   // Mixed-DPI restore: remember which monitor the window was on
   try { db.exec('ALTER TABLE window_state ADD COLUMN displayId INTEGER') } catch { /* already exists */ }
@@ -870,8 +890,13 @@ export function addNotificationHistoryBatch(items: NotificationHistoryItem[]): v
     INSERT OR REPLACE INTO notification_history (id, title, body, link, feedName, icon, thumbnail, articleId, createdAt, receivedAt)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `)
+  const dedupeStmt = db.prepare(`
+    INSERT OR IGNORE INTO notified_articles (articleId, link, notifiedAt)
+    VALUES (?, ?, ?)
+  `)
   db.transaction(() => {
     for (const item of items) {
+      const recAt = item.receivedAt ?? Date.now()
       stmt.run(
         item.id,
         item.title,
@@ -882,14 +907,29 @@ export function addNotificationHistoryBatch(items: NotificationHistoryItem[]): v
         item.thumbnail ?? null,
         item.articleId ?? null,
         item.createdAt,
-        item.receivedAt ?? Date.now()
+        recAt
       )
+      if (item.articleId || item.link) {
+        dedupeStmt.run(
+          item.articleId ?? null,
+          item.link ?? null,
+          recAt
+        )
+      }
     }
   })()
   const limit = getSettings().notifications?.historyLimit ?? 1000
   if (limit > 0) {
     pruneNotificationHistory(limit)
   }
+  // Cap persistent deduplication tracking to at most 10,000 items
+  try {
+    db.prepare(`
+      DELETE FROM notified_articles WHERE id NOT IN (
+        SELECT id FROM notified_articles ORDER BY notifiedAt DESC LIMIT 10000
+      )
+    `).run()
+  } catch { /* ignore */ }
 }
 
 export function clearNotificationHistory(): void {
@@ -898,8 +938,9 @@ export function clearNotificationHistory(): void {
 
 /**
  * Returns a Set of IDs from the provided candidate article IDs or links that
- * already exist in the notification history. Used to prevent re-notifying articles
- * (e.g. from feeds with no pubDate or re-discovered items).
+ * already exist in the notification history or deduplication record. Used to prevent
+ * re-notifying articles (e.g. from feeds with no pubDate or re-discovered items),
+ * even if the user clears their visible notification history log.
  */
 export function getNotifiedArticleIds(candidateIds: string[], candidateLinks: string[]): Set<string> {
   const notified = new Set<string>()
@@ -908,8 +949,12 @@ export function getNotifiedArticleIds(candidateIds: string[], candidateLinks: st
   if (candidateIds.length > 0) {
     const idPlaceholders = candidateIds.map(() => '?').join(', ')
     const rows = db
-      .prepare(`SELECT articleId FROM notification_history WHERE articleId IN (${idPlaceholders})`)
-      .all(...candidateIds) as { articleId: string }[]
+      .prepare(`
+        SELECT articleId FROM notified_articles WHERE articleId IN (${idPlaceholders})
+        UNION
+        SELECT articleId FROM notification_history WHERE articleId IN (${idPlaceholders})
+      `)
+      .all(...candidateIds, ...candidateIds) as { articleId: string }[]
     for (const r of rows) {
       if (r.articleId) notified.add(r.articleId)
     }
@@ -918,8 +963,12 @@ export function getNotifiedArticleIds(candidateIds: string[], candidateLinks: st
   if (candidateLinks.length > 0) {
     const linkPlaceholders = candidateLinks.map(() => '?').join(', ')
     const rows = db
-      .prepare(`SELECT link FROM notification_history WHERE link IN (${linkPlaceholders})`)
-      .all(...candidateLinks) as { link: string }[]
+      .prepare(`
+        SELECT link FROM notified_articles WHERE link IN (${linkPlaceholders})
+        UNION
+        SELECT link FROM notification_history WHERE link IN (${linkPlaceholders})
+      `)
+      .all(...candidateLinks, ...candidateLinks) as { link: string }[]
     for (const r of rows) {
       if (r.link) notified.add(r.link)
     }
@@ -966,7 +1015,10 @@ export function getSettings(): AppSettings {
       shortcuts: {
         ...DEFAULT_SETTINGS.shortcuts,
         ...parsed.shortcuts,
-        ...(parsed.shortcuts?.showHide?.accelerator === 'Alt+Shift+S'
+        ...(parsed.shortcuts?.showHide?.accelerator === 'Alt+Shift+S' &&
+          parsed.shortcuts?.notifications?.accelerator !== 'Alt+S' &&
+          parsed.shortcuts?.settings?.accelerator !== 'Alt+S' &&
+          parsed.shortcuts?.fetch?.accelerator !== 'Alt+S'
           ? { showHide: { ...parsed.shortcuts.showHide, accelerator: 'Alt+S' } }
           : {})
       },

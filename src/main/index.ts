@@ -579,6 +579,7 @@ ipcMain.on('window:maximize', () => {
   else mainWindow?.maximize()
 })
 ipcMain.on('window:close', () => mainWindow?.close())
+ipcMain.on('window:hide', () => mainWindow?.hide())
 ipcMain.handle('window:is-maximized', () => (mainWindow ? mainWindow.isMaximized() : false))
 ipcMain.handle('window:close-choice', (_e, action: string, remember: boolean) => {
   if (action !== 'tray' && action !== 'quit') return false

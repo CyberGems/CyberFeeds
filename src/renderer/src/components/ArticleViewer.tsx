@@ -902,21 +902,26 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
 
   useEffect(() => {
     if (!article) return
+    const isEditableTarget = (target: EventTarget | null): boolean => {
+      return (
+        target instanceof HTMLElement &&
+        Boolean(target.closest('input, textarea, select, [contenteditable="true"]'))
+      )
+    }
+
     const handleKeyDown = (e: KeyboardEvent): void => {
-      const target = e.target as HTMLElement
-      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
+      if (isEditableTarget(e.target) || useUIStore.getState().activePanel) return
 
       if (
         ((e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'f') ||
-          e.key === 'F3') &&
-        !isInput
+          e.key === 'F3')
       ) {
         e.preventDefault()
         openSearch()
         return
       }
 
-      if (e.key === 'Escape' && searchOpen && !isInput) {
+      if (e.key === 'Escape' && searchOpen) {
         e.preventDefault()
         closeSearch()
       }

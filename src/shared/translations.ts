@@ -639,7 +639,8 @@ export const translations = {
         save: 'Save',
         validation: {
           invalidFormat: 'Invalid format. Use format like Ctrl+A or Alt+S',
-          conflict: 'This shortcut conflicts with another action'
+          conflict: 'This shortcut conflicts with another action',
+          builtinConflict: 'This shortcut conflicts with a built-in application shortcut'
         }
       }
     },
@@ -1548,7 +1549,8 @@ export const translations = {
         save: 'Guardar',
         validation: {
           invalidFormat: 'Formato inválido. Usa formato como Ctrl+A o Alt+S',
-          conflict: 'Este atajo entra en conflicto con otra acción'
+          conflict: 'Este atajo entra en conflicto con otra acción',
+          builtinConflict: 'Este atajo entra en conflicto con un atajo fijo de la aplicación'
         }
       }
     },

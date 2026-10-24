@@ -33,6 +33,7 @@ import {
   interfaceScaleToZoomFactor,
   normalizeInterfaceScale
 } from '@shared/interface-scale'
+import { normalizeKey, isValidAccelerator, BUILTIN_SHORTCUTS } from '@shared/shortcuts'
 import logoPng from '../../../../resources/icon.png'
 
 interface DisplayInfo {
@@ -89,60 +90,20 @@ function CardTitle({
   )
 }
 
-function normalizeKey(key: string, code: string): string {
-  if (key.length === 1 && key >= 'a' && key <= 'z') return key.toUpperCase()
-  if (key.length === 1 && key >= 'A' && key <= 'Z') return key
-  if (key.length === 1 && key >= '0' && key <= '9') return key
-
-  switch (key) {
-    case ' ': return 'Space'
-    case 'ArrowUp': return 'Up'
-    case 'ArrowDown': return 'Down'
-    case 'ArrowLeft': return 'Left'
-    case 'ArrowRight': return 'Right'
-    case 'Escape': return 'Esc'
-    case 'Enter': return 'Enter'
-    case 'Tab': return 'Tab'
-    case 'Backspace': return 'Backspace'
-    case 'Delete': return 'Delete'
-    case 'Insert': return 'Insert'
-    case 'Home': return 'Home'
-    case 'End': return 'End'
-    case 'PageUp': return 'PageUp'
-    case 'PageDown': return 'PageDown'
-    case 'PrintScreen': return 'PrintScreen'
-    case '`': case '~': return '`'
-    case '-': case '_': return '-'
-    case '=': case '+': return '='
-    case '[': case '{': return '['
-    case ']': case '}': return ']'
-    case ';': case ':': return ';'
-    case "'": case '"': return "'"
-    case ',': case '<': return ','
-    case '.': case '>': return '.'
-    case '/': case '?': return '/'
-    case '\\': case '|': return '\\'
-  }
-
-  if (/^F[1-9][0-9]?$/.test(key)) return key
-  if (code.startsWith('Key')) return code.substring(3)
-  if (code.startsWith('Digit')) return code.substring(5)
-  if (code.startsWith('Numpad')) return code
-
-  return key
-}
-
 function findShortcutConflict(
   currentKey: string,
   accelerator: string,
   shortcuts: KeyboardShortcuts
-): string | null {
+): 'configurable' | 'builtin' | null {
   if (!accelerator) return null
   const cleanAcc = accelerator.trim().toLowerCase()
+  if (BUILTIN_SHORTCUTS.has(cleanAcc)) {
+    return 'builtin'
+  }
   for (const [key, val] of Object.entries(shortcuts)) {
     const s = val as KeyboardShortcuts[keyof KeyboardShortcuts]
     if (key !== currentKey && s.enabled && s.accelerator.trim().toLowerCase() === cleanAcc) {
-      return key
+      return 'configurable'
     }
   }
   return null
@@ -159,6 +120,7 @@ interface HotkeyRecorderProps {
 function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyRecorderProps): JSX.Element {
   const [recording, setRecording] = useState(false)
   const [tempValue, setTempValue] = useState('')
+  const [formatError, setFormatError] = useState(false)
 
   const formatDisplay = (val: string): string => {
     if (!val) return t.settings.keyboard.empty
@@ -176,6 +138,7 @@ function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyReco
     const key = e.key
     if (key === 'Escape') {
       setRecording(false)
+      setFormatError(false)
       e.currentTarget.blur()
       return
     }
@@ -183,6 +146,7 @@ function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyReco
     if ((key === 'Backspace' || key === 'Delete') && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
       onChange('')
       setRecording(false)
+      setFormatError(false)
       e.currentTarget.blur()
       return
     }
@@ -196,21 +160,34 @@ function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyReco
 
     if (!isModifier) {
       const normalized = normalizeKey(key, e.code)
+      const hasModifier = parts.length > 0
+      const isFunctionKey = /^F[1-9][0-9]?$/i.test(normalized)
+      const isSystemReserved = e.altKey && (normalized === 'F4' || key === 'F4')
+
+      if ((!hasModifier && !isFunctionKey) || isSystemReserved) {
+        setFormatError(true)
+        setTempValue(parts.length > 0 ? parts.join('+') + ' + ' + normalized : normalized)
+        return
+      }
+
+      setFormatError(false)
       if (normalized) parts.push(normalized)
       onChange(parts.join('+'))
       setRecording(false)
       e.currentTarget.blur()
     } else {
+      setFormatError(false)
       setTempValue(parts.join('+') + ' + …')
     }
   }
 
-  const conflictKey = findShortcutConflict(actionKey, value, shortcuts)
-  const hasConflict = !!conflictKey
+  const conflictType = findShortcutConflict(actionKey, value, shortcuts)
+  const hasConflict = !!conflictType
+  const hasFormatIssue = formatError || (Boolean(value) && !isValidAccelerator(value))
 
   let inputClass = 'form-input hotkey-input'
   if (recording) inputClass += ' is-recording'
-  else if (hasConflict) inputClass += ' has-conflict'
+  else if (hasConflict || hasFormatIssue) inputClass += ' has-conflict'
   else if (value) inputClass += ' has-value'
   else inputClass += ' is-empty'
 
@@ -224,6 +201,7 @@ function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyReco
           value={recording ? tempValue : formatDisplay(value)}
           onFocus={() => {
             setRecording(true)
+            setFormatError(false)
             setTempValue(t.settings.keyboard.recording)
           }}
           onBlur={() => {
@@ -234,15 +212,43 @@ function HotkeyRecorder({ actionKey, value, onChange, shortcuts, t }: HotkeyReco
           placeholder={t.settings.keyboard.accelerator}
         />
       </Tooltip>
-      {hasConflict && (
-        <span style={{
-          fontSize: 9,
-          color: 'var(--orange)',
-          marginTop: 2,
-          textAlign: 'left',
-          display: 'block'
-        }}>
+      {hasFormatIssue && (
+        <span
+          style={{
+            fontSize: 9,
+            color: 'var(--orange)',
+            marginTop: 2,
+            textAlign: 'left',
+            display: 'block'
+          }}
+        >
+          {t.settings.keyboard.validation.invalidFormat}
+        </span>
+      )}
+      {!hasFormatIssue && conflictType === 'configurable' && (
+        <span
+          style={{
+            fontSize: 9,
+            color: 'var(--orange)',
+            marginTop: 2,
+            textAlign: 'left',
+            display: 'block'
+          }}
+        >
           {t.settings.keyboard.validation.conflict}
+        </span>
+      )}
+      {!hasFormatIssue && conflictType === 'builtin' && (
+        <span
+          style={{
+            fontSize: 9,
+            color: 'var(--orange)',
+            marginTop: 2,
+            textAlign: 'left',
+            display: 'block'
+          }}
+        >
+          {t.settings.keyboard.validation.builtinConflict}
         </span>
       )}
     </div>
