@@ -1574,12 +1574,20 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                   margin: '20px 0',
                   borderRadius: '8px',
                   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid var(--border)'
+                  border: '1px solid var(--border)',
+                  overflow: 'hidden'
                 }}
               >
                 <img
                   src={article.thumbnail}
                   alt={article.title}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '520px',
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
                   onError={(e) => {
                     const el = (e.target as HTMLElement).closest('.reader-featured-image') as HTMLElement | null
                     if (el) el.remove()

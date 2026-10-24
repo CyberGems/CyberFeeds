@@ -1755,17 +1755,15 @@ mark.reader-search-match.reader-search-active {
 }
 .reader-featured-image {
   width: 100%;
-  height: min(380px, 56.25vw);
-  min-height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-2);
+  border-radius: 8px;
+  overflow: hidden;
 }
 .reader-featured-image img {
   width: 100%;
-  height: 100%;
-  object-fit: contain;
+  height: auto;
+  max-height: 520px;
+  object-fit: cover;
+  display: block;
 }
 .reader-youtube-thumbnail-wrapper {
   position: relative;
