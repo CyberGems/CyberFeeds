@@ -150,6 +150,7 @@ export default function NotifierApp(): JSX.Element {
   const stackLengthRef = useRef(0)
   const [belowCount, setBelowCount] = useState(0)
   const [scrollbarW, setScrollbarW] = useState(0)
+  const [hasScrolled, setHasScrolled] = useState(false)
 
   useEffect(() => {
     stackLengthRef.current = state.stack.length
@@ -257,6 +258,7 @@ export default function NotifierApp(): JSX.Element {
     if (scrollRef.current) {
       isProgrammaticScroll.current = true
       scrollRef.current.scrollTop = 0
+      setHasScrolled(false)
       requestAnimationFrame(() => {
         isProgrammaticScroll.current = false
       })
@@ -460,6 +462,13 @@ export default function NotifierApp(): JSX.Element {
   const handleScroll = useCallback(() => {
     if (!isProgrammaticScroll.current && !isHovering.current) {
       pauseTimer()
+    }
+    const el = scrollRef.current
+    if (el) {
+      const scrolled = el.scrollTop > 2
+      setHasScrolled((prev) => (prev !== scrolled ? scrolled : prev))
+      const sw = el.offsetWidth - el.clientWidth
+      setScrollbarW((prev) => (prev !== sw ? sw : prev))
     }
     if (rafRef.current != null) return
     rafRef.current = requestAnimationFrame(() => {
@@ -736,25 +745,52 @@ export default function NotifierApp(): JSX.Element {
         </div>
       )}
 
-      {/* Scrollable notification list */}
+      {/* Scrollable notification list area with top & bottom fades */}
       <div
-        ref={scrollRef}
-        onScroll={handleScroll}
-        onWheel={handleWheel}
         style={{
+          position: 'relative',
           flex: 1,
           minHeight: 0,
-          overflowY: 'auto',
           display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-          paddingTop: 4,
-          // Keep card right edge aligned whether or not the scrollbar is visible
-          paddingRight: scrollbarW > 0 ? 0 : 16,
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(255,255,255,0.15) transparent'
+          flexDirection: 'column'
         }}
       >
+        {/* Top fade overlay when scrolled - excludes scrollbar area */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: scrollbarW > 0 ? scrollbarW : 16,
+            height: 38,
+            background:
+              'linear-gradient(to bottom, rgba(13, 17, 23, 0.96) 0%, rgba(13, 17, 23, 0.8) 45%, rgba(13, 17, 23, 0.25) 80%, transparent 100%)',
+            pointerEvents: 'none',
+            zIndex: 10,
+            opacity: hasScrolled ? 1 : 0,
+            transition: 'opacity 0.2s ease',
+            borderRadius: '6px 6px 0 0'
+          }}
+        />
+
+        {/* Scrollable notification list */}
+        <div
+          ref={scrollRef}
+          onScroll={handleScroll}
+          onWheel={handleWheel}
+          className="notif-scroll-area"
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+            paddingTop: 4,
+            // Keep card right edge aligned whether or not the scrollbar is visible
+            paddingRight: scrollbarW > 0 ? 0 : 16
+          }}
+        >
         {state.stack.map((item) => (
           <div
             key={item.id}
@@ -901,53 +937,54 @@ export default function NotifierApp(): JSX.Element {
             </div>
           </div>
         ))}
-      </div>
-      {/* "More" floating indicator with gradient fade over the peek area */}
-      {showMoreIndicator && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 8,
-            left: 8,
-            right: 8,
-            height: 48,
-            background:
-              'linear-gradient(to top, rgba(13, 17, 23, 0.96) 0%, rgba(13, 17, 23, 0.8) 45%, rgba(13, 17, 23, 0.25) 80%, transparent 100%)',
-            pointerEvents: 'none',
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'center',
-            paddingBottom: 4,
-            borderRadius: '0 0 8px 8px',
-            zIndex: 10
-          }}
-        >
-          <Tooltip label={t.notifier.moreTooltip} placement="top">
-            <div
-              onClick={scrollToBottom}
-              style={{
-                pointerEvents: 'auto',
-                background: 'var(--accent, #00D8F1)',
-                color: '#0d1117',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: 12,
-                padding: '3px 12px',
-                fontSize: 10,
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-                transition: 'opacity 0.2s ease, transform 0.15s ease'
-              }}
-            >
-              <ChevronDown size={11} strokeWidth={2.5} />
-              {belowCount} {t.notifier.more}
-            </div>
-          </Tooltip>
         </div>
-      )}
+        {/* "More" floating indicator with gradient fade over the peek area - excludes scrollbar area */}
+        {showMoreIndicator && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: scrollbarW > 0 ? scrollbarW : 16,
+              height: 48,
+              background:
+                'linear-gradient(to top, rgba(13, 17, 23, 0.96) 0%, rgba(13, 17, 23, 0.8) 45%, rgba(13, 17, 23, 0.25) 80%, transparent 100%)',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'center',
+              paddingBottom: 4,
+              borderRadius: '0 0 8px 8px',
+              zIndex: 10
+            }}
+          >
+            <Tooltip label={t.notifier.moreTooltip} placement="top">
+              <div
+                onClick={scrollToBottom}
+                style={{
+                  pointerEvents: 'auto',
+                  background: 'var(--accent, #00D8F1)',
+                  color: '#0d1117',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: 12,
+                  padding: '3px 12px',
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                  transition: 'opacity 0.2s ease, transform 0.15s ease'
+                }}
+              >
+                <ChevronDown size={11} strokeWidth={2.5} />
+                {belowCount} {t.notifier.more}
+              </div>
+            </Tooltip>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

@@ -4202,6 +4202,74 @@ input[type="radio"] {
   }
 }
 
+/* ─── Notifier Scroll Area & Scrollbar ───────────────────────────────────── */
+.notif-scroll-area::-webkit-scrollbar {
+  width: 10px;
+}
+.notif-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.notif-scroll-area::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 24px;
+}
+.notif-scroll-area::-webkit-scrollbar-thumb:hover,
+.notif-scroll-area::-webkit-scrollbar-thumb:active {
+  background-color: rgba(255, 255, 255, 0.38);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Vertical chevron navigation buttons in notifier scrollbar */
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement {
+  display: block;
+  height: 18px;
+  width: 10px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 8px 5px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 4.5L5 1.5L8.5 4.5' stroke='rgba(255,255,255,0.45)' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  border-radius: 4px;
+}
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:hover,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:hover {
+  background-color: rgba(255, 255, 255, 0.22);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 4.5L5 1.5L8.5 4.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:active,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:active {
+  background-color: rgba(255, 255, 255, 0.38);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 4.5L5 1.5L8.5 4.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:end:increment {
+  display: block;
+  height: 18px;
+  width: 10px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 8px 5px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='rgba(255,255,255,0.45)' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  border-radius: 4px;
+}
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:hover,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:end:increment:hover {
+  background-color: rgba(255, 255, 255, 0.22);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:active,
+.notif-scroll-area::-webkit-scrollbar-button:vertical:end:increment:active {
+  background-color: rgba(255, 255, 255, 0.38);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
 /* ─── Context Menu ──────────────────────────────────────────────────────── */
 .ctx-menu {
   position: fixed;
