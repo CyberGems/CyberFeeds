@@ -4186,6 +4186,7 @@ input[type="radio"] {
 .notif-countdown-num {
   display: inline-block;
   will-change: transform, opacity;
+  transition: color 0.2s ease;
 }
 .notif-countdown-num.breathing {
   animation: notifCountdownBreath 1s ease-in-out infinite;

@@ -729,11 +729,13 @@ export default function NotifierApp(): JSX.Element {
                 }}
               >
                 <span
-                  className={`notif-countdown-num ${!isHovered && countdownSeconds > 0 ? 'breathing' : ''}`}
+                  className={`notif-countdown-num ${isHovered && countdownSeconds > 0 ? 'breathing' : ''}`}
                   style={{
                     minWidth: 12,
                     textAlign: 'center',
-                    fontVariantNumeric: 'tabular-nums'
+                    fontVariantNumeric: 'tabular-nums',
+                    color: !isHovered && countdownSeconds > 0 ? 'var(--red, #f85149)' : undefined,
+                    fontWeight: !isHovered && countdownSeconds > 0 ? 600 : undefined
                   }}
                 >
                   {countdownSeconds}
