@@ -2212,12 +2212,6 @@ mark.reader-search-match.reader-search-active {
   font-weight: 600;
 }
 
-.welcome-open-unread {
-  gap: 6px;
-  font-size: 12px;
-  margin-top: 12px;
-}
-
 .welcome-card-meta {
   display: inline-flex;
   align-items: center;

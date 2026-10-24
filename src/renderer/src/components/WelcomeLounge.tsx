@@ -12,12 +12,10 @@ import {
   ZoomOut
 } from 'lucide-react'
 import Tooltip from './Tooltip'
-import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { useSettingsStore } from '../store/settings.store'
 import { useUIStore } from '../store/ui.store'
 import { useFeedsStore } from '../store/feeds.store'
-import { useArticlesStore } from '../store/articles.store'
 import {
   getTimeOfDay,
   getEffectiveUserName,
@@ -38,12 +36,9 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   const {
     detectedUserName,
     openUserNameSettings,
-    openSettingsTab,
-    selectFeed,
-    selectArticle
+    openSettingsTab
   } = useUIStore()
   const { unreadCounts, feeds } = useFeedsStore()
-  const { markRead } = useArticlesStore()
 
   const timeOfDay = useMemo(() => getTimeOfDay(), [])
   const effectiveName = useMemo(
@@ -78,15 +73,6 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
     [language, totalUnread]
   )
 
-  const openFirstUnreadArticle = useCallback(async (): Promise<void> => {
-    const articles = await window.api.getArticles({ unreadOnly: true, limit: 1, offset: 0 }) as Article[]
-    const firstUnread = articles[0]
-    if (!firstUnread) return
-
-    selectFeed(null, { unreadOnly: true })
-    selectArticle(firstUnread.id)
-    void markRead(firstUnread.id, true)
-  }, [markRead, selectArticle, selectFeed])
 
   const TimeIcon = useMemo(() => {
     if (timeOfDay === 'morning') return Coffee
@@ -179,16 +165,6 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
                   <Rss size={12} />
                   {t.welcome.activeFeeds.replace('{count}', String(totalFeeds))}
                 </span>
-              )}
-              {totalUnread > 0 && (
-                <button
-                  type="button"
-                  className="btn btn-secondary welcome-open-unread"
-                  onClick={() => void openFirstUnreadArticle()}
-                >
-                  {t.welcome.openFirstUnread}
-                  <ArrowRight size={14} />
-                </button>
               )}
             </div>
           </div>
