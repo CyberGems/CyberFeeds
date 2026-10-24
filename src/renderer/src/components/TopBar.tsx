@@ -33,7 +33,8 @@ import { useSettingsStore } from '../store/settings.store'
 import { useFeedsStore } from '../store/feeds.store'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
-import { getTimeOfDay, getEffectiveUserName, getGreetingText, formatWelcomeDate } from '@shared/welcome'
+import { getEffectiveUserName, getGreetingText, formatWelcomeDate } from '@shared/welcome'
+import { useTimeOfDay } from '../hooks/useTimeOfDay'
 
 const DONATE_URL = 'https://github.com/CyberGems/CyberFeeds#%EF%B8%8F-donate'
 const WIKI_URL = 'https://github.com/CyberGems/CyberFeeds/wiki'
@@ -78,7 +79,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
     [unreadCounts]
   )
 
-  const timeOfDay = useMemo(() => getTimeOfDay(), [])
+  const { timeOfDay, now } = useTimeOfDay()
   const effectiveName = useMemo(
     () => getEffectiveUserName(settings.userName, detectedUserName),
     [settings.userName, detectedUserName]
@@ -95,8 +96,8 @@ const TopBar = memo(function TopBar(): JSX.Element {
   }, [timeOfDay])
 
   const formattedDate = useMemo(
-    () => formatWelcomeDate(new Date(), language),
-    [language]
+    () => formatWelcomeDate(now, language),
+    [now, language]
   )
 
   const tickerItems = useMemo(() => {

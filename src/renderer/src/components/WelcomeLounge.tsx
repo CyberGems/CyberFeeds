@@ -17,11 +17,11 @@ import { useSettingsStore } from '../store/settings.store'
 import { useUIStore } from '../store/ui.store'
 import { useFeedsStore } from '../store/feeds.store'
 import {
-  getTimeOfDay,
   getEffectiveUserName,
   getGreetingText,
   formatWelcomeDate
 } from '@shared/welcome'
+import { useTimeOfDay } from '../hooks/useTimeOfDay'
 import {
   INTERFACE_SCALE_MAX,
   INTERFACE_SCALE_MIN,
@@ -40,7 +40,7 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   } = useUIStore()
   const { unreadCounts, feeds } = useFeedsStore()
 
-  const timeOfDay = useMemo(() => getTimeOfDay(), [])
+  const { timeOfDay, now } = useTimeOfDay()
   const effectiveName = useMemo(
     () => getEffectiveUserName(settings.userName, detectedUserName),
     [settings.userName, detectedUserName]
@@ -57,8 +57,8 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
   )
 
   const formattedDate = useMemo(
-    () => formatWelcomeDate(new Date(), language),
-    [language]
+    () => formatWelcomeDate(now, language),
+    [now, language]
   )
 
   const totalUnread = useMemo(() => {
