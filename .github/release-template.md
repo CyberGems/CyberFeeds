@@ -8,7 +8,7 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Desktop shortcuts now use collision-free single-modifier combinations, the system tray menu eliminates opening flicker with smooth suggestions scrolling, and unified reactive time-of-day greetings harmonize across the titlebar and welcome screen.
+Notification popups introduce smooth top scroll fade overlays with dedicated scrollbar spacing, dynamic countdown breathing states with active alert coloring, and refined reader featured image rendering with natural aspect proportions.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,56 +17,34 @@ Desktop shortcuts now use collision-free single-modifier combinations, the syste
 
 ### ✨ Key Features & Highlights
 
-- ⌨️ **Streamlined Single-Modifier Shortcuts & Window Hotkeys**:
-  - Replaced dual-modifier hotkeys with single-modifier equivalents to eliminate conflicts with third-party software: show/hide is now `Alt+S`, maximize/restore window is `Alt+M` (alongside `F11`), and in-article search is `Alt+F` (alongside `F3`).
-  - Automatic database migration upgrades stored legacy shortcuts seamlessly on startup.
+- 🔔 **Notification Popups with Smooth Fade & Dedicated Scrollbar**:
+  - Added a top gradient fade overlay when scrolling notification cards, eliminating harsh clipping beneath the header buttons.
+  - Aligned top and bottom fade overlays precisely to the cards area, keeping the scrollbar track, thumb, and chevrons completely uncovered and interactive.
+  - Re-engineered custom scrollbar styling with balanced idle opacity, brightened hover/active states, and larger, clickable chevron buttons styled as rounded semitransparent buttons on hover.
+  - Updated auto-dismiss countdown timer: numbers display in clear alert red while actively ticking down, and smoothly pulse with a breathing zoom in/out effect when held/paused on hover.
 
-- 🪟 **Refined Desktop Experience & System Tray**:
-  - Eliminated tray menu opening flicker by showing the window strictly after its dimensions are computed.
-  - Fixed tray menu app suggestions scrolling so all apps in the list remain accessible.
-  - Refreshed companion suite app icons across About and tray interfaces.
-
-- 🌅 **Harmonized Reactive Greetings & Clean Welcome Lounge**:
-  - Synchronized reactive time-of-day greetings across the TopBar ticker and Welcome Lounge so they always agree consistently.
-  - Removed the problematic "Open first unread article" button to eliminate navigation jumps and improve layout clarity.
-  - Unified sidebar article counter badges with the typography of the welcome card.
-
-- 🛠️ **Diagnostics, Polling & Cleanup Improvements**:
-  - Background polling prevents notification suppression on fetch failures and properly deduplicates dateless feeds.
-  - Notification popups are now reliably sorted newest-first by receipt time.
-  - Added a direct Settings navigation shortcut button inside the storage cleanup banner.
-  - Updated update notification popups to adopt the standard glass-card tooltip component.
+- 🖼️ **Refined Reader Featured Image Rendering**:
+  - Featured images in articles now render with natural aspect proportions without forced letterboxing or distortion.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Los atajos de teclado ahora utilizan combinaciones de un solo modificador sin conflictos, el menú de la bandeja del sistema elimina el parpadeo al abrir con desplazamiento fluido, y los saludos reactivos se sincronizan en toda la interfaz.
+Los avisos de notificación incorporan degradados suaves de desplazamiento superior con separación de barra de scroll, temporizador con respiración dinámica en pausa y color de alerta activo, y proporciones naturales en imágenes destacadas del lector.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- ⌨️ **Atajos de un solo modificador y control de ventana optimizado**:
-  - Se sustituyeron combinaciones de dos modificadores por atajos de un solo modificador para evitar conflictos con otras aplicaciones del sistema: mostrar/ocultar ahora es `Alt+S`, maximizar/restaurar ventana es `Alt+M` (junto con `F11`) y buscar en artículo es `Alt+F` (junto con `F3`).
-  - Migración automática que actualiza atajos guardados al iniciar la aplicación.
+- 🔔 **Ventana de notificaciones con desvanecimiento suave y barra de scroll dedicada**:
+  - Se agregó un efecto de desvanecimiento superior al hacer scroll que elimina el corte abrupto de las tarjetas bajo los botones de la cabecera.
+  - Los degradados superior e inferior terminan exactamente en el borde de las tarjetas, dejando el carril, el cabezal y los chevrones de la barra de scroll completamente despejados y accesibles.
+  - Estilos de scrollbar personalizados con opacidad equilibrada en reposo, realce al interactuar y chevrones más grandes que se iluminan como botones semitransparentes en hover.
+  - Temporizador de cierre automático mejorado: muestra los números en rojo de alerta durante el conteo activo y adopta un efecto de respiración (zoom in/out) únicamente cuando está en pausa por interacción.
 
-- 🪟 **Bandeja del sistema y visualización refinada**:
-  - Se eliminó el parpadeo de apertura del menú del tray mostrándolo únicamente tras calcular sus dimensiones exactas.
-  - Se corrigió el desplazamiento del listado de sugerencias de la suite en el tray para mostrar todas las apps fluidamente.
-  - Iconos actualizados de las apps de la suite en About y el tray.
-
-- 🌅 **Saludos sincronizados y pantalla de bienvenida más limpia**:
-  - Sincronización reactiva del saludo según la hora del día entre la barra superior y la pantalla de bienvenida.
-  - Se retiró el botón de "Abrir primer artículo sin leer" para evitar saltos inesperados y estados inconsistentes.
-  - Tipografía unificada entre los contadores de artículos de la barra lateral y la tarjeta de bienvenida.
-
-- 🛠️ **Mejoras en sondeo, notificaciones y limpieza**:
-  - El sondeo periódico previene la supresión de notificaciones en fallos temporales y deduplica feeds sin fechas.
-  - Los popups de aviso se ordenan por orden de llegada más reciente.
-  - Acceso directo a configuración de mantenimiento integrado en el banner de limpieza.
-  - Los popups de actualización adoptan el estilo glass-card de los tooltips de la suite.
+- 🖼️ **Visualización refinada de imágenes destacadas en el lector**:
+  - Las imágenes destacadas de los artículos ahora se muestran con proporciones naturales sin letterboxing forzado ni distorsión.
 
 </details>
 
