@@ -84,7 +84,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Dynamic Titlebar Ticker**: Cycles through contextual time-of-day greetings, unread counters, sync status, active feeds, and localized date with hover-pause and click navigation
 - **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, suite diamond shortcut, and animation during background polling
 - **Multi-Monitor Window Memory**: Automatically remembers active display bounds and restores window to designated monitor
-- **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+S`)
+- **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+S`)
 - **Auto-Start**: Start with Windows option
 - **Interactive Auto-Updates**: Built-in update checker with release changelog preview, immediate update, and version skip options
 - **Custom Browser Detection**: Auto-detect installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or configure a custom executable
@@ -229,8 +229,11 @@ npm run format         # Formatting
 
 | Key | Action | Scope |
 |---|---|---|
-| `Alt+Shift+S` | Show/hide CyberFeeds | Global |
-| `Ctrl+F` | Find text in current article | Article Reader |
+| `Alt+S` | Show/hide CyberFeeds | Global |
+| `Alt+M` / `F11` | Maximize / restore window | Application |
+| `Alt+F` / `F3` | Find text in current article | Article Reader |
+| `Ctrl+M` | Minimize window | Application |
+| `Ctrl+W` | Close window | Application |
 | `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
 | `Escape` | Close panel or search bar | Application |
 

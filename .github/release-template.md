@@ -8,7 +8,7 @@
 
 <!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-New tab mode toggle lets users choose between opening articles in independent tabs or in-place, notification history accurately tracks receipt timestamps independently from publication dates, and polling silences spurious rediscovery notifications.
+Desktop shortcuts now use collision-free single-modifier combinations, the system tray menu eliminates opening flicker with smooth suggestions scrolling, and unified reactive time-of-day greetings harmonize across the titlebar and welcome screen.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,36 +17,56 @@ New tab mode toggle lets users choose between opening articles in independent ta
 
 ### ✨ Key Features & Highlights
 
-- 📑 **Configurable tab management & streamlined controls**:
-  - New preference in Settings to toggle opening articles in independent tabs or reading them directly in-place.
-  - Automatically disables startup tab session options when tab mode is turned off and clears lingering tabs.
-  - Removed standalone "Close all tabs" button next to the tab counter to eliminate misclicks with the window close button.
-  - Context menu tab actions are cleanly adapted based on your tab mode preference.
+- ⌨️ **Streamlined Single-Modifier Shortcuts & Window Hotkeys**:
+  - Replaced dual-modifier hotkeys with single-modifier equivalents to eliminate conflicts with third-party software: show/hide is now `Alt+S`, maximize/restore window is `Alt+M` (alongside `F11`), and in-article search is `Alt+F` (alongside `F3`).
+  - Automatic database migration upgrades stored legacy shortcuts seamlessly on startup.
 
-- 🔔 **Accurate notification receipt tracking & polling noise suppression**:
-  - Added dedicated receipt time tracking (`receivedAt`) distinct from article publication time (`createdAt`), ensuring unread badges and history sorting remain accurate even for backfilled feeds.
-  - Background polling now cross-checks article publication dates against feed fetch baselines, preventing auto-cleanup rediscovery cycles from triggering burst notifications for week-old articles.
+- 🪟 **Refined Desktop Experience & System Tray**:
+  - Eliminated tray menu opening flicker by showing the window strictly after its dimensions are computed.
+  - Fixed tray menu app suggestions scrolling so all apps in the list remain accessible.
+  - Refreshed companion suite app icons across About and tray interfaces.
+
+- 🌅 **Harmonized Reactive Greetings & Clean Welcome Lounge**:
+  - Synchronized reactive time-of-day greetings across the TopBar ticker and Welcome Lounge so they always agree consistently.
+  - Removed the problematic "Open first unread article" button to eliminate navigation jumps and improve layout clarity.
+  - Unified sidebar article counter badges with the typography of the welcome card.
+
+- 🛠️ **Diagnostics, Polling & Cleanup Improvements**:
+  - Background polling prevents notification suppression on fetch failures and properly deduplicates dateless feeds.
+  - Notification popups are now reliably sorted newest-first by receipt time.
+  - Added a direct Settings navigation shortcut button inside the storage cleanup banner.
+  - Updated update notification popups to adopt the standard glass-card tooltip component.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-El nuevo ajuste de modo de pestañas permite elegir entre abrir artículos en pestañas independientes o en el visor, el historial registra con precisión la hora de recepción independiente de la fecha de publicación, y el sondeo suprime notificaciones repetidas tras limpiezas.
+Los atajos de teclado ahora utilizan combinaciones de un solo modificador sin conflictos, el menú de la bandeja del sistema elimina el parpadeo al abrir con desplazamiento fluido, y los saludos reactivos se sincronizan en toda la interfaz.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 📑 **Gestión configurable de pestañas y controles más limpios**:
-  - Nueva opción en Ajustes para activar o desactivar la apertura de artículos en pestañas independientes o verlos directamente en el lector.
-  - Deshabilita automáticamente el ajuste de sesión de pestañas al desactivar las pestañas y limpia pestañas activas.
-  - Se retiró el botón suelto de "Cerrar todas las pestañas" junto al contador para evitar clics accidentales con la X de la ventana.
-  - El menú contextual de artículos oculta las acciones de pestañas si el modo está deshabilitado.
+- ⌨️ **Atajos de un solo modificador y control de ventana optimizado**:
+  - Se sustituyeron combinaciones de dos modificadores por atajos de un solo modificador para evitar conflictos con otras aplicaciones del sistema: mostrar/ocultar ahora es `Alt+S`, maximizar/restaurar ventana es `Alt+M` (junto con `F11`) y buscar en artículo es `Alt+F` (junto con `F3`).
+  - Migración automática que actualiza atajos guardados al iniciar la aplicación.
 
-- 🔔 **Registro preciso de hora de recepción y supresión de notificaciones antiguas**:
-  - Registro de hora de recepción (`receivedAt`) separado de la fecha de publicación (`createdAt`), manteniendo exacto el contador no visto y el orden del historial.
-  - El sondeo periódico filtra artículos re-descubiertos tras limpiezas automáticas, evitando ráfagas de notificaciones para artículos de hace días.
+- 🪟 **Bandeja del sistema y visualización refinada**:
+  - Se eliminó el parpadeo de apertura del menú del tray mostrándolo únicamente tras calcular sus dimensiones exactas.
+  - Se corrigió el desplazamiento del listado de sugerencias de la suite en el tray para mostrar todas las apps fluidamente.
+  - Iconos actualizados de las apps de la suite en About y el tray.
+
+- 🌅 **Saludos sincronizados y pantalla de bienvenida más limpia**:
+  - Sincronización reactiva del saludo según la hora del día entre la barra superior y la pantalla de bienvenida.
+  - Se retiró el botón de "Abrir primer artículo sin leer" para evitar saltos inesperados y estados inconsistentes.
+  - Tipografía unificada entre los contadores de artículos de la barra lateral y la tarjeta de bienvenida.
+
+- 🛠️ **Mejoras en sondeo, notificaciones y limpieza**:
+  - El sondeo periódico previene la supresión de notificaciones en fallos temporales y deduplica feeds sin fechas.
+  - Los popups de aviso se ordenan por orden de llegada más reciente.
+  - Acceso directo a configuración de mantenimiento integrado en el banner de limpieza.
+  - Los popups de actualización adoptan el estilo glass-card de los tooltips de la suite.
 
 </details>
 

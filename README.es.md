@@ -84,7 +84,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Barra superior dinámica**: rota saludos contextuales según la hora, contador de artículos sin leer, estado de sincronización, feeds activos y fecha con pausa al pasar el cursor y clic directo
 - **Bandeja del sistema**: minimizar a la bandeja, menú de acciones rápidas, submenú de artículos recientes en tiempo real, acceso directo con diamante de la suite y animación durante el sondeo
 - **Memoria de ventana multi-monitor**: recuerda automáticamente los límites de la pantalla activa y restaura la ventana en el monitor designado
-- **Atajos globales**: accesos configurables (mostrar/ocultar predeterminado: `Alt+Shift+S`)
+- **Atajos globales**: accesos configurables (mostrar/ocultar predeterminado: `Alt+S`)
 - **Inicio automático**: opción de iniciar con Windows
 - **Actualizaciones automáticas interactivas**: comprobador de actualizaciones integrado con vista previa del changelog, actualización inmediata y opciones de omisión de versión
 - **Detección de navegadores personalizados**: descubre automáticamente navegadores instalados (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) o configura un ejecutable personalizado
@@ -226,8 +226,11 @@ npm run format         # Formato
 
 | Tecla | Acción | Ámbito |
 |---|---|---|
-| `Alt+Shift+S` | Mostrar/ocultar CyberFeeds | Global |
-| `Ctrl+F` | Buscar texto en el artículo actual | Lector de artículos |
+| `Alt+S` | Mostrar/ocultar CyberFeeds | Global |
+| `Alt+M` / `F11` | Maximizar / restaurar ventana | Aplicación |
+| `Alt+F` / `F3` | Buscar texto en el artículo actual | Lector de artículos |
+| `Ctrl+M` | Minimizar ventana | Aplicación |
+| `Ctrl+W` | Cerrar ventana | Aplicación |
 | `Intro` / `Mayús+Intro` | Coincidencia siguiente / anterior | Barra de búsqueda |
 | `Escape` | Cierra el panel o la barra de búsqueda | Aplicación |
 
