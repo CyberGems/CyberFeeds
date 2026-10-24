@@ -832,13 +832,20 @@ body {
   content: none !important;
 }
 .sidebar .cyber-badge {
-  padding: 2px 9px !important;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 2px 8px !important;
   border-radius: 8px;
-  letter-spacing: 0.02em;
 }
 .sidebar .cyber-badge.folder-badge {
   font-size: 10px;
-  padding: 2.5px 10px !important;
+  padding: 2px 8px !important;
   font-weight: 700;
   border-radius: 8px;
 }

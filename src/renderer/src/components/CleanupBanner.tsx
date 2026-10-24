@@ -1,6 +1,7 @@
 import React from 'react'
-import { Sparkles, X, CheckCircle } from 'lucide-react'
+import { Sparkles, X, CheckCircle, Settings } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
+import { useUIStore } from '../store/ui.store'
 import Tooltip from './Tooltip'
 
 interface CleanupBannerProps {
@@ -14,6 +15,7 @@ interface CleanupBannerProps {
 
 export const CleanupBanner: React.FC<CleanupBannerProps> = ({ notice, onDismiss }) => {
   const { t } = useTranslation()
+  const { openMaintenanceSettings } = useUIStore()
 
   const hasDeleted = notice.deletedArticles > 0
   const hasPurgedTrash = notice.purgedTrash > 0
@@ -83,38 +85,63 @@ export const CleanupBanner: React.FC<CleanupBannerProps> = ({ notice, onDismiss 
         </span>
       </div>
 
-      <Tooltip label={t.common.close} placement="left">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 12 }}>
         <button
           type="button"
-          onClick={onDismiss}
-          aria-label={t.common.close}
+          onClick={() => {
+            openMaintenanceSettings()
+            onDismiss()
+          }}
+          className="btn btn-secondary"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            width: 26,
+            gap: 6,
             height: 26,
+            padding: '0 10px',
+            fontSize: 12,
+            fontWeight: 500,
             borderRadius: 6,
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-secondary)',
             cursor: 'pointer',
-            flexShrink: 0,
-            marginLeft: 12,
-            transition: 'background 0.15s ease, color 0.15s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-            e.currentTarget.style.color = 'var(--text-primary)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = 'var(--text-secondary)'
+            whiteSpace: 'nowrap'
           }}
         >
-          <X size={15} />
+          <Settings size={13} style={{ color: 'var(--accent)' }} />
+          <span>{t.settings.maintenance.configure}</span>
         </button>
-      </Tooltip>
+
+        <Tooltip label={t.common.close} placement="left">
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label={t.common.close}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 26,
+              height: 26,
+              borderRadius: 6,
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'background 0.15s ease, color 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+              e.currentTarget.style.color = 'var(--text-primary)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--text-secondary)'
+            }}
+          >
+            <X size={15} />
+          </button>
+        </Tooltip>
+      </div>
     </div>
   )
 }

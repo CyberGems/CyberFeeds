@@ -208,7 +208,16 @@ export function TrayMenu(): React.JSX.Element {
   }, [applySnapshot, refresh, reportSize])
 
   useEffect(() => {
-    window.requestAnimationFrame(() => window.requestAnimationFrame(reportSize))
+    reportSize()
+    const rafId = window.requestAnimationFrame(() => {
+      reportSize()
+      window.requestAnimationFrame(reportSize)
+    })
+    const timer = setTimeout(reportSize, 50)
+    return () => {
+      window.cancelAnimationFrame(rafId)
+      clearTimeout(timer)
+    }
   }, [view, reportSize])
 
   useEffect(() => {

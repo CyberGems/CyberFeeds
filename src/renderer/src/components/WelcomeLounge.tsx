@@ -164,8 +164,8 @@ const WelcomeLounge = memo(function WelcomeLounge(): JSX.Element {
                     <span className="welcome-unread-count">{formattedUnreadTotal}</span>
                     <span className="welcome-unread-label">
                       {totalUnread === 1
-                        ? t.welcome.unreadArticleLabel
-                        : t.welcome.unreadArticlesLabel}
+                        ? t.welcome.pendingSingular
+                        : t.welcome.pendingPlural}
                     </span>
                   </div>
                 </>

@@ -204,44 +204,52 @@ let trayMenuShowFallback: NodeJS.Timeout | null = null
 let trayMenuRevealTimer: NodeJS.Timeout | null = null
 let trayMenuAnchor: any = null
 
+function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: number; height: number } {
+  if (eventBounds && typeof eventBounds.x === 'number') {
+    return {
+      x: eventBounds.x,
+      y: eventBounds.y,
+      width: eventBounds.width || 0,
+      height: eventBounds.height || 0
+    }
+  }
+  try {
+    const tb = tray?.getBounds()
+    if (tb && typeof tb.x === 'number' && (tb.width > 0 || tb.height > 0)) {
+      return { x: tb.x, y: tb.y, width: tb.width, height: tb.height }
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    const p = screen.getCursorScreenPoint()
+    return { x: p.x, y: p.y, width: 0, height: 0 }
+  } catch {
+    return { x: 0, y: 0, width: 0, height: 0 }
+  }
+}
+
 function calculateTrayMenuGeometry(
   iconBounds: any,
   windowW: number,
   windowH: number
 ): { x: number; y: number; width: number; height: number } {
-  // 1) Cursor position is the most reliable anchor on Windows, especially
-  //    on secondary monitors with vertical taskbars and mixed DPI where
-  //    tray.getBounds() can return incorrect/stale coordinates.
-  let cursor: { x: number; y: number } = { x: 0, y: 0 }
-  try {
-    cursor = screen.getCursorScreenPoint()
-  } catch {
-    cursor = { x: 0, y: 0 }
-  }
-
-  // 2) Use iconBounds only if they seem plausible (on the same display as cursor).
-  //    On vertical taskbars, tray.getBounds() often returns primary-display coords.
   let b: { x: number; y: number; width: number; height: number }
 
-  const eventBoundsValid = iconBounds && typeof iconBounds.x === 'number' &&
-    (iconBounds.width > 0 || iconBounds.height > 0)
-
-  if (eventBoundsValid) {
-    // Check if event bounds are on the same display as the cursor
-    const cursorDisplay = screen.getDisplayNearestPoint(cursor)
-    const boundsCenter = {
-      x: iconBounds.x + (iconBounds.width || 0) / 2,
-      y: iconBounds.y + (iconBounds.height || 0) / 2
-    }
-    const boundsDisplay = screen.getDisplayNearestPoint(boundsCenter)
-
-    if (cursorDisplay.id === boundsDisplay.id) {
-      b = { x: iconBounds.x, y: iconBounds.y, width: iconBounds.width || 0, height: iconBounds.height || 0 }
-    } else {
-      // Bounds are on a different display than cursor; cursor is more reliable
-      b = { x: cursor.x, y: cursor.y, width: 0, height: 0 }
+  if (iconBounds && typeof iconBounds.x === 'number') {
+    b = {
+      x: iconBounds.x,
+      y: iconBounds.y,
+      width: iconBounds.width || 0,
+      height: iconBounds.height || 0
     }
   } else {
+    let cursor = { x: 0, y: 0 }
+    try {
+      cursor = screen.getCursorScreenPoint()
+    } catch {
+      cursor = { x: 0, y: 0 }
+    }
     b = { x: cursor.x, y: cursor.y, width: 0, height: 0 }
   }
 
@@ -380,8 +388,8 @@ function showTrayMenu(eventBounds?: any): void {
   const win = ensureTrayWindow()
   if (win.isDestroyed()) return
 
-  trayMenuAnchor = eventBounds
-  const geo = calculateTrayMenuGeometry(eventBounds, currentTraySize.width, currentTraySize.height)
+  trayMenuAnchor = getInitialAnchor(eventBounds)
+  const geo = calculateTrayMenuGeometry(trayMenuAnchor, currentTraySize.width, currentTraySize.height)
 
   // To avoid flicker: hide first if visible, reposition, then show.
   // This prevents the user from seeing the window jump from its old position.
@@ -415,6 +423,7 @@ export function hideTrayMenu(): void {
   if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
   if (trayMenuRevealTimer) { clearTimeout(trayMenuRevealTimer); trayMenuRevealTimer = null }
   trayMenuShowPending = false
+  currentTraySize = { width: 292, height: 380 }
   if (trayWindow && !trayWindow.isDestroyed()) {
     try { trayWindow.setOpacity(1) } catch { /* ignore */ }
     if (trayWindow.isVisible()) {
@@ -525,17 +534,29 @@ function registerTrayIpc(): void {
     const newWidth = Math.max(260, Math.min(450, Math.round(size.width)))
     const newHeight = Math.max(200, Math.min(800, Math.round(size.height)))
 
-    if (Math.abs(newWidth - currentTraySize.width) >= 6 || Math.abs(newHeight - currentTraySize.height) >= 6) {
+    const sizeChanged =
+      Math.abs(newWidth - currentTraySize.width) >= 4 ||
+      Math.abs(newHeight - currentTraySize.height) >= 4
+
+    if (sizeChanged) {
       currentTraySize = { width: newWidth, height: newHeight }
     }
 
-    if (trayMenuShowPending && trayWindow && !trayWindow.isDestroyed()) {
+    if (!trayWindow || trayWindow.isDestroyed()) return
+
+    if (trayMenuShowPending) {
       const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
       const current = trayWindow.getBounds()
       if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
         trayWindow.setBounds(geo)
       }
       revealTrayMenuWin()
+    } else if (trayWindow.isVisible() && sizeChanged) {
+      const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
+      const current = trayWindow.getBounds()
+      if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
+        trayWindow.setBounds(geo)
+      }
     }
   })
 }

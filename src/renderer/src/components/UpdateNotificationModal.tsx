@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Sparkles, Download, ExternalLink, SkipForward, RefreshCw, X } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
+import Tooltip from './Tooltip'
 
 export type ActiveUpdateStatus =
   | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
@@ -235,38 +236,38 @@ export function UpdateNotificationModal({
               <span className="update-notification-title">{titleText}</span>
               <div className="update-notification-version-tags">
                 {installedVersion && (
-                  <span
-                    className="update-notification-badge-current"
-                    title={language === 'es' ? 'Versión instalada' : 'Installed version'}
-                  >
-                    v{installedVersion}
-                  </span>
+                  <Tooltip label={t.about.installedVersion} placement="top">
+                    <span className="update-notification-badge-current">
+                      v{installedVersion}
+                    </span>
+                  </Tooltip>
                 )}
                 {installedVersion && targetVersion && (
                   <span className="update-notification-version-arrow">→</span>
                 )}
                 {targetVersion && (
-                  <span
-                    className="update-notification-badge"
-                    title={language === 'es' ? 'Nueva versión disponible' : 'Available version'}
-                  >
-                    v{targetVersion}
-                  </span>
+                  <Tooltip label={t.about.availableVersion} placement="top">
+                    <span className="update-notification-badge">
+                      v{targetVersion}
+                    </span>
+                  </Tooltip>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="btn btn-ghost btn-icon"
-          style={{ width: 24, height: 24, borderRadius: 6 }}
-          onClick={onClose}
-          title={t.about.dismiss}
-        >
-          <X size={13} />
-        </button>
+        <Tooltip label={t.about.dismiss} placement="left">
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon"
+            style={{ width: 24, height: 24, borderRadius: 6 }}
+            onClick={onClose}
+            aria-label={t.about.dismiss}
+          >
+            <X size={13} />
+          </button>
+        </Tooltip>
       </div>
 
       {/* Body: Available State with Changelog Peek */}
@@ -345,7 +346,6 @@ export function UpdateNotificationModal({
                 type="button"
                 className="btn btn-secondary update-notification-btn"
                 onClick={() => window.api.openExternal(releaseUrl)}
-                title={t.about.viewReleaseNotes}
               >
                 <ExternalLink size={12} />
                 <span>{t.about.viewRelease}</span>
@@ -355,7 +355,6 @@ export function UpdateNotificationModal({
                 type="button"
                 className="btn btn-secondary update-notification-btn"
                 onClick={() => onSkip(targetVersion)}
-                title={t.about.skipUpdate}
               >
                 <SkipForward size={12} />
                 <span>{t.about.skipUpdate}</span>

@@ -502,6 +502,8 @@ body {
 /* Suite list */
 .tray-suite-list {
   max-height: 310px;
+  padding: 5px 6px 8px;
+  scroll-padding-bottom: 8px;
   overflow-x: hidden;
   overflow-y: auto;
 }

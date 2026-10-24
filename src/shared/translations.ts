@@ -611,7 +611,8 @@ export const translations = {
         runningClean: 'Cleaning database...',
         cleanSuccess: 'Clean up completed: {count} old articles deleted and {trash} from trash. Database optimized.',
         cleanSuccessNoTrash: 'Clean up completed: {count} old articles deleted. Database optimized.',
-        cleanNoArticles: 'No old articles found to delete. Your library is already up to date.'
+        cleanNoArticles: 'No old articles found to delete. Your library is already up to date.',
+        configure: 'Configure'
       },
       keyboard: {
         title: 'Keyboard Shortcuts',
@@ -685,6 +686,8 @@ export const translations = {
       restartAndApply: 'Click to restart and apply',
       moreInFullNotes: '+{count} more in full release notes',
       dismiss: 'Dismiss',
+      installedVersion: 'Installed version',
+      availableVersion: 'Available version',
       portableBadge: 'Portable',
       downloadPortableUpdate: 'Download portable release',
       suiteTitle: 'More from CyberGems',
@@ -862,6 +865,8 @@ export const translations = {
       oneUnreadArticle: '1 unread article',
       unreadArticleLabel: 'unread article',
       unreadArticlesLabel: 'unread articles',
+      pendingSingular: 'pending',
+      pendingPlural: 'pending',
       activeFeeds: '{count} active feeds',
       keyboardHint: 'Press J / K to navigate articles, Enter to read, or M to mark as read.',
       quickActions: 'Keyboard shortcuts',
@@ -1516,7 +1521,8 @@ export const translations = {
         runningClean: 'Limpiando base de datos...',
         cleanSuccess: 'Limpieza completada: se eliminaron {count} artículos antiguos y {trash} de la papelera. Base de datos optimizada.',
         cleanSuccessNoTrash: 'Limpieza completada: se eliminaron {count} artículos antiguos. Base de datos optimizada.',
-        cleanNoArticles: 'No se encontraron artículos antiguos para eliminar. Tu biblioteca ya está al día.'
+        cleanNoArticles: 'No se encontraron artículos antiguos para eliminar. Tu biblioteca ya está al día.',
+        configure: 'Configurar'
       },
       keyboard: {
         title: 'Atajos de teclado',
@@ -1590,6 +1596,8 @@ export const translations = {
       restartAndApply: 'Haz clic para reiniciar y aplicar',
       moreInFullNotes: '+{count} más en las notas completas',
       dismiss: 'Descartar',
+      installedVersion: 'Versión instalada',
+      availableVersion: 'Nueva versión disponible',
       portableBadge: 'Portable',
       downloadPortableUpdate: 'Descargar versión portable',
       suiteTitle: 'Más de CyberGems',
@@ -1767,6 +1775,8 @@ export const translations = {
       oneUnreadArticle: '1 artículo sin leer',
       unreadArticleLabel: 'artículo sin leer',
       unreadArticlesLabel: 'artículos sin leer',
+      pendingSingular: 'pendiente',
+      pendingPlural: 'pendientes',
       activeFeeds: '{count} fuentes activas',
       keyboardHint:
         'Pulse J / K para navegar entre artículos, Enter para leer o M para marcar como leído.',

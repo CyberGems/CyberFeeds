@@ -270,6 +270,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab || 'general')
   const panelRef = useRef<HTMLDivElement>(null)
   const userNameInputRef = useRef<HTMLInputElement>(null)
+  const maintenanceCardRef = useRef<HTMLDivElement>(null)
   const closeAfterNameConfirmRef = useRef(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [newPriorityInput, setNewPriorityInput] = useState('')
@@ -304,16 +305,26 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   }, [initialTab])
 
   useEffect(() => {
-    if (settingsFocusField !== 'userName') return
+    if (settingsFocusField === 'userName') {
+      setActiveTab('general')
+      const frame = window.requestAnimationFrame(() => {
+        userNameInputRef.current?.focus()
+        userNameInputRef.current?.select()
+        useUIStore.setState({ settingsFocusField: null })
+      })
+      return () => window.cancelAnimationFrame(frame)
+    }
 
-    setActiveTab('general')
-    const frame = window.requestAnimationFrame(() => {
-      userNameInputRef.current?.focus()
-      userNameInputRef.current?.select()
-      useUIStore.setState({ settingsFocusField: null })
-    })
+    if (settingsFocusField === 'maintenance') {
+      setActiveTab('backupMaintenance')
+      const timer = setTimeout(() => {
+        maintenanceCardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        useUIStore.setState({ settingsFocusField: null })
+      }, 100)
+      return () => clearTimeout(timer)
+    }
 
-    return () => window.cancelAnimationFrame(frame)
+    return undefined
   }, [settingsFocusField])
 
   useEffect(() => {
@@ -2393,7 +2404,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </div>
               </div>
 
-              <div className="settings-card">
+              <div className="settings-card" ref={maintenanceCardRef}>
                 <CardTitle icon={Wrench} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.maintenance.title}
                 </CardTitle>

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export type Panel = 'settings' | 'inbox' | 'history' | 'addFeed' | 'editFeed' | 'addFolder' | 'editFolder' | 'about' | 'doctor' | null
 export type QuickFilter = 'all' | 'unread' | 'today' | 'priority' | 'video'
-export type SettingsFocusField = 'userName' | null
+export type SettingsFocusField = 'userName' | 'maintenance' | null
 
 interface UIState {
   selectedFeedId: string | null    // null = All Feeds
@@ -29,6 +29,7 @@ interface UIState {
   openPanel: (panel: Panel, id?: string) => void
   openSettingsTab: (tab: string) => void
   openUserNameSettings: () => void
+  openMaintenanceSettings: () => void
   closePanel: () => void
   setUnreadOnly: (v: boolean) => void
   setReadOnly: (v: boolean) => void
@@ -104,6 +105,13 @@ export const useUIStore = create<UIState>((set) => ({
     activePanel: 'settings',
     settingsInitialTab: 'general',
     settingsFocusField: 'userName',
+    editFeedId: null,
+    editFolderId: null
+  }),
+  openMaintenanceSettings: () => set({
+    activePanel: 'settings',
+    settingsInitialTab: 'backupMaintenance',
+    settingsFocusField: 'maintenance',
     editFeedId: null,
     editFolderId: null
   }),
