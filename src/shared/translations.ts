@@ -638,7 +638,7 @@ export const translations = {
         resetToDefaults: 'Reset to Defaults',
         save: 'Save',
         validation: {
-          invalidFormat: 'Invalid format. Use format like Ctrl+Shift+A',
+          invalidFormat: 'Invalid format. Use format like Ctrl+A or Alt+S',
           conflict: 'This shortcut conflicts with another action'
         }
       }
@@ -1547,7 +1547,7 @@ export const translations = {
         resetToDefaults: 'Restablecer valores predeterminados',
         save: 'Guardar',
         validation: {
-          invalidFormat: 'Formato inválido. Usa formato como Ctrl+Shift+A',
+          invalidFormat: 'Formato inválido. Usa formato como Ctrl+A o Alt+S',
           conflict: 'Este atajo entra en conflicto con otra acción'
         }
       }

@@ -963,7 +963,13 @@ export function getSettings(): AppSettings {
       ...parsed,
       theme: validTheme,
       notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications },
-      shortcuts: { ...DEFAULT_SETTINGS.shortcuts, ...parsed.shortcuts },
+      shortcuts: {
+        ...DEFAULT_SETTINGS.shortcuts,
+        ...parsed.shortcuts,
+        ...(parsed.shortcuts?.showHide?.accelerator === 'Alt+Shift+S'
+          ? { showHide: { ...parsed.shortcuts.showHide, accelerator: 'Alt+S' } }
+          : {})
+      },
       filters: { ...DEFAULT_SETTINGS.filters, ...parsed.filters },
       autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup },
       recentSearches: Array.isArray(parsed.recentSearches) ? parsed.recentSearches : []

@@ -906,7 +906,11 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       const target = e.target as HTMLElement
       const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')
 
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+      if (
+        ((e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'f') ||
+          e.key === 'F3') &&
+        !isInput
+      ) {
         e.preventDefault()
         openSearch()
         return
@@ -1084,7 +1088,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
             </button>
           </Tooltip>
         )}
-        <Tooltip label={`${t.articleViewer.searchInArticle} (Ctrl+Shift+F)`} placement="bottom">
+        <Tooltip label={`${t.articleViewer.searchInArticle} (Alt+F)`} placement="bottom">
           <button
             className={`btn btn-ghost has-label ${searchOpen ? 'is-active' : ''}`}
             style={{

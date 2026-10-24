@@ -319,11 +319,20 @@ const TopBar = memo(function TopBar(): JSX.Element {
           setTopbarMenuOpen(nextOpen)
           setMenuKeyboardIndex(0)
           setMenuOpen(nextOpen)
+        } else if (e.key === 'F11') {
+          e.preventDefault()
+          void window.api.windowMaximize()
         }
         return
       }
 
-      if (!e.ctrlKey || e.altKey || e.metaKey) return
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
+        e.preventDefault()
+        void window.api.windowMaximize()
+        return
+      }
+
+      if (!e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return
 
       const key = e.key.toLowerCase()
       if (key === 'h') {
@@ -340,12 +349,8 @@ const TopBar = memo(function TopBar(): JSX.Element {
         openPanel('settings')
       } else if (key === 'm') {
         e.preventDefault()
-        if (e.shiftKey) {
-          void window.api.windowMaximize()
-        } else {
-          void window.api.windowMinimize()
-        }
-      } else if (key === 'w' && !e.shiftKey) {
+        void window.api.windowMinimize()
+      } else if (key === 'w') {
         e.preventDefault()
         void window.api.windowClose()
       }
@@ -574,7 +579,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
           </button>
         </Tooltip>
         <Tooltip
-          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, 'Ctrl+Shift+M')}
+          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, 'Alt+M')}
           placement="bottom"
         >
           <button className="win-btn" onClick={() => window.api.windowMaximize()}>
