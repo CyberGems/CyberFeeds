@@ -1,0 +1,11 @@
+{
+  "destinations": [
+    "resources/suite"
+  ],
+  "catalogs": [
+    {
+      "path": "src/renderer/src/components/AboutModal.tsx",
+      "pattern": "\\bslug\\s*:\\s*['\"](cyber[a-z0-9-]+)['\"]"
+    }
+  ]
+}
