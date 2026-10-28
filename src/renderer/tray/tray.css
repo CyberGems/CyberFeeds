@@ -120,7 +120,7 @@ body {
   height: 14px;
   flex-shrink: 0;
   display: block;
-  filter: grayscale(1);
+  filter: grayscale(0.5);
   transition: filter 0.12s ease;
 }
 
