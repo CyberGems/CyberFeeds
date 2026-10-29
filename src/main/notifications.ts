@@ -6,7 +6,7 @@ import fs from 'fs'
 import { exec } from 'child_process'
 import { is } from '@electron-toolkit/utils'
 import * as db from './db'
-import { restoreMainWindow } from './index'
+import { restoreMainWindow, getMainWindow } from './index'
 import { translations } from '../shared/translations'
 import { getReceivedAt } from '../shared/notification-time'
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from './types'
@@ -610,8 +610,8 @@ export function cancelPendingBatch(): void {
 function persistNotifierSettings(next: NotificationSettings): void {
   settings = next
   db.saveSettings({ ...db.getSettings(), notifications: settings })
-  const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow && !w.isDestroyed())
-  if (mainWin) {
+  const mainWin = getMainWindow()
+  if (mainWin && !mainWin.isDestroyed()) {
     mainWin.webContents.send('settings:changed', db.getSettings())
   }
 }
@@ -882,7 +882,7 @@ export function showNotificationsBatch(items: NotificationHistoryItem[]): void {
       `[Notifier] Renderer batch capped at ${RENDERER_BATCH_CAP} item(s); ${allowed.length - rendererItems.length} item(s) remain in history only.`
     )
   }
-  const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow && !w.isDestroyed())
+  const mainWin = getMainWindow()
   if (mainWin && !mainWin.isDestroyed()) {
     mainWin.webContents.send('notifications:batch', {
       items: rendererItems,
@@ -1010,22 +1010,25 @@ export function registerNotifierIpc(): void {
     if (settings.closeOnViewInApp) {
       hideNotifierWindow()
     }
-    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
-    if (mainWin) {
+    // Address the main window by reference: picking "any window that is not
+    // the notifier" from getAllWindows() could hit the tray menu window and
+    // silently drop the event (the main renderer never received it).
+    const mainWin = getMainWindow()
+    if (mainWin && !mainWin.isDestroyed()) {
       restoreMainWindow()
       mainWin.webContents.send('app:openArticle', { feedId, articleId })
       // TEMP DIAGNOSTIC
-      console.log('[diag] openInApp | event sent to:', mainWin === BrowserWindow.getAllWindows()[0] ? 'first window' : 'other window')
+      console.log('[diag] openInApp | event sent to main window')
     } else {
       // TEMP DIAGNOSTIC
-      console.log('[diag] openInApp | NO main window found, event NOT sent')
+      console.log('[diag] openInApp | NO main window, event NOT sent')
     }
   })
 
   ipcMain.on('notifier:openHistory', () => {
     hideNotifierWindow()
-    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
-    if (mainWin) {
+    const mainWin = getMainWindow()
+    if (mainWin && !mainWin.isDestroyed()) {
       restoreMainWindow()
       mainWin.webContents.send('app:openHistory')
     }
@@ -1033,8 +1036,8 @@ export function registerNotifierIpc(): void {
 
   ipcMain.on('notifier:openSettings', (_, tab?: string) => {
     hideNotifierWindow()
-    const mainWin = BrowserWindow.getAllWindows().find((w) => w !== notifierWindow)
-    if (mainWin) {
+    const mainWin = getMainWindow()
+    if (mainWin && !mainWin.isDestroyed()) {
       restoreMainWindow()
       mainWin.webContents.send('app:openSettings', tab || 'notifications')
     }
