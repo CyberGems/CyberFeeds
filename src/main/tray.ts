@@ -399,6 +399,22 @@ function ensureTrayWindow(): BrowserWindow {
   return trayWindow
 }
 
+function restampPendingGeo(): void {
+  if (!trayWindow || trayWindow.isDestroyed() || !trayWindow.isVisible()) return
+  if (!trayMenuPendingGeo) return
+  try {
+    const cur = trayWindow.getBounds()
+    const g = trayMenuPendingGeo
+    if (cur.x !== g.x || cur.y !== g.y || cur.width !== g.width || cur.height !== g.height) {
+      // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
+      console.log('[tray-diag] restamp | before:', JSON.stringify(cur), '| target:', JSON.stringify(g))
+      trayWindow.setBounds(g)
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function revealTrayMenuWin(): void {
   if (!trayWindow || trayWindow.isDestroyed()) return
   if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
@@ -418,6 +434,11 @@ function revealTrayMenuWin(): void {
   }
   trayWindow.focus()
   trayMenuLastShown = Date.now()
+  // Windows can recenter a transparent frameless window on its first show,
+  // discarding the pre-show bounds (the notifier needed the same re-stamp).
+  // Verify shortly after revealing and correct while the menu stays open.
+  setTimeout(restampPendingGeo, 60)
+  setTimeout(restampPendingGeo, 250)
 }
 
 function showTrayMenu(eventBounds?: any): void {
