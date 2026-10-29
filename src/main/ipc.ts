@@ -10,7 +10,7 @@ import * as polling from './polling'
 import { importOpml, exportOpml } from './opml'
 import { updateNotifierSettings, pruneFeedFilter } from './notifications'
 import { setAutoUpdate } from './updater'
-import { rebuildTrayMenu, rebuildGlobalShortcuts } from './tray'
+import { rebuildTrayMenu, rebuildGlobalShortcuts, refreshTrayTooltip } from './tray'
 import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
 import { translations } from '../shared/translations'
 import { DEFAULT_SETTINGS } from '../shared/types'
@@ -574,6 +574,7 @@ export function registerIpc(): void {
 
     // Rebuild tray menu and global shortcuts
     rebuildTrayMenu()
+    refreshTrayTooltip()
     if (settings.shortcuts !== current.shortcuts) {
       rebuildGlobalShortcuts()
     }

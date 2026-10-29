@@ -80,23 +80,34 @@ function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
   return cachedIdleImage
 }
 
+// Windows caps tray tooltips at 63 characters.
+const TRAY_TOOLTIP_MAX_LEN = 63
+
+function clampTrayTooltip(text: string): string {
+  return text.length > TRAY_TOOLTIP_MAX_LEN ? text.slice(0, TRAY_TOOLTIP_MAX_LEN) : text
+}
+
+function buildTrayTooltip(busy: boolean): string {
+  const lang = db.getSettings().language || 'en'
+  const t = translations[lang] || translations.en
+  if (busy) {
+    const status = t?.mainProcess?.tray?.refreshingFeeds || 'Refreshing feeds...'
+    return clampTrayTooltip(`CyberFeeds · ${status}`)
+  }
+  const shortcuts = db.getSettings().shortcuts as KeyboardShortcuts
+  const hotkey =
+    shortcuts?.showHide?.enabled && shortcuts?.showHide?.global
+      ? shortcuts.showHide.accelerator
+      : null
+  return clampTrayTooltip(hotkey ? `CyberFeeds · ${hotkey}` : 'CyberFeeds')
+}
+
 function updateTrayTooltip(busy: boolean): void {
   if (!tray || tray.isDestroyed()) return
-  const version = app.getVersion()
-  if (busy) {
-    const lang = db.getSettings().language || 'en'
-    const loadingText = translations[lang]?.mainProcess?.tray?.updateFeeds || 'Loading feeds...'
-    try {
-      tray.setToolTip(`CyberFeeds v${version}: ${loadingText}`)
-    } catch {
-      /* ignore if destroyed */
-    }
-  } else {
-    try {
-      tray.setToolTip(`CyberFeeds v${version}`)
-    } catch {
-      /* ignore if destroyed */
-    }
+  try {
+    tray.setToolTip(buildTrayTooltip(busy))
+  } catch {
+    /* ignore if destroyed */
   }
 }
 
@@ -619,6 +630,12 @@ export function rebuildTrayMenu(): void {
 export function rebuildGlobalShortcuts(): void {
   unregisterGlobalShortcuts()
   registerGlobalShortcuts()
+  refreshTrayTooltip()
+}
+
+/** Re-apply the tray tooltip after a language or global shortcut change. */
+export function refreshTrayTooltip(): void {
+  updateTrayTooltip(activeActivities.size > 0)
 }
 
 function registerGlobalShortcuts(): void {
