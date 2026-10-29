@@ -216,12 +216,15 @@ let trayMenuRevealTimer: NodeJS.Timeout | null = null
 let trayMenuAnchor: any = null
 
 function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: number; height: number } {
-  if (eventBounds && typeof eventBounds.x === 'number') {
+  // Only trust the event rect when it has a real size; the first tray event
+  // after launch can deliver zero-size or stale rects (Windows fills the icon
+  // rect lazily), which would anchor the menu far from the taskbar.
+  if (eventBounds && typeof eventBounds.x === 'number' && (eventBounds.width || eventBounds.height)) {
     return {
       x: eventBounds.x,
       y: eventBounds.y,
-      width: eventBounds.width || 0,
-      height: eventBounds.height || 0
+      width: eventBounds.width,
+      height: eventBounds.height
     }
   }
   try {
@@ -402,6 +405,22 @@ function showTrayMenu(eventBounds?: any): void {
   trayMenuAnchor = getInitialAnchor(eventBounds)
   const geo = calculateTrayMenuGeometry(trayMenuAnchor, currentTraySize.width, currentTraySize.height)
 
+  // TEMP DIAGNOSTIC: capture the raw first-open inputs; remove once the
+  // first-open mispositioning root cause is confirmed.
+  let diagTrayBounds: unknown = null
+  try { diagTrayBounds = tray?.getBounds() } catch { /* ignore */ }
+  let diagCursor: unknown = null
+  try { diagCursor = screen.getCursorScreenPoint() } catch { /* ignore */ }
+  console.log(
+    '[tray-diag] show',
+    '| eventBounds:', JSON.stringify(eventBounds ?? null),
+    '| anchor:', JSON.stringify(trayMenuAnchor),
+    '| trayBounds:', JSON.stringify(diagTrayBounds),
+    '| cursor:', JSON.stringify(diagCursor),
+    '| size:', JSON.stringify(currentTraySize),
+    '| geo:', JSON.stringify(geo)
+  )
+
   // To avoid flicker: hide first if visible, reposition, then show.
   // This prevents the user from seeing the window jump from its old position.
   const wasVisible = win.isVisible()
@@ -434,7 +453,9 @@ export function hideTrayMenu(): void {
   if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
   if (trayMenuRevealTimer) { clearTimeout(trayMenuRevealTimer); trayMenuRevealTimer = null }
   trayMenuShowPending = false
-  currentTraySize = { width: 292, height: 380 }
+  // Keep the last reported menu size so the next open positions correctly in
+  // one step instead of first landing on the 292x380 default and jumping
+  // after the renderer reports the real height.
   if (trayWindow && !trayWindow.isDestroyed()) {
     try { trayWindow.setOpacity(1) } catch { /* ignore */ }
     if (trayWindow.isVisible()) {
@@ -557,6 +578,13 @@ function registerTrayIpc(): void {
 
     if (trayMenuShowPending) {
       const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
+      // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
+      console.log(
+        '[tray-diag] reportSize',
+        '| reported:', newWidth + 'x' + newHeight,
+        '| anchor:', JSON.stringify(trayMenuAnchor),
+        '| geo:', JSON.stringify(geo)
+      )
       const current = trayWindow.getBounds()
       if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
         trayWindow.setBounds(geo)
