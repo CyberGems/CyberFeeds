@@ -158,6 +158,9 @@ export default function NotifierApp(): JSX.Element {
   const rafRef = useRef<number | undefined>(undefined)
   const hoverOffTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isHovering = useRef(false)
+  // Bumped on every pause and resume request so a stale async cursor check
+  // cannot resume the countdown after a newer interaction re-paused it.
+  const hoverSeqRef = useRef(0)
   const initialCursorPos = useRef<{ x: number; y: number } | null>(null)
   const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const countdownEnd = useRef<number | null>(null)
@@ -208,6 +211,7 @@ export default function NotifierApp(): JSX.Element {
       clearTimeout(hoverOffTimer.current)
       hoverOffTimer.current = null
     }
+    hoverSeqRef.current += 1
     isHovering.current = true
     setIsHovered(true)
     stopCountdown()
@@ -224,6 +228,27 @@ export default function NotifierApp(): JSX.Element {
       startCountdown(state.settings.duration + AUTO_HIDE_BUFFER_MS)
     }
   }, [startCountdown, state.stack.length, state.settings])
+
+  /**
+   * Resume the auto-hide countdown only after confirming the OS cursor is
+   * really outside the window bounds. Dismissing a card (fade + window resize)
+   * and focus changes can emit spurious mouseleave/blur events while the
+   * cursor is still over the popup, and a fresh mouseenter then re-arms the
+   * 4px movement threshold, leaving the countdown running under a stationary
+   * cursor. Once the user interacted with the popup it must stay until the
+   * cursor genuinely leaves its area.
+   */
+  const requestResume = useCallback((): void => {
+    if (!isHovering.current) return
+    const seq = ++hoverSeqRef.current
+    void window.api.isCursorOverNotifierWindow
+      ?.()
+      .then((over) => {
+        if (seq !== hoverSeqRef.current) return
+        if (!over && isHovering.current) resumeTimer()
+      })
+      .catch(() => {})
+  }, [resumeTimer])
 
   const handleMouseEnter = (e: React.MouseEvent): void => {
     if (state.settings?.alwaysPauseOnHover) {
@@ -285,9 +310,7 @@ export default function NotifierApp(): JSX.Element {
 
   const handleMouseLeave = (): void => {
     initialCursorPos.current = null
-    if (isHovering.current) {
-      resumeTimer()
-    }
+    requestResume()
   }
 
   const [confirmMuteFeedId, setConfirmMuteFeedId] = useState<string | null>(null)
@@ -407,17 +430,15 @@ export default function NotifierApp(): JSX.Element {
     return () => document.removeEventListener('visibilitychange', handleVisibility)
   }, [resetScrollTop, stopCountdown])
 
-  // Safety: resume countdown if cursor leaves document or window blurs
+  // Safety: resume countdown only when the cursor truly left the window bounds.
+  // A focus change (blur) alone must never close the popup under the cursor,
+  // e.g. when a card click opens the article in the app or an external browser.
   useEffect(() => {
     const handleWindowBlur = (): void => {
-      if (isHovering.current) {
-        resumeTimer()
-      }
+      requestResume()
     }
     const handleDocMouseLeave = (e: MouseEvent): void => {
-      if (!e.relatedTarget && isHovering.current) {
-        resumeTimer()
-      }
+      if (!e.relatedTarget) requestResume()
     }
     window.addEventListener('blur', handleWindowBlur)
     document.addEventListener('mouseleave', handleDocMouseLeave)
@@ -425,7 +446,7 @@ export default function NotifierApp(): JSX.Element {
       window.removeEventListener('blur', handleWindowBlur)
       document.removeEventListener('mouseleave', handleDocMouseLeave)
     }
-  }, [resumeTimer])
+  }, [requestResume])
 
   const computeBelowCount = useCallback(() => {
     const el = scrollRef.current
@@ -543,6 +564,7 @@ export default function NotifierApp(): JSX.Element {
         return next
       })
       if (state.stack.length <= 1) {
+        hoverSeqRef.current += 1
         isHovering.current = false
         setIsHovered(false)
         stopCountdown()

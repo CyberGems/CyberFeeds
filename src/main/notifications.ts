@@ -1047,6 +1047,23 @@ export function registerNotifierIpc(): void {
     }
   })
 
+  // Tells the renderer whether the OS cursor is currently inside the notifier
+  // window bounds. Card dismissal (fade + resize) and focus changes can emit
+  // spurious mouseleave/blur events while the cursor never left the popup, so
+  // the auto-hide countdown must only resume on a verified cursor exit.
+  ipcMain.handle('notifier:isCursorOverWindow', () => {
+    if (!notifierWindow || notifierWindow.isDestroyed() || !notifierWindow.isVisible()) {
+      return false
+    }
+    try {
+      const pt = screen.getCursorScreenPoint()
+      const b = notifierWindow.getBounds()
+      return pt.x >= b.x && pt.x < b.x + b.width && pt.y >= b.y && pt.y < b.y + b.height
+    } catch {
+      return false
+    }
+  })
+
   ipcMain.on('notifier:hover', (_, hovering: boolean) => {
     isHovering = hovering
     if (isHovering) {

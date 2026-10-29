@@ -238,6 +238,8 @@ const api = {
   openSettingsInApp: (tab?: string) => ipcRenderer.send('notifier:openSettings', tab),
   resizeNotifier: (height: number) => ipcRenderer.send('notifier:resize', height),
   setHover: (isHovering: boolean) => ipcRenderer.send('notifier:hover', isHovering),
+  isCursorOverNotifierWindow: () =>
+    ipcRenderer.invoke('notifier:isCursorOverWindow') as Promise<boolean>,
   pickSoundFile: () => ipcRenderer.invoke('notifications:pickSoundFile'),
   onNotifierStack: (
     cb: (
