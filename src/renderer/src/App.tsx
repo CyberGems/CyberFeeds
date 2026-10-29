@@ -537,6 +537,10 @@ export default function App(): JSX.Element {
       if (e.key === 'Escape') {
         if (activePanel) {
           if (activePanel === 'settings') {
+            // Offer the Escape to the settings search first: while it has a
+            // query it consumes the key to clear itself before closing.
+            const consumed = !window.dispatchEvent(new CustomEvent('cf-settings-search-escape'))
+            if (consumed) return
             handleCloseSettings()
           } else {
             closePanel()

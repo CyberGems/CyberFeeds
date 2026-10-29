@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback, type KeyboardEvent } from 'react'
 import {
   Settings, Bell, Sliders, Palette, Database, Zap,
   Stethoscope, Keyboard, X, Upload, Download, FolderOpen, RotateCcw, Trash2,
@@ -291,6 +291,197 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const [detectedBrowsers, setDetectedBrowsers] = useState<import('../../../shared/types').DetectedBrowser[]>([])
   const { t, language } = useTranslation()
 
+  // ─── Settings search ──────────────────────────────────────────────────────
+  // DOM text search over the visible tab (CSS Custom Highlight API, so React
+  // never owns the highlight nodes) plus a cross-tab index over the translated
+  // texts so a query can hop to the tab that contains it.
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const tabChipsRef = useRef<HTMLDivElement>(null)
+  const searchRangesRef = useRef<Range[]>([])
+  const searchCurrentMatchRef = useRef(0)
+  const searchRerunTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchMatchCount, setSearchMatchCount] = useState(0)
+  const [searchCurrentMatch, setSearchCurrentMatch] = useState(0)
+
+  const setSearchMatchPosition = useCallback((position: number): void => {
+    searchCurrentMatchRef.current = position
+    setSearchCurrentMatch(position)
+  }, [])
+
+  const searchTabStrings = useMemo((): Array<{ id: ActiveTab; strings: string[] }> => {
+    type SettingsTranslations = ReturnType<typeof useTranslation>['t']['settings']
+    const collect = (value: unknown, out: string[]): void => {
+      if (typeof value === 'string') {
+        if (value.trim()) out.push(value)
+        return
+      }
+      if (Array.isArray(value)) {
+        for (const item of value) collect(item, out)
+        return
+      }
+      if (value && typeof value === 'object') {
+        for (const item of Object.values(value)) collect(item, out)
+      }
+    }
+    const grab = (pick: (st: SettingsTranslations) => unknown): string[] => {
+      const out: string[] = []
+      collect(pick(t.settings), out)
+      return out
+    }
+    return [
+      { id: 'general', strings: grab((st) => st.general) },
+      { id: 'appearance', strings: grab((st) => [st.general.layout, st.general.theme, st.general.themes, st.fontSizes]) },
+      { id: 'filters', strings: grab((st) => st.filters) },
+      { id: 'notifications', strings: grab((st) => st.notifications) },
+      { id: 'keyboard', strings: grab((st) => st.keyboard) },
+      { id: 'backupMaintenance', strings: grab((st) => [st.autoBackup, st.backupData, st.maintenance, st.backup]) }
+    ]
+  }, [t])
+
+  const searchOtherTabsList = useMemo((): Array<{ id: ActiveTab; label: string; count: number }> => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return []
+    return searchTabStrings
+      .filter((entry) => entry.id !== activeTab)
+      .map((entry) => ({
+        id: entry.id,
+        label: t.settings.tabs[entry.id],
+        count: entry.strings.filter((txt) => txt.toLowerCase().includes(q)).length
+      }))
+      .filter((entry) => entry.count > 0)
+  }, [searchQuery, activeTab, searchTabStrings, t])
+
+  const runSettingsSearch = useCallback((keepPosition: boolean): void => {
+    const container = contentRef.current
+    const registry = CSS.highlights
+    if (!registry) return
+    const q = searchQuery.trim()
+    if (!container || !q) {
+      searchRangesRef.current = []
+      registry.delete('cf-settings-matches')
+      registry.delete('cf-settings-current')
+      setSearchMatchCount(0)
+      setSearchMatchPosition(0)
+      return
+    }
+    const ranges: Range[] = []
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT)
+    const lower = q.toLowerCase()
+    let node = walker.nextNode()
+    while (node) {
+      const text = node.nodeValue ?? ''
+      if (text.trim()) {
+        let idx = text.toLowerCase().indexOf(lower)
+        while (idx !== -1) {
+          const range = new Range()
+          range.setStart(node, idx)
+          range.setEnd(node, idx + q.length)
+          ranges.push(range)
+          idx = text.toLowerCase().indexOf(lower, idx + q.length)
+        }
+      }
+      node = walker.nextNode()
+    }
+    searchRangesRef.current = ranges
+    registry.set('cf-settings-matches', new Highlight(...ranges))
+    const previous = searchCurrentMatchRef.current
+    const currentIdx = keepPosition && previous > 0 ? Math.min(previous - 1, ranges.length - 1) : 0
+    setSearchMatchCount(ranges.length)
+    setSearchMatchPosition(ranges.length ? currentIdx + 1 : 0)
+    if (!ranges[currentIdx]) {
+      registry.delete('cf-settings-current')
+    }
+  }, [searchQuery, setSearchMatchPosition])
+
+  // Refresh highlights + scroll whenever the current match changes
+  useEffect(() => {
+    const registry = CSS.highlights
+    if (!registry) return
+    const ranges = searchRangesRef.current
+    const current = searchCurrentMatch > 0 ? ranges[searchCurrentMatch - 1] : undefined
+    registry.set('cf-settings-current', new Highlight(...(current ? [current] : [])))
+    if (current) {
+      current.startContainer.parentElement?.scrollIntoView({ block: 'center' })
+    }
+  }, [searchCurrentMatch])
+
+  // Re-run on query or tab change (position resets to the first match)
+  useEffect(() => {
+    runSettingsSearch(false)
+  }, [runSettingsSearch, activeTab])
+
+  // The panel re-renders as toggles change; keep the highlights accurate
+  useEffect(() => {
+    const container = contentRef.current
+    if (!container) return
+    const observer = new MutationObserver(() => {
+      if (!searchQuery.trim()) return
+      if (searchRerunTimer.current) clearTimeout(searchRerunTimer.current)
+      searchRerunTimer.current = setTimeout(() => runSettingsSearch(true), 180)
+    })
+    observer.observe(container, { childList: true, subtree: true, characterData: true })
+    return () => {
+      observer.disconnect()
+      if (searchRerunTimer.current) clearTimeout(searchRerunTimer.current)
+    }
+  }, [searchQuery, runSettingsSearch])
+
+  // Global highlights are document-scoped: clear them when the modal closes
+  useEffect(() => () => {
+    try {
+      CSS.highlights?.delete('cf-settings-matches')
+      CSS.highlights?.delete('cf-settings-current')
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  // Focus the search bar as soon as the modal opens
+  useEffect(() => {
+    searchInputRef.current?.focus()
+  }, [])
+
+  // The window-level Escape handler in App.tsx offers the Escape to the search
+  // first: consume it while there is a query so Esc clears before it closes.
+  useEffect(() => {
+    const onEscape = (e: Event): void => {
+      if (searchQuery) {
+        e.preventDefault()
+        setSearchQuery('')
+        searchInputRef.current?.focus()
+      }
+    }
+    window.addEventListener('cf-settings-search-escape', onEscape)
+    return () => window.removeEventListener('cf-settings-search-escape', onEscape)
+  }, [searchQuery])
+
+  const goToSearchMatch = useCallback((direction: 1 | -1): void => {
+    const ranges = searchRangesRef.current
+    const total = ranges.length
+    if (total === 0) return
+    const next = (((searchCurrentMatchRef.current - 1 + direction) % total) + total) % total
+    setSearchMatchPosition(next + 1)
+  }, [setSearchMatchPosition])
+
+  const focusSettingsSearch = useCallback((): void => {
+    searchInputRef.current?.focus()
+    searchInputRef.current?.select()
+  }, [])
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      goToSearchMatch(e.shiftKey ? -1 : 1)
+    } else if (e.key === 'ArrowDown' && searchOtherTabsList.length > 0) {
+      e.preventDefault()
+      tabChipsRef.current?.querySelector<HTMLButtonElement>('button')?.focus()
+    }
+  }
+
+  // ─── End settings search ──────────────────────────────────────────────────
+
   const fetchAutoBackups = useCallback(async () => {
     setLoadingAutoBackups(true)
     try {
@@ -484,6 +675,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   }
 
   const handlePanelKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
+      e.preventDefault()
+      e.stopPropagation()
+      focusSettingsSearch()
+      return
+    }
     if (e.key !== 'Enter' || e.defaultPrevented || !closeAfterNameConfirmRef.current) return
 
     e.preventDefault()
@@ -896,6 +1093,54 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             </span>
             <span className="settings-nav-title-text">{t.settings.title}</span>
           </div>
+          <div className="settings-nav-search">
+            <Search size={12} aria-hidden="true" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              data-settings-search="true"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              placeholder={t.settings.search.placeholder}
+              aria-label={t.settings.search.placeholder}
+              spellCheck={false}
+            />
+            {searchQuery.trim() && searchMatchCount > 0 && (
+              <span className="settings-nav-search-count">
+                {searchCurrentMatch}/{searchMatchCount}
+              </span>
+            )}
+            {searchQuery && (
+              <button
+                type="button"
+                className="settings-nav-search-clear"
+                aria-label={t.settings.search.clear}
+                onClick={() => setSearchQuery('')}
+              >
+                <X size={11} />
+              </button>
+            )}
+          </div>
+          {searchOtherTabsList.length > 0 && (
+            <div className="settings-nav-search-tabs" ref={tabChipsRef}>
+              <span className="settings-nav-search-tabs-label">{t.settings.search.otherTabs}</span>
+              {searchOtherTabsList.map((hit) => (
+                <button
+                  key={hit.id}
+                  type="button"
+                  className="settings-nav-search-tab"
+                  onClick={() => setActiveTab(hit.id)}
+                >
+                  <span>{hit.label}</span>
+                  <span className="count">{hit.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {searchQuery.trim() && searchMatchCount === 0 && searchOtherTabsList.length === 0 && (
+            <div className="settings-nav-search-empty">{t.settings.search.noMatches}</div>
+          )}
           <div className="settings-nav-items">
             {navItems.map(item => (
               <button
@@ -923,7 +1168,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
           </div>
         </aside>
 
-        <div className="settings-content">
+        <div className="settings-content" ref={contentRef}>
           {activeTab === 'general' && (
             <>
               <div className="settings-card">

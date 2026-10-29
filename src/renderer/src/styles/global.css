@@ -2611,6 +2611,105 @@ mark.reader-search-match.reader-search-active {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.settings-nav-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 10px 4px;
+  padding: 5px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  transition: border-color 0.15s ease;
+}
+.settings-nav-search:focus-within {
+  border-color: var(--accent);
+}
+.settings-nav-search svg {
+  flex-shrink: 0;
+}
+.settings-nav-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.settings-nav-search input::placeholder {
+  color: var(--text-muted);
+}
+.settings-nav-search-count {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.settings-nav-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.settings-nav-search-clear:hover {
+  background: var(--bg-1);
+  color: var(--text-primary);
+}
+.settings-nav-search-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 10px 6px;
+}
+.settings-nav-search-tabs-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 2px 4px;
+}
+.settings-nav-search-tab {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 4px 8px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+.settings-nav-search-tab:hover {
+  border-color: var(--accent);
+}
+.settings-nav-search-tab .count {
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+.settings-nav-search-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 2px 12px 6px;
+}
+::highlight(cf-settings-matches) {
+  background-color: rgba(210, 153, 34, 0.4);
+}
+::highlight(cf-settings-current) {
+  background-color: #d29922;
+  color: #0d1117;
+}
 .settings-nav-items {
   display: flex;
   flex-direction: column;

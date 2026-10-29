@@ -298,6 +298,12 @@ export const translations = {
         keyboard: 'Keyboard',
         backupMaintenance: 'Backup & Data'
       },
+      search: {
+        placeholder: 'Search settings',
+        clear: 'Clear search',
+        otherTabs: 'Other tabs',
+        noMatches: 'No matches in settings'
+      },
       general: {
         title: 'General',
         language: 'Language',
@@ -1200,6 +1206,12 @@ export const translations = {
         notifications: 'Notificaciones',
         keyboard: 'Teclado',
         backupMaintenance: 'Respaldo y Datos'
+      },
+      search: {
+        placeholder: 'Buscar en ajustes',
+        clear: 'Limpiar búsqueda',
+        otherTabs: 'Otras pestañas',
+        noMatches: 'Sin coincidencias en ajustes'
       },
       general: {
         title: 'General',
