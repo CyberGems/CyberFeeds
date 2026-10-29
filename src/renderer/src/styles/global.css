@@ -3993,7 +3993,6 @@ input[type="radio"] {
 }
 .notif-card:hover {
   border-color: var(--accent);
-  transform: translateY(-1px);
 }
 .notif-card:active {
   transform: scale(0.985);
@@ -4121,7 +4120,6 @@ input[type="radio"] {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-subtle);
-  transform: translateY(-1px);
 }
 .notif-btn:active {
   transform: scale(0.94);
@@ -4178,7 +4176,6 @@ input[type="radio"] {
   background: var(--accent, #58a6ff);
   border-color: var(--accent, #58a6ff);
   color: #0d1117;
-  transform: translateY(-1px);
 }
 .clear-all-btn:active {
   transform: scale(0.95);
