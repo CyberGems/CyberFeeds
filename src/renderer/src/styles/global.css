@@ -2703,6 +2703,9 @@ mark.reader-search-match.reader-search-active {
   color: var(--text-muted);
   margin: 2px 12px 6px;
 }
+.settings-content > [data-search-hidden] {
+  display: none !important;
+}
 ::highlight(cf-settings-matches) {
   background-color: rgba(210, 153, 34, 0.4);
 }

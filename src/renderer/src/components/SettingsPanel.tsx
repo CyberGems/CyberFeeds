@@ -374,6 +374,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       searchRangesRef.current = []
       registry.delete('cf-settings-matches')
       registry.delete('cf-settings-current')
+      for (const child of Array.from(container.children) as HTMLElement[]) {
+        child.removeAttribute('data-search-hidden')
+      }
       setSearchMatchCount(0)
       setSearchMatchPosition(0)
       return
@@ -395,6 +398,19 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
         }
       }
       node = walker.nextNode()
+    }
+    // Filter mode: hide every direct child (settings card) without a match so
+    // only the relevant cards remain visible while searching.
+    const visibleChildren = new Set<Element>()
+    for (const range of ranges) {
+      let el = range.startContainer.parentElement as HTMLElement | null
+      while (el && el !== container) {
+        if (el.parentElement === container) visibleChildren.add(el)
+        el = el.parentElement
+      }
+    }
+    for (const child of Array.from(container.children) as HTMLElement[]) {
+      child.toggleAttribute('data-search-hidden', !visibleChildren.has(child))
     }
     searchRangesRef.current = ranges
     registry.set('cf-settings-matches', new Highlight(...ranges))
