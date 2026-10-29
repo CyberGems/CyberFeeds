@@ -374,8 +374,10 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       searchRangesRef.current = []
       registry.delete('cf-settings-matches')
       registry.delete('cf-settings-current')
-      for (const child of Array.from(container.children) as HTMLElement[]) {
-        child.removeAttribute('data-search-hidden')
+      if (container) {
+        for (const child of Array.from(container.children) as HTMLElement[]) {
+          child.removeAttribute('data-search-hidden')
+        }
       }
       setSearchMatchCount(0)
       setSearchMatchPosition(0)
