@@ -6,9 +6,9 @@
 
 ### 🚀 What's new in this release
 
-<!-- Maintainer: Rewrite the marked paragraph for every release. Use 25-45 words, lead with user-facing changes, and do not repeat the app name or version. -->
+<!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Notification popups introduce smooth top scroll fade overlays with dedicated scrollbar spacing, dynamic countdown breathing states with active alert coloring, and refined reader featured image rendering with natural aspect proportions.
+Settings gain a filter-as-you-type search with match highlighting, cross-tab jumps, and keyboard navigation. Notification View and tray menu reliability on mixed-DPI monitors are fixed, the show/hide hotkey joins the Alt+Shift+R suite pattern, and the app upgrades to Electron 42.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,34 +17,56 @@ Notification popups introduce smooth top scroll fade overlays with dedicated scr
 
 ### ✨ Key Features & Highlights
 
-- 🔔 **Notification Popups with Smooth Fade & Dedicated Scrollbar**:
-  - Added a top gradient fade overlay when scrolling notification cards, eliminating harsh clipping beneath the header buttons.
-  - Aligned top and bottom fade overlays precisely to the cards area, keeping the scrollbar track, thumb, and chevrons completely uncovered and interactive.
-  - Re-engineered custom scrollbar styling with balanced idle opacity, brightened hover/active states, and larger, clickable chevron buttons styled as rounded semitransparent buttons on hover.
-  - Updated auto-dismiss countdown timer: numbers display in clear alert red while actively ticking down, and smoothly pulse with a breathing zoom in/out effect when held/paused on hover.
+- 🔍 **Settings Search**:
+  - Filter-as-you-type: settings cards without matches hide while searching, and tabs without matches leave the sidebar.
+  - Every match is highlighted with an n/m counter, Enter/Shift+Enter navigation, and automatic scrolling to the current match.
+  - Cross-tab chips list other tabs containing the query; the bar is focused when the modal opens, Ctrl+F refocuses it, and Escape clears the query before closing.
 
-- 🖼️ **Refined Reader Featured Image Rendering**:
-  - Featured images in articles now render with natural aspect proportions without forced letterboxing or distortion.
+- 🖥️ **Tray Menu Reliability on Mixed-DPI Monitors**:
+  - The first open after launch now anchors to the real tray icon position on monitors whose scale differs from the primary.
+  - Menu geometry is re-stamped after display-scale crossings, ending far-from-taskbar placements.
+
+- 🔔 **Notification Popup Reliability**:
+  - "View" and card clicks always reach the reader article, even from a cold tray session.
+  - The popup stays open while interacting until the cursor verifiably leaves its area, and hover text blur is gone.
+
+- ⌨️ **Alt+Shift+R Show/Hide Hotkey**:
+  - New default following the suite Alt+Shift+X pattern; legacy Alt+S / Alt+Shift+S values migrate automatically.
+  - Show/hide is always global, and the tray tooltip now shows it alongside a "Refreshing feeds..." status while fetching.
+
+- 🧱 **Electron 42 Runtime**:
+  - Upgraded from Electron 34 to 42 (Chromium 148, Node 24) with better-sqlite3 v13.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Los avisos de notificación incorporan degradados suaves de desplazamiento superior con separación de barra de scroll, temporizador con respiración dinámica en pausa y color de alerta activo, y proporciones naturales en imágenes destacadas del lector.
+Los ajustes incorporan un buscador con filtro al escribir, resaltado de coincidencias, salto entre pestañas y navegación por teclado. Se corrigen Ver en notificaciones y el menú del tray en DPI mixto; el atajo de mostrar/ocultar pasa a Alt+Shift+R y llega Electron 42.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 🔔 **Ventana de notificaciones con desvanecimiento suave y barra de scroll dedicada**:
-  - Se agregó un efecto de desvanecimiento superior al hacer scroll que elimina el corte abrupto de las tarjetas bajo los botones de la cabecera.
-  - Los degradados superior e inferior terminan exactamente en el borde de las tarjetas, dejando el carril, el cabezal y los chevrones de la barra de scroll completamente despejados y accesibles.
-  - Estilos de scrollbar personalizados con opacidad equilibrada en reposo, realce al interactuar y chevrones más grandes que se iluminan como botones semitransparentes en hover.
-  - Temporizador de cierre automático mejorado: muestra los números en rojo de alerta durante el conteo activo y adopta un efecto de respiración (zoom in/out) únicamente cuando está en pausa por interacción.
+- 🔍 **Buscador de ajustes**:
+  - Filtro al escribir: las tarjetas sin coincidencias se ocultan y las pestañas sin resultados salen del menú lateral.
+  - Todas las coincidencias se resaltan con contador n/m, navegación con Enter/Shift+Enter y desplazamiento automático a la coincidencia actual.
+  - Chips de otras pestañas con la consulta; la barra se enfoca al abrir el modal, Ctrl+F la re-enfoca y Escape limpia antes de cerrar.
 
-- 🖼️ **Visualización refinada de imágenes destacadas en el lector**:
-  - Las imágenes destacadas de los artículos ahora se muestran con proporciones naturales sin letterboxing forzado ni distorsión.
+- 🖥️ **Menú del tray fiable en monitores de DPI mixto**:
+  - La primera apertura tras iniciar se ancla a la posición real del icono en monitores con escala distinta a la del primario.
+  - La geometría se re-estampa tras los cambios de escala, eliminando las apariciones lejos de la barra de tareas.
+
+- 🔔 **Fiabilidad de las notificaciones**:
+  - "Ver" y el click en la tarjeta siempre llegan al artículo, incluso desde una sesión fría del tray.
+  - El popup permanece abierto mientras interactúas hasta que el cursor sale de su zona, y el texto borroso en hover desapareció.
+
+- ⌨️ **Atajo Alt+Shift+R para mostrar/ocultar**:
+  - Nuevo valor por defecto siguiendo el patrón Alt+Shift+X de la suite; los valores previos Alt+S / Alt+Shift+S migran automáticamente.
+  - Siempre global, y el tooltip del tray lo muestra junto al estado "Actualizando feeds..." durante la obtención.
+
+- 🧱 **Runtime Electron 42**:
+  - Actualización de Electron 34 a 42 (Chromium 148, Node 24) con better-sqlite3 v13.
 
 </details>
 
