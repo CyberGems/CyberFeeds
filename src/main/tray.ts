@@ -216,31 +216,50 @@ let trayMenuRevealTimer: NodeJS.Timeout | null = null
 let trayMenuAnchor: any = null
 
 function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: number; height: number } {
-  // Only trust the event rect when it has a real size; the first tray event
-  // after launch can deliver zero-size or stale rects (Windows fills the icon
-  // rect lazily), which would anchor the menu far from the taskbar.
+  let cursor: { x: number; y: number } | null = null
+  try {
+    cursor = screen.getCursorScreenPoint()
+  } catch {
+    cursor = null
+  }
+
+  // The cursor sits on the tray icon while the user right-clicks it, so any
+  // candidate rect whose center is far from the cursor is expressed in the
+  // wrong coordinate space (mixed-DPI tray rects are scaled by the primary
+  // display's factor) and must not anchor the menu.
+  const nearCursor = (r: { x: number; y: number; width: number; height: number }): boolean => {
+    if (!cursor) return true
+    const cx = r.x + r.width / 2
+    const cy = r.y + r.height / 2
+    return Math.abs(cx - cursor.x) <= 80 && Math.abs(cy - cursor.y) <= 80
+  }
+
   if (eventBounds && typeof eventBounds.x === 'number' && (eventBounds.width || eventBounds.height)) {
-    return {
+    const r = {
       x: eventBounds.x,
       y: eventBounds.y,
-      width: eventBounds.width,
-      height: eventBounds.height
+      width: eventBounds.width || 0,
+      height: eventBounds.height || 0
+    }
+    if (nearCursor(r)) {
+      return r
     }
   }
   try {
     const tb = tray?.getBounds()
     if (tb && typeof tb.x === 'number' && (tb.width > 0 || tb.height > 0)) {
-      return { x: tb.x, y: tb.y, width: tb.width, height: tb.height }
+      const r = { x: tb.x, y: tb.y, width: tb.width, height: tb.height }
+      if (nearCursor(r)) {
+        return r
+      }
     }
   } catch {
     /* ignore */
   }
-  try {
-    const p = screen.getCursorScreenPoint()
-    return { x: p.x, y: p.y, width: 0, height: 0 }
-  } catch {
-    return { x: 0, y: 0, width: 0, height: 0 }
+  if (cursor) {
+    return { x: cursor.x, y: cursor.y, width: 0, height: 0 }
   }
+  return { x: 0, y: 0, width: 0, height: 0 }
 }
 
 function calculateTrayMenuGeometry(
@@ -603,6 +622,19 @@ function registerTrayIpc(): void {
 export function createTray(mainWindow: BrowserWindow): Tray {
   tray = new Tray(loadTrayFrame())
   _mainWindow = mainWindow
+
+  // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
+  console.log(
+    '[tray-diag] displays:',
+    JSON.stringify(
+      screen.getAllDisplays().map((d) => ({
+        id: d.id,
+        bounds: d.bounds,
+        workArea: d.workArea,
+        scale: d.scaleFactor
+      }))
+    )
+  )
 
   registerTrayIpc()
   registerGlobalShortcuts()
