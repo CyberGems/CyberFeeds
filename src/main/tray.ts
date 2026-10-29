@@ -216,11 +216,10 @@ let trayMenuRevealTimer: NodeJS.Timeout | null = null
 let trayMenuAnchor: any = null
 // Geometry awaiting the reveal; re-stamped after the DPI context attaches
 // because the first setBounds across displays converts the position with the
-// window's previous scale, landing the window off-target (tray-diag logs).
+// window's previous scale, landing the window off-target.
 let trayMenuPendingGeo: { x: number; y: number; width: number; height: number } | null = null
 let trayMenuCrossingReveal = false
 let trayMenuCrossingTimer: NodeJS.Timeout | null = null
-let trayMenuOpenCount = 0
 
 function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: number; height: number } {
   let cursor: { x: number; y: number } | null = null
@@ -406,8 +405,6 @@ function restampPendingGeo(): void {
     const cur = trayWindow.getBounds()
     const g = trayMenuPendingGeo
     if (cur.x !== g.x || cur.y !== g.y || cur.width !== g.width || cur.height !== g.height) {
-      // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
-      console.log('[tray-diag] restamp | before:', JSON.stringify(cur), '| target:', JSON.stringify(g))
       trayWindow.setBounds(g)
     }
   } catch {
@@ -452,33 +449,14 @@ function showTrayMenu(eventBounds?: any): void {
   trayMenuAnchor = getInitialAnchor(eventBounds)
   const geo = calculateTrayMenuGeometry(trayMenuAnchor, currentTraySize.width, currentTraySize.height)
 
-  trayMenuOpenCount += 1
   let fromDisplay: Electron.Display | null = null
   try { fromDisplay = screen.getDisplayMatching(win.getBounds()) } catch { fromDisplay = null }
-
-  // TEMP DIAGNOSTIC: capture the raw first-open inputs; remove once the
-  // first-open mispositioning root cause is confirmed.
-  let diagTrayBounds: unknown = null
-  try { diagTrayBounds = tray?.getBounds() } catch { /* ignore */ }
-  let diagCursor: unknown = null
-  try { diagCursor = screen.getCursorScreenPoint() } catch { /* ignore */ }
   let toDisplay: Electron.Display | null = null
   try { toDisplay = screen.getDisplayMatching(geo) } catch { toDisplay = null }
   const crossing =
     !!fromDisplay && !!toDisplay &&
     fromDisplay.id !== toDisplay.id &&
     fromDisplay.scaleFactor !== toDisplay.scaleFactor
-  console.log(
-    '[tray-diag] show',
-    '| open:', trayMenuOpenCount,
-    '| eventBounds:', JSON.stringify(eventBounds ?? null),
-    '| anchor:', JSON.stringify(trayMenuAnchor),
-    '| trayBounds:', JSON.stringify(diagTrayBounds),
-    '| cursor:', JSON.stringify(diagCursor),
-    '| size:', JSON.stringify(currentTraySize),
-    '| geo:', JSON.stringify(geo),
-    '| crossing:', crossing
-  )
 
   // To avoid flicker: hide first if visible, reposition, then show.
   // This prevents the user from seeing the window jump from its old position.
@@ -663,14 +641,6 @@ function registerTrayIpc(): void {
 
     if (trayMenuShowPending) {
       const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
-      // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
-      console.log(
-        '[tray-diag] reportSize',
-        '| open:', trayMenuOpenCount,
-        '| reported:', newWidth + 'x' + newHeight,
-        '| anchor:', JSON.stringify(trayMenuAnchor),
-        '| geo:', JSON.stringify(geo)
-      )
       trayMenuPendingGeo = { x: geo.x, y: geo.y, width: geo.width, height: geo.height }
       if (trayMenuCrossingReveal) {
         // Re-stamp the new size but defer the reveal to the crossing timer,
@@ -700,19 +670,6 @@ function registerTrayIpc(): void {
 export function createTray(mainWindow: BrowserWindow): Tray {
   tray = new Tray(loadTrayFrame())
   _mainWindow = mainWindow
-
-  // TEMP DIAGNOSTIC: remove once the first-open mispositioning is confirmed
-  console.log(
-    '[tray-diag] displays:',
-    JSON.stringify(
-      screen.getAllDisplays().map((d) => ({
-        id: d.id,
-        bounds: d.bounds,
-        workArea: d.workArea,
-        scale: d.scaleFactor
-      }))
-    )
-  )
 
   registerTrayIpc()
   registerGlobalShortcuts()
