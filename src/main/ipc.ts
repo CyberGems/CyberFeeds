@@ -1102,10 +1102,10 @@ export function registerIpc(): void {
     // Explicit reset payload to guarantee expected defaults even if the
     // main-process build has stale DEFAULT_SETTINGS cached.
     const RESET_SHORTCUTS = {
-      showHide: { enabled: true, accelerator: 'Alt+S', global: true },
-      notifications: { enabled: false, accelerator: '', global: false },
-      settings: { enabled: false, accelerator: '', global: false },
-      fetch: { enabled: false, accelerator: '', global: false }
+      showHide: { enabled: true, accelerator: 'Alt+Shift+R', global: true },
+      notifications: { enabled: false, accelerator: '', global: true },
+      settings: { enabled: false, accelerator: '', global: true },
+      fetch: { enabled: false, accelerator: '', global: true }
     }
 
     // Overwrite shortcuts deterministically (avoid depending on current DB value shape/merge).

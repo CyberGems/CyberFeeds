@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { app } from 'electron'
 import path from 'path'
-import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState, CleanupScope } from './types'
+import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState, CleanupScope, KeyboardShortcuts } from './types'
 import { DEFAULT_SETTINGS } from './types'
 import { articleHasVideo } from '../shared/youtube'
 
@@ -998,6 +998,37 @@ export function getUnseenNotificationCount(): number {
 
 // ─── Settings ──────────────────────────────────────────────────────────────
 
+/**
+ * Migrate legacy show/hide accelerators on load and apply the scope policy.
+ * CyberFeeds originally used Alt+Shift+S, then Alt+S; both belong to other
+ * apps today and the suite pattern is Alt+Shift+X, so saved defaults move to
+ * Alt+Shift+R while a user's own custom accelerator is respected (a migration
+ * never takes a combo already used by another shortcut of this app).
+ * Show/Hide only makes sense system-wide, so its scope is always global, and
+ * the remaining shortcuts exist to be used from any app, so they default to
+ * global too.
+ */
+function normalizeShortcutsOnLoad(parsed?: Partial<KeyboardShortcuts>): KeyboardShortcuts {
+  const merged: KeyboardShortcuts = { ...DEFAULT_SETTINGS.shortcuts, ...parsed }
+  const others = [merged.notifications, merged.settings, merged.fetch]
+  const comboFree = (combo: string): boolean =>
+    others.every((s) => s?.accelerator !== combo)
+
+  if (merged.showHide) {
+    if (
+      (merged.showHide.accelerator === 'Alt+Shift+S' || merged.showHide.accelerator === 'Alt+S') &&
+      comboFree('Alt+Shift+R')
+    ) {
+      merged.showHide = { ...merged.showHide, accelerator: 'Alt+Shift+R' }
+    }
+    merged.showHide = { ...merged.showHide, global: true }
+  }
+  merged.notifications = { ...merged.notifications, global: true }
+  merged.settings = { ...merged.settings, global: true }
+  merged.fetch = { ...merged.fetch, global: true }
+  return merged
+}
+
 export function getSettings(): AppSettings {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('app') as { value: string } | undefined
   if (!row) return DEFAULT_SETTINGS
@@ -1012,16 +1043,7 @@ export function getSettings(): AppSettings {
       ...parsed,
       theme: validTheme,
       notifications: { ...DEFAULT_SETTINGS.notifications, ...parsed.notifications },
-      shortcuts: {
-        ...DEFAULT_SETTINGS.shortcuts,
-        ...parsed.shortcuts,
-        ...(parsed.shortcuts?.showHide?.accelerator === 'Alt+Shift+S' &&
-          parsed.shortcuts?.notifications?.accelerator !== 'Alt+S' &&
-          parsed.shortcuts?.settings?.accelerator !== 'Alt+S' &&
-          parsed.shortcuts?.fetch?.accelerator !== 'Alt+S'
-          ? { showHide: { ...parsed.shortcuts.showHide, accelerator: 'Alt+S' } }
-          : {})
-      },
+      shortcuts: normalizeShortcutsOnLoad(parsed.shortcuts),
       filters: { ...DEFAULT_SETTINGS.filters, ...parsed.filters },
       autoBackup: { ...DEFAULT_SETTINGS.autoBackup, ...parsed.autoBackup },
       recentSearches: Array.isArray(parsed.recentSearches) ? parsed.recentSearches : []

@@ -291,13 +291,17 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pollOnlyWhenUnfocused: false,
   shortcuts: {
     // Default: only one hotkey enabled by default.
-    // Show/Hide (tray + global shortcut): Alt+S
-    showHide: { enabled: true, accelerator: 'Alt+S', global: true },
+    // Show/Hide (tray + global shortcut): Alt+Shift+R, following the suite
+    // pattern Alt+Shift+X (Clock C, Files F, Go G, Launcher L, Notes N,
+    // Snap A, Tray T).
+    showHide: { enabled: true, accelerator: 'Alt+Shift+R', global: true },
 
-    // Disabled by default: no accelerators so they don't appear unless the user sets them.
-    notifications: { enabled: false, accelerator: '', global: false },
-    settings: { enabled: false, accelerator: '', global: false },
-    fetch: { enabled: false, accelerator: '', global: false }
+    // Disabled by default: no accelerators so they don't appear unless the
+    // user sets them. Their scope defaults to Global: these actions exist to
+    // be used from any app.
+    notifications: { enabled: false, accelerator: '', global: true },
+    settings: { enabled: false, accelerator: '', global: true },
+    fetch: { enabled: false, accelerator: '', global: true }
   },
   autoFetchFullContent: true,
   instantSearch: true,

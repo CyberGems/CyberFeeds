@@ -2137,30 +2137,44 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                       </Tooltip>
                     ) : null}
                   </div>
-                  <Tooltip label={shortcut.global ? t.settings.keyboard.scopeGlobalHint : t.settings.keyboard.scopeAppHint} placement="bottom">
-                    <label
-                      className="toggle"
-                      style={{ margin: 0 }}
+                  {key === 'showHide' ? (
+                    <span
+                      style={{
+                        fontSize: 11,
+                        color: 'var(--text-secondary)',
+                        display: 'inline-block',
+                        width: 42,
+                        textAlign: 'left'
+                      }}
                     >
-                      <div
-                        className={`toggle-track ${shortcut.global ? 'on' : ''}`}
-                        onClick={() => {
-                          const cur = localRef.current.shortcuts
-                          const newShortcuts = { ...cur }
-                          newShortcuts[key as keyof KeyboardShortcuts] = {
-                            ...cur[key as keyof KeyboardShortcuts],
-                            global: !cur[key as keyof KeyboardShortcuts].global
-                          }
-                          updateShortcuts(newShortcuts)
-                        }}
+                      {t.settings.keyboard.scopeGlobal}
+                    </span>
+                  ) : (
+                    <Tooltip label={shortcut.global ? t.settings.keyboard.scopeGlobalHint : t.settings.keyboard.scopeAppHint} placement="bottom">
+                      <label
+                        className="toggle"
+                        style={{ margin: 0 }}
                       >
-                        <div className="toggle-thumb" />
-                      </div>
-                      <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'inline-block', width: 42, textAlign: 'left' }}>
-                        {shortcut.global ? t.settings.keyboard.scopeGlobal : t.settings.keyboard.scopeApp}
-                      </span>
-                    </label>
-                  </Tooltip>
+                        <div
+                          className={`toggle-track ${shortcut.global ? 'on' : ''}`}
+                          onClick={() => {
+                            const cur = localRef.current.shortcuts
+                            const newShortcuts = { ...cur }
+                            newShortcuts[key as keyof KeyboardShortcuts] = {
+                              ...cur[key as keyof KeyboardShortcuts],
+                              global: !cur[key as keyof KeyboardShortcuts].global
+                            }
+                            updateShortcuts(newShortcuts)
+                          }}
+                        >
+                          <div className="toggle-thumb" />
+                        </div>
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'inline-block', width: 42, textAlign: 'left' }}>
+                          {shortcut.global ? t.settings.keyboard.scopeGlobal : t.settings.keyboard.scopeApp}
+                        </span>
+                      </label>
+                    </Tooltip>
+                  )}
                 </div>
               ))}
 
