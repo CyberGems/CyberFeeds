@@ -63,6 +63,8 @@ export const useTabsStore = create<TabsState>((set, get) => ({
 
   openTab: (article, activate = true) => {
     const settings = useSettingsStore.getState().settings
+    // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
+    window.api.diagLog?.(`openTab | id=${article.id} | tabsMode=${settings.openArticlesInTabs !== false} | activate=${activate}`)
     if (settings.openArticlesInTabs === false) {
       if (activate) {
         useUIStore.getState().selectArticle(article.id)

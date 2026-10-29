@@ -286,17 +286,24 @@ export default function App(): JSX.Element {
   // Listen for open article requests (e.g. from notifier click or tray menu)
   useEffect(() => {
     const unsub = window.api.onOpenArticle(async (feedId, articleId) => {
+      // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
+      window.api.diagLog?.(`openArticle | received feedId=${feedId} articleId=${articleId}`)
       useUIStore.setState({
         selectedFeedId: !feedId || feedId === 'all' ? null : feedId,
         activePanel: null
       })
-      if (!articleId) return
+      if (!articleId) {
+        window.api.diagLog?.('openArticle | articleId empty, stopping after feed selection')
+        return
+      }
       const found = useArticlesStore.getState().articles.find((a) => a.id === articleId)
+      window.api.diagLog?.(`openArticle | inLoadedList=${!!found}`)
       if (found) {
         useTabsStore.getState().openTab(found, true)
       } else {
         try {
           const art = await window.api.getArticleById(articleId)
+          window.api.diagLog?.(`openArticle | dbLookup=${art ? 'found' : 'MISSING'}`)
           if (art) {
             useTabsStore.getState().openTab(art, true)
           }
@@ -304,12 +311,6 @@ export default function App(): JSX.Element {
           /* ignore lookup errors */
         }
       }
-
-
-
-
-
-
     })
     return unsub
   }, [])

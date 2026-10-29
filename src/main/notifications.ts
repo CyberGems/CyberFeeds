@@ -1005,6 +1005,8 @@ export function registerNotifierIpc(): void {
   })
 
   ipcMain.on('notifier:openInApp', (_, feedId: string, articleId: string) => {
+    // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
+    console.log('[diag] openInApp | feedId:', feedId, '| articleId:', articleId, '| closeOnViewInApp:', settings.closeOnViewInApp)
     if (settings.closeOnViewInApp) {
       hideNotifierWindow()
     }
@@ -1012,6 +1014,11 @@ export function registerNotifierIpc(): void {
     if (mainWin) {
       restoreMainWindow()
       mainWin.webContents.send('app:openArticle', { feedId, articleId })
+      // TEMP DIAGNOSTIC
+      console.log('[diag] openInApp | event sent to:', mainWin === BrowserWindow.getAllWindows()[0] ? 'first window' : 'other window')
+    } else {
+      // TEMP DIAGNOSTIC
+      console.log('[diag] openInApp | NO main window found, event NOT sent')
     }
   })
 

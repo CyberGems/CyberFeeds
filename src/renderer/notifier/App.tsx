@@ -597,6 +597,8 @@ export default function NotifierApp(): JSX.Element {
   }, [state.stack.length, stopCountdown])
 
   const handleViewInApp = (item: NotificationHistoryItem): void => {
+    // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
+    window.api.diagLog?.(`view | item.id=${item.id} | item.feedId=${item.feedId} | item.articleId=${item.articleId}`)
     if (item.feedId) {
       window.api.openInApp(item.feedId, item.articleId || '')
     }
