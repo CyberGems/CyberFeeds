@@ -306,6 +306,7 @@ export const translations = {
       },
       general: {
         title: 'General',
+        systemTitle: 'System & Startup',
         language: 'Language',
         pollingTitle: 'Feed Synchronization & Polling',
         pollingInterval: 'Check for new articles every',
@@ -1215,6 +1216,7 @@ export const translations = {
       },
       general: {
         title: 'General',
+        systemTitle: 'Sistema e inicio',
         language: 'Idioma',
         pollingTitle: 'Sincronización y sondeo de feeds',
         pollingInterval: 'Comprobar nuevos artículos cada',

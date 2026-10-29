@@ -1528,7 +1528,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
-                <CardTitle icon={Power} accent={TAB_META.general.accent}>{t.settings.tabs.general}</CardTitle>
+                <CardTitle icon={Power} accent={TAB_META.general.accent}>{t.settings.general.systemTitle}</CardTitle>
                 <label className="toggle">
                   <div
                     className={`toggle-track ${local.autoStart ? 'on' : ''}`}
