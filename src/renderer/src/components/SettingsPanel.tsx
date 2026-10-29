@@ -90,6 +90,18 @@ function CardTitle({
   )
 }
 
+function applySearchHighlight(ranges: Range[], index: number): void {
+  const registry = CSS.highlights
+  if (!registry) return
+  const current = ranges[index]
+  if (current) {
+    registry.set('cf-settings-current', new Highlight(current))
+    current.startContainer.parentElement?.scrollIntoView({ block: 'center' })
+  } else {
+    registry.delete('cf-settings-current')
+  }
+}
+
 function findShortcutConflict(
   currentKey: string,
   accelerator: string,
@@ -390,21 +402,15 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     const currentIdx = keepPosition && previous > 0 ? Math.min(previous - 1, ranges.length - 1) : 0
     setSearchMatchCount(ranges.length)
     setSearchMatchPosition(ranges.length ? currentIdx + 1 : 0)
-    if (!ranges[currentIdx]) {
-      registry.delete('cf-settings-current')
-    }
+    // Apply the current highlight here: the position (and therefore the
+    // effect that used to own this) often stays at 1 across queries, which
+    // left stale ranges from the previous query painted on screen.
+    applySearchHighlight(ranges, currentIdx)
   }, [searchQuery, setSearchMatchPosition])
 
-  // Refresh highlights + scroll whenever the current match changes
+  // Refresh highlight + scroll on explicit navigation (Enter/Shift+Enter)
   useEffect(() => {
-    const registry = CSS.highlights
-    if (!registry) return
-    const ranges = searchRangesRef.current
-    const current = searchCurrentMatch > 0 ? ranges[searchCurrentMatch - 1] : undefined
-    registry.set('cf-settings-current', new Highlight(...(current ? [current] : [])))
-    if (current) {
-      current.startContainer.parentElement?.scrollIntoView({ block: 'center' })
-    }
+    applySearchHighlight(searchRangesRef.current, searchCurrentMatch - 1)
   }, [searchCurrentMatch])
 
   // Re-run on query or tab change (position resets to the first match)
