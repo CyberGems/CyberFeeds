@@ -448,6 +448,26 @@ export default function NotifierApp(): JSX.Element {
     }
   }, [requestResume])
 
+  // While paused, periodically re-verify that the cursor is still over the
+  // popup. Dismissing a card can shrink the window away from a stationary
+  // cursor without any mouse event firing, which would otherwise leave the
+  // countdown paused forever even after the user moves the cursor elsewhere.
+  useEffect(() => {
+    if (!isHovered) return undefined
+    const id = setInterval(() => {
+      if (!isHovering.current) return
+      const seq = hoverSeqRef.current
+      void window.api.isCursorOverNotifierWindow
+        ?.()
+        .then((over) => {
+          if (seq !== hoverSeqRef.current) return
+          if (!over && isHovering.current) resumeTimer()
+        })
+        .catch(() => {})
+    }, 1000)
+    return () => clearInterval(id)
+  }, [isHovered, resumeTimer])
+
   const computeBelowCount = useCallback(() => {
     const el = scrollRef.current
     if (!el) return
