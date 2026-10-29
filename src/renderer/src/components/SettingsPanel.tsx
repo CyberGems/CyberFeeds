@@ -365,6 +365,19 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       .filter((entry) => entry.count > 0)
   }, [searchQuery, activeTab, searchTabStrings, t])
 
+  // While searching, tabs without any match disappear from the nav. The
+  // active tab always stays visible so the user knows where they are.
+  const searchMatchedTabs = useMemo((): Set<ActiveTab> | null => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return null
+    const matched = new Set<ActiveTab>()
+    for (const entry of searchTabStrings) {
+      if (entry.strings.some((txt) => txt.toLowerCase().includes(q))) matched.add(entry.id)
+    }
+    if (searchMatchCount > 0) matched.add(activeTab)
+    return matched
+  }, [searchQuery, searchTabStrings, searchMatchCount, activeTab])
+
   const runSettingsSearch = useCallback((keepPosition: boolean): void => {
     const container = contentRef.current
     const registry = CSS.highlights
@@ -1166,20 +1179,25 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             <div className="settings-nav-search-empty">{t.settings.search.noMatches}</div>
           )}
           <div className="settings-nav-items">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                type="button"
-                className={`settings-nav-btn${activeTab === item.id ? ' active' : ''}`}
-                onClick={() => setActiveTab(item.id)}
-                style={{ ['--nav-accent' as string]: TAB_META[item.id].accent, ['--nav-soft' as string]: TAB_META[item.id].soft }}
-              >
-                <span className="settings-nav-ico" aria-hidden="true">
-                  <item.Icon size={14} strokeWidth={2.1} />
-                </span>
-                <span className="settings-nav-label">{item.label}</span>
-              </button>
-            ))}
+            {navItems.map(item => {
+              if (searchMatchedTabs && !searchMatchedTabs.has(item.id) && item.id !== activeTab) {
+                return null
+              }
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`settings-nav-btn${activeTab === item.id ? ' active' : ''}`}
+                  onClick={() => setActiveTab(item.id)}
+                  style={{ ['--nav-accent' as string]: TAB_META[item.id].accent, ['--nav-soft' as string]: TAB_META[item.id].soft }}
+                >
+                  <span className="settings-nav-ico" aria-hidden="true">
+                    <item.Icon size={14} strokeWidth={2.1} />
+                  </span>
+                  <span className="settings-nav-label">{item.label}</span>
+                </button>
+              )
+            })}
           </div>
           <div className="settings-nav-footer">
             <div className={`settings-save-status${statusVisible ? ' is-visible' : ''} ${statusClass}`.trim()}>
