@@ -164,11 +164,6 @@ function extractContent(url: string): Promise<{ html?: string; error?: string }>
 }
 
 export function registerIpc(): void {
-  // TEMP DIAGNOSTIC: forward renderer diagnostics to the terminal; remove
-  // once the notifier "View" bug is root-caused.
-  ipcMain.on('diag:log', (_, message: string) => {
-    console.log('[diag]', message)
-  })
 
   // ─── Feeds ───────────────────────────────────────────────────────────────
 

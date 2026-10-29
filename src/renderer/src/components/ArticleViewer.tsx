@@ -532,8 +532,6 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
     if (contentRef.current) contentRef.current.scrollTop = 0
     const found = articles.find((a) => a.id === selectedArticleId)
     if (found) {
-      // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
-      window.api.diagLog?.(`viewer | id=${selectedArticleId} | source=list`)
       setArticle(found)
       setFullHtml(null)
       pendingFullHtmlRef.current = null
@@ -543,8 +541,6 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
       setIsPlayingVideo(Boolean(isYtFound && settings.autoPlayYouTube))
     } else {
       window.api.getArticleById(selectedArticleId).then((a) => {
-        // TEMP DIAGNOSTIC: remove once the notifier "View" bug is root-caused
-        window.api.diagLog?.(`viewer | id=${selectedArticleId} | source=db | result=${a ? 'found' : 'MISSING'}`)
         if (a) {
           setArticle(a)
           const isYtFound = isYouTubeUrl(a.link)

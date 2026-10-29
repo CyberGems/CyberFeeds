@@ -228,9 +228,6 @@ const api = {
 
   // Notifier specific
   dismissNotification: (id: string) => ipcRenderer.send('notifier:dismiss', id),
-  // TEMP DIAGNOSTIC: forward renderer diagnostics to the main terminal;
-  // remove once the notifier "View" bug is root-caused.
-  diagLog: (message: string) => ipcRenderer.send('diag:log', message),
   clearAllNotifications: () => ipcRenderer.send('notifier:clearAll'),
   markNotificationRead: (articleId: string) => ipcRenderer.send('notifier:markRead', articleId),
   snoozeNotifications: (minutes: number) => ipcRenderer.send('notifier:snooze', minutes),
