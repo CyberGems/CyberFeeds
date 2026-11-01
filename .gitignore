@@ -1,27 +1,2 @@
-node_modules
-dist
-out
-.DS_Store
-.vscode/
-.eslintcache
-*.log*
-*.tsbuildinfo
-scratch/
-data/
-
-
-
-
-## AI agent instruction files (LOCAL ONLY)
-AGENTS.md
-CLAUDE.md
-.cursorrules
-.cursor/
-.github/copilot-instructions.md
-
-## Local AI/runtime artifacts
-.claude/
-/artifacts/
-
-## GitHub Wiki (local copy — wiki lives on GitHub Wiki)
-docs/wiki/
+# Shared dependency exclusion
+node_modules/
