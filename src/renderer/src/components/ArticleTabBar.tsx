@@ -57,6 +57,72 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     })
   }, [])
 
+  // Press-and-hold scrolling: a quick click keeps the single smooth jump, but
+  // holding a nav button glides the strip continuously until release or edge.
+  const holdState = useRef<{
+    timer: ReturnType<typeof setTimeout> | null
+    raf: number | null
+    held: boolean
+  }>({ timer: null, raf: null, held: false })
+
+  const stopHoldScroll = useCallback(() => {
+    const h = holdState.current
+    if (h.timer) {
+      clearTimeout(h.timer)
+      h.timer = null
+    }
+    if (h.raf) {
+      cancelAnimationFrame(h.raf)
+      h.raf = null
+    }
+  }, [])
+
+  const startHoldScroll = useCallback(
+    (direction: 'left' | 'right') => {
+      stopHoldScroll()
+      holdState.current.held = false
+      holdState.current.timer = setTimeout(() => {
+        holdState.current.held = true
+        let lastLeft = -1
+        const step = (): void => {
+          const el = scrollContainerRef.current
+          if (!el) {
+            stopHoldScroll()
+            return
+          }
+          // Stop when the strip hits the edge the button points at
+          const dist = Math.max(2, el.clientWidth * 0.014)
+          const next = el.scrollLeft + (direction === 'left' ? -dist : dist)
+          el.scrollLeft = next
+          if (el.scrollLeft === lastLeft) {
+            stopHoldScroll()
+            return
+          }
+          lastLeft = el.scrollLeft
+          updateScrollState()
+          holdState.current.raf = requestAnimationFrame(step)
+        }
+        holdState.current.raf = requestAnimationFrame(step)
+      }, 280)
+    },
+    [stopHoldScroll, updateScrollState]
+  )
+
+  const handleNavClick = useCallback(
+    (direction: 'left' | 'right') => {
+      // A hold already scrolled the strip; don't add a jump on release
+      if (holdState.current.held) {
+        holdState.current.held = false
+        return
+      }
+      scrollTabs(direction)
+    },
+    [scrollTabs]
+  )
+
+  // Cancel any in-flight hold scroll when the bar unmounts
+  useEffect(() => stopHoldScroll, [stopHoldScroll])
+
   // Check overflow on tabs count change or container resize
   useEffect(() => {
     const el = scrollContainerRef.current
@@ -207,7 +273,11 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
           <button
             type="button"
             disabled={!canScrollLeft}
-            onClick={() => scrollTabs('left')}
+            onClick={() => handleNavClick('left')}
+            onPointerDown={() => startHoldScroll('left')}
+            onPointerUp={stopHoldScroll}
+            onPointerLeave={stopHoldScroll}
+            onPointerCancel={stopHoldScroll}
             aria-label={t.articleTabs.scrollLeft}
             className={`article-tab-bar-nav-btn ${canScrollLeft ? '' : 'disabled'}`}
           >
@@ -282,7 +352,11 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
           <button
             type="button"
             disabled={!canScrollRight}
-            onClick={() => scrollTabs('right')}
+            onClick={() => handleNavClick('right')}
+            onPointerDown={() => startHoldScroll('right')}
+            onPointerUp={stopHoldScroll}
+            onPointerLeave={stopHoldScroll}
+            onPointerCancel={stopHoldScroll}
             aria-label={t.articleTabs.scrollRight}
             className={`article-tab-bar-nav-btn ${canScrollRight ? '' : 'disabled'}`}
           >
