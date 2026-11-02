@@ -57,5 +57,11 @@
     "react-dom": "^19.2.1",
     "typescript": "^5.9.3",
     "vite": "^6.3.5"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "electron-winstaller@5.4.0": true,
+    "electron@42.11.10": true,
+    "better-sqlite3@13.0.3": true
   }
 }
