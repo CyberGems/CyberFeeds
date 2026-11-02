@@ -131,7 +131,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Interruptores modernos de la suite**: conmutadores tipo píldora interactivos con checkmarks táctiles y acentos reactivos al tema
 - **Personalización de saludos**: configura tu nombre, usa el título por defecto o déjalo vacío para saludos puros
 - **Escala de interfaz**: ajusta rápidamente la escala general desde el panel de bienvenida, con controles independientes detallados de interfaz y lector en Configuración
-- **Preferencias de lectura**: tamaño de fuente, interlineado, ancho máximo, tema de lectura (Predeterminado, Sepia, Oscuro) y conmutador de reproducción de YouTube en la app
+- **Preferencias de lectura**: tamaño de fuente, interlineado, ancho máximo y conmutador de reproducción de YouTube en la app
 - **Interfaz bilingüe**: interfaz completa en inglés y español
 
 ### 💾 Gestión de datos
