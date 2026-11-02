@@ -86,6 +86,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app or external browser playback and CDN thumbnails
 - **Reddit Integration**: Native subreddit and user feed support with fallback chain (RSS → JSON API)
 - **OPML Import/Export**: Migrate your feeds with folder structure preserved
+- **Welcome Wizard**: Guided first-run setup: pick language and theme with live preview, then add your first feeds from suggestions, a custom URL, or OPML
 - **Feed Preview**: Preview feed content before subscribing
 - **Feed Doctor**: Diagnostic scanner for connectivity and parsing issues
 - **Background Polling**: Configurable refresh intervals with per-feed and per-folder pause/resume
@@ -146,6 +147,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 1. Download the latest installer from [Releases](https://github.com/CyberGems/CyberFeeds/releases/latest)
 2. Run the `.exe` installer and follow the setup wizard
 3. Launch CyberFeeds. No other requirements needed: you do **not** need Node.js or npm
+4. On first launch with an empty library, a short welcome wizard sets you up: language, theme with live preview, and your first feeds (suggestions, your own URL, or OPML). It is skippable and reopenable later from Settings > General
 
 ### 🛡️ Windows SmartScreen
 
