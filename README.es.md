@@ -4,27 +4,36 @@
 
 <p align="center">
   <a href="https://cybergems.org/apps/cyberfeeds/">
-    <img src="https://cybergems.org/banners/es/cyberfeeds.png" alt="CyberFeeds: lector RSS y Atom local-first para una lectura rápida, privada y limpia" />
+    <img src="https://cybergems.org/banners/es/cyberfeeds.png" alt="Sitios, YouTube y Reddit en un solo lugar" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Descargar%20CyberFeeds%20v&suffix=%20&style=for-the-badge&label=&labelColor=0891B2&color=0891B2" alt="Descargar la última versión" /><img src="https://img.shields.io/badge/Windows_10%2F11_(64--bit)-2563EB?style=for-the-badge" alt="Windows 10/11 (64 bits)" /></a>
-  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/Todas_las_versiones-30363D?style=for-the-badge&logo=github&logoColor=white" alt="Todas las versiones" /><img src="https://img.shields.io/badge/Notas_de_la_versi%C3%B3n-475569?style=for-the-badge" alt="Notas de la versión" /></a>
+  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Descargar%20v&suffix=%20&style=for-the-badge&label=&labelColor=0891B2&color=0891B2" alt="Descargar la última versión" /><img src="https://img.shields.io/badge/Windows_10%2F11_(64--bit)-2563EB?style=for-the-badge" alt="Windows 10/11 (64 bits)" /></a>
+  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/Todas_las_versiones-30363D?style=for-the-badge&logo=github&logoColor=white" alt="Todas las versiones" /></a>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Licencia-GPL--3.0-1F2428.svg?style=flat-square&color=334155" alt="Licencia" />&nbsp;
   <img src="https://img.shields.io/badge/Plataforma-Windows_10%2F11-1F2428.svg?style=flat-square&color=334155" alt="Plataforma" />&nbsp;
   <img src="https://img.shields.io/badge/Electron-34-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=334155" alt="Electron" />&nbsp;
-  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentaci%C3%B3n-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=334155" alt="Wiki" /></a>
+  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentaci%C3%B3n-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=334155" alt="Wiki" /></a>&nbsp;
+  <a href="https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/Notas_de_la_versi%C3%B3n-475569?style=flat-square" alt="Notas de la versión" /></a>
 </p>
+
+---
+
+<div align="center">
+
+### Un lector RSS y Atom local-first para una lectura rápida, privada y limpia
+
+</div>
 
 ---
 
 ## 📑 Table of Contents
 
-- [¿Qué es CyberFeeds?](#qué-es-cyberfeeds)
+- [👋 Introducción](#-introducción)
 - [📡 ¿Por qué CyberFeeds?](#-por-qué-cyberfeeds)
 - [✨ Funciones principales](#-funciones-principales)
 - [🚀 Primeros pasos](#-primeros-pasos)
@@ -47,7 +56,7 @@
 
 ---
 
-## ¿Qué es CyberFeeds?
+## 👋 Introducción
 
 CyberFeeds es un lector de **RSS y Atom** local-first, enfocado en el rendimiento, para Windows. Suscríbete a sitios web, canales y listas de reproducción de YouTube, y feeds de Reddit; extrae artículos completos; busca en bibliotecas grandes; y organiza tu lectura con carpetas, estrellas, estados de leído y papelera. La obtención basada en workers mantiene la interfaz receptiva, mientras que las notificaciones inteligentes, el vídeo flotante, las copias de seguridad automáticas y una base de datos local SQLite te mantienen al día sin una cuenta ni servicio en la nube. Construido con **Electron + React + TypeScript**.
 
