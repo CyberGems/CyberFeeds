@@ -1175,14 +1175,15 @@ body {
   padding: 3px 12px;
   border-radius: 12px;
   font-size: 10px;
-  font-weight: 600;
-  color: #0d1117;
-  background: color-mix(in srgb, var(--accent) 82%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--bg-1) 72%, transparent);
+  border: none;
+  box-shadow: none;
   backdrop-filter: blur(8px);
-  z-index: 10;
   pointer-events: none;
+  user-select: none;
+  z-index: 10;
 }
 
 /* Back-to-top floating action button */
@@ -1316,6 +1317,16 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+/* Failed-image placeholder: same fixed height as a loaded thumbnail, so the
+   card height never changes and the virtual list stays stable. */
+.article-thumbnail-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--text-muted);
 }
 /* Unread cards carry a subtle accent stripe on the left edge; read cards stay
    clean with no reserved slot in the meta row. The stripe is intentionally

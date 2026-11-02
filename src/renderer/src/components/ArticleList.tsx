@@ -6,12 +6,12 @@ import {
   Mail,
   MailOpen,
   Search,
-  ChevronDown,
   ArrowUp,
   Circle,
   CircleDot,
   Link2,
   Image,
+  ImageOff,
   ExternalLink,
   Trash2,
   CheckCheck,
@@ -1608,7 +1608,6 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       {/* Floating "more below" indicator — mirrors the notifier popup pill */}
       {!loading && belowCount > 0 && (
         <div className="list-more-pill">
-          <ChevronDown size={10} />
           {belowCount} {t.articleList.moreBelow}
         </div>
       )}
@@ -1858,6 +1857,9 @@ const ArticleItem = memo(
     const { markRead, starArticle } = useArticlesStore()
     const { settings } = useSettingsStore()
     const { t, language } = useTranslation()
+    // Failed thumbnails swap the image for a fixed-height placeholder so the
+    // card keeps its measured size across remounts.
+    const [thumbFailed, setThumbFailed] = useState(false)
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
@@ -1975,19 +1977,20 @@ const ArticleItem = memo(
         {/* Thumbnail strip */}
         {article.thumbnail && settings.showArticleThumbnails && (
           <div className="article-thumbnail" style={{ position: 'relative' }}>
-            <img
-              src={article.thumbnail}
-              alt=""
-              loading="lazy"
-              onError={(e) => {
-                // Hide only the broken image: the container has a fixed
-                // height, so the card keeps its measured size and the
-                // virtual list never reflows when an image 404s. Collapsing
-                // the container here made every remount of a failed
-                // thumbnail shift the whole list (scroll flicker).
-                e.currentTarget.style.display = 'none'
-              }}
-            />
+            {thumbFailed ? (
+              // Fixed-height placeholder: the card keeps its measured size, so
+              // a failed image never reflows the virtual list.
+              <div className="article-thumbnail-failed">
+                <ImageOff size={16} aria-hidden="true" />
+              </div>
+            ) : (
+              <img
+                src={article.thumbnail}
+                alt=""
+                loading="lazy"
+                onError={() => setThumbFailed(true)}
+              />
+            )}
             {hasVideo && (
               <div className="article-thumbnail-video-tag" title={t.articleList.videoBadgeTooltip}>
                 <Play size={10} fill="currentColor" />
