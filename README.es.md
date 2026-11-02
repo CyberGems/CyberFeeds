@@ -58,7 +58,7 @@
 
 ## 👋 Introducción
 
-Estar al día con los sitios que de verdad te importan suele significar una docena de pestañas abiertas y una app distinta para cada plataforma. CyberFeeds reúne feeds RSS y Atom, canales y listas de YouTube y comunidades de Reddit en una sola biblioteca de escritorio: artículos completos en lugar de resúmenes recortados, búsqueda instantánea entre miles de publicaciones, carpetas, favoritos y estados de lectura para mantener el orden, y avisos que puedes ajustar por palabra clave, momento y monitor. La descarga se ejecuta en hilos worker sobre una base de datos SQLite local, así que la ventana se mantiene ágil y tu biblioteca nunca sale de tu PC: sin cuenta y sin nube. Construido con **Electron + React + TypeScript**.
+Estar al día con los sitios que de verdad te importan suele significar una docena de pestañas abiertas y una app distinta para cada plataforma. CyberFeeds reúne feeds RSS y Atom, canales y listas de YouTube y comunidades de Reddit en una sola biblioteca de escritorio: artículos completos en lugar de resúmenes recortados, búsqueda instantánea entre miles de publicaciones, carpetas, favoritos y estados de lectura para mantener el orden, y avisos que puedes ajustar por palabra clave, momento y monitor. La descarga se ejecuta en hilos worker sobre una base de datos SQLite local, así que la ventana se mantiene ágil y tu biblioteca se queda en tu PC —sin cuenta y sin nube—, mientras las copias automáticas pueden ir a la carpeta o unidad que elijas. Construido con **Electron + React + TypeScript**.
 
 *Gratuito y de código abierto (GPLv3): sin anuncios, sin rastreo y sin recogida de datos. Solo disfrútalo.*
 
@@ -76,6 +76,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 | Gestiona bibliotecas grandes | Listas virtualizadas, búsqueda, estrellas, leído/no leído y limpieza automática |
 | Migrar desde otro lector | Importación/exportación OPML con la estructura de carpetas conservada |
 | Conserva tus datos | Base de datos SQLite local: sin nube, sin cuentas, sin rastreo |
+| Sobrevive a un fallo de disco | Copias JSON programadas en la carpeta o unidad que elijas, con rotación automática y restauración desde la app |
 
 ---
 
@@ -134,7 +135,8 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Interfaz bilingüe**: interfaz completa en inglés y español
 
 ### 💾 Gestión de datos
-- **Copia de seguridad y restauración**: copia en formato JSON de feeds, carpetas y configuración
+- **Copias automáticas programadas:** copias JSON de feeds, carpetas, favoritos y configuración al iniciar, a diario, cada semana o cada mes, guardadas en la carpeta predeterminada o en cualquier carpeta y unidad que elijas; las copias antiguas rotan automáticamente
+- **Copia y restauración manual:** exporta o importa toda la configuración en un archivo JSON, o consulta, restaura y elimina cualquier copia automática desde Configuración
 - **Limpieza automática**: elimina automáticamente artículos leídos antiguos
 - **Base de datos SQLite**: almacenamiento local de alto rendimiento con modo WAL
 ---

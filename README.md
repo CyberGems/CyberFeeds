@@ -58,7 +58,7 @@
 
 ## 👋 Introduction
 
-Keeping up with the sites you actually care about usually means a dozen open tabs and a different app for every platform. CyberFeeds pulls RSS and Atom feeds, YouTube channels and playlists, and Reddit communities into one desktop library: full articles instead of truncated summaries, instant search across thousands of posts, folders, stars and read states to keep things organized, and notifications you can tune by keyword, timing and monitor. Fetching runs in worker threads over a local SQLite database, so the window stays responsive and your library never leaves your PC — no account, no cloud. Built with **Electron + React + TypeScript**.
+Keeping up with the sites you actually care about usually means a dozen open tabs and a different app for every platform. CyberFeeds pulls RSS and Atom feeds, YouTube channels and playlists, and Reddit communities into one desktop library: full articles instead of truncated summaries, instant search across thousands of posts, folders, stars and read states to keep things organized, and notifications you can tune by keyword, timing and monitor. Fetching runs in worker threads over a local SQLite database, so the window stays responsive and your library stays on your PC — no account, no cloud — while automatic backups can land in any folder or drive you choose. Built with **Electron + React + TypeScript**.
 
 *Free and open source (GPLv3): no ads, no tracking, and no data collection. Just enjoy it.*
 
@@ -76,6 +76,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 | Manage large libraries | Virtualized lists, search, star/read/unread, auto-cleanup |
 | Migrate from another reader | OPML import/export with folder structure preserved |
 | Keep your data | Local SQLite database: no cloud, no accounts, no tracking |
+| Survive a disk failure | Scheduled JSON backups to any folder or drive you choose, with automatic rotation and in-app restore |
 
 ---
 
@@ -134,7 +135,8 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Bilingual UI**: Full English and Spanish interface
 
 ### 💾 Data Management
-- **Backup & Restore**: JSON-based backup of feeds, folders, and settings
+- **Scheduled Automatic Backups**: JSON copies of feeds, folders, starred articles, and settings on startup, daily, weekly, or monthly, saved to the default folder or any folder and drive you choose; old copies rotate out automatically
+- **Manual Backup & Restore**: Export or import the whole configuration as a JSON file, or browse, restore, and delete any automatic backup from Settings
 - **Auto-Cleanup**: Automatically delete old read articles
 - **SQLite Database**: High-performance local storage with WAL mode
 
