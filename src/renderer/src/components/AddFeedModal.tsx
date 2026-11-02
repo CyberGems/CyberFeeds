@@ -11,7 +11,7 @@ type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss' | 'cybergems'
 const FEED_EXAMPLES: Array<{
   id: string
   category: FeedExampleCategory
-  labelKey: 'redditTechnology' | 'redditProgramming' | 'youtubeTed' | 'hackerNews' | 'githubBlog' | 'cybergemsReleases'
+  labelKey: 'redditTechnology' | 'youtubeTed' | 'bbcNews' | 'githubBlog' | 'cybergemsReleases'
   url: string
 }> = [
   {
@@ -27,22 +27,16 @@ const FEED_EXAMPLES: Array<{
     url: 'https://www.reddit.com/r/technology'
   },
   {
-    id: 'reddit-programming',
-    category: 'reddit',
-    labelKey: 'redditProgramming',
-    url: 'https://www.reddit.com/r/programming'
-  },
-  {
     id: 'youtube-ted',
     category: 'youtube',
     labelKey: 'youtubeTed',
     url: 'https://www.youtube.com/@TED'
   },
   {
-    id: 'hacker-news',
+    id: 'bbc-news',
     category: 'news',
-    labelKey: 'hackerNews',
-    url: 'https://news.ycombinator.com/rss'
+    labelKey: 'bbcNews',
+    url: 'https://feeds.bbci.co.uk/news/rss.xml'
   },
   {
     id: 'github-blog',

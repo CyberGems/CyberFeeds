@@ -750,9 +750,8 @@ export const translations = {
       },
       examples: {
         redditTechnology: 'r/technology',
-        redditProgramming: 'r/programming',
         youtubeTed: 'TED',
-        hackerNews: 'Hacker News',
+        bbcNews: 'BBC News',
         githubBlog: 'GitHub Blog',
         cybergemsReleases: 'CyberFeeds releases'
       }
@@ -1668,9 +1667,8 @@ export const translations = {
       },
       examples: {
         redditTechnology: 'r/technology',
-        redditProgramming: 'r/programming',
         youtubeTed: 'TED',
-        hackerNews: 'Hacker News',
+        bbcNews: 'BBC News',
         githubBlog: 'Blog de GitHub',
         cybergemsReleases: 'Lanzamientos de CyberFeeds'
       }
