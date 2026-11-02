@@ -73,7 +73,14 @@ export default function App(): JSX.Element {
   const [bootReady, setBootReady] = useState(false)
   const [onboardingPreview, setOnboardingPreview] = useState(false)
   const feedCount = useFeedsStore((s) => s.feeds.length)
-  const showOnboarding = bootReady && (onboardingPreview || (!settings.onboardingDone && feedCount === 0))
+  // Latch: once the wizard is up it must not disappear mid-flow when the user
+  // adds their first feed (feeds.length changes from 0); it closes only when
+  // onboardingDone is saved (finish/skip) or the preview is dismissed.
+  const [onboardingActive, setOnboardingActive] = useState(false)
+  useEffect(() => {
+    if (bootReady && !settings.onboardingDone && feedCount === 0) setOnboardingActive(true)
+  }, [bootReady, settings.onboardingDone, feedCount])
+  const showOnboarding = bootReady && (onboardingPreview || (onboardingActive && !settings.onboardingDone))
 
   useEffect(() => {
     window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__ = () => setOnboardingPreview(true)
