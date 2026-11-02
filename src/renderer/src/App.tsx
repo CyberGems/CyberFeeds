@@ -265,8 +265,12 @@ export default function App(): JSX.Element {
   // Listen for new articles from main process
   useEffect(() => {
     let checkTimer: ReturnType<typeof setTimeout> | null = null
+    // Trailing debounce: a fetch cycle pushes once per feed as it completes,
+    // so a leading check would fire between pushes and fragment the pending
+    // count into several consecutive pills. Resetting the timer on every
+    // push consolidates the whole wave into one check with the full count.
     const scheduleArticleCheck = (): void => {
-      if (checkTimer) return
+      if (checkTimer) clearTimeout(checkTimer)
       checkTimer = setTimeout(async () => {
         checkTimer = null
         void refreshUnreadCounts()
@@ -289,7 +293,7 @@ export default function App(): JSX.Element {
         } catch (err) {
           console.error('[App] Failed to check for incoming articles:', err)
         }
-      }, 300)
+      }, 1200)
     }
 
     const unsub = window.api.onArticlesUpdated(async (data) => {

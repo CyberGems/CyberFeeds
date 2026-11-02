@@ -264,9 +264,22 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
 
   setIncomingCount: (incomingCount) => set({ incomingCount }),
 
+  // Applying the pending pill loads every article the query currently counts
+  // (with a small margin), not just as many rows as were already loaded: the
+  // old refresh-based path fetched max(PAGE_SIZE, loaded), so applying a
+  // partially accumulated pill moved the list by only a fraction of the
+  // announced count and left the rest pending for yet another pill.
   applyIncomingArticles: async () => {
+    const { currentQuery, articles: currentArticles, incomingCount } = get()
     set({ incomingCount: 0 })
-    await get().refresh()
+    if (Object.keys(currentQuery).length === 0) return
+    const total = await window.api.getArticleCount(currentQuery)
+    const limit = Math.max(PAGE_SIZE, currentArticles.length + incomingCount + 50, Math.min(total, 20000))
+    const [articles, totalCount] = await Promise.all([
+      window.api.getArticles({ ...currentQuery, limit, offset: 0 }),
+      window.api.getArticleCount(currentQuery)
+    ])
+    set({ articles, totalCount })
   }
 }))
 
