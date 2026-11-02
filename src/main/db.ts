@@ -1034,6 +1034,10 @@ export function getSettings(): AppSettings {
   if (!row) return DEFAULT_SETTINGS
   try {
     const parsed = JSON.parse(row.value) as Partial<AppSettings>
+    // Profiles that predate the onboarding flag were set up long ago, so they
+    // must never see the welcome wizard. Only fresh profiles (DEFAULT_SETTINGS)
+    // start with onboardingDone: false.
+    if (parsed.onboardingDone === undefined) parsed.onboardingDone = true
     const validTheme: AppSettings['theme'] =
       parsed.theme === 'grayscale' || parsed.theme === 'light' || parsed.theme === 'dark'
         ? parsed.theme

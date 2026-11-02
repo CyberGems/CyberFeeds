@@ -1,58 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { X, Globe, ChevronDown, MessageCircle, Youtube, Newspaper, Rss, Github } from 'lucide-react'
+import { X, Globe, ChevronDown } from 'lucide-react'
 import { useFeedsStore } from '../store/feeds.store'
 import { useUIStore } from '../store/ui.store'
 import { useTranslation } from '../hooks/useTranslation'
 import { useOverlayDismiss } from '../hooks/useOverlayDismiss'
 import { FeedFavicon } from './ArticleList'
-
-type FeedExampleCategory = 'reddit' | 'youtube' | 'news' | 'rss' | 'cybergems'
-
-const FEED_EXAMPLES: Array<{
-  id: string
-  category: FeedExampleCategory
-  labelKey: 'redditTechnology' | 'youtubeTed' | 'bbcNews' | 'githubBlog' | 'cybergemsReleases'
-  url: string
-}> = [
-  {
-    id: 'cybergems-releases',
-    category: 'cybergems',
-    labelKey: 'cybergemsReleases',
-    url: 'https://github.com/CyberGems/CyberFeeds/releases.atom'
-  },
-  {
-    id: 'reddit-technology',
-    category: 'reddit',
-    labelKey: 'redditTechnology',
-    url: 'https://www.reddit.com/r/technology'
-  },
-  {
-    id: 'youtube-ted',
-    category: 'youtube',
-    labelKey: 'youtubeTed',
-    url: 'https://www.youtube.com/@TED'
-  },
-  {
-    id: 'bbc-news',
-    category: 'news',
-    labelKey: 'bbcNews',
-    url: 'https://feeds.bbci.co.uk/news/rss.xml'
-  },
-  {
-    id: 'github-blog',
-    category: 'rss',
-    labelKey: 'githubBlog',
-    url: 'https://github.blog/feed/'
-  }
-]
-
-function FeedExampleIcon({ category }: { category: FeedExampleCategory }): JSX.Element {
-  if (category === 'cybergems') return <Github size={14} />
-  if (category === 'reddit') return <MessageCircle size={14} />
-  if (category === 'youtube') return <Youtube size={14} />
-  if (category === 'news') return <Newspaper size={14} />
-  return <Rss size={14} />
-}
+import { FEED_EXAMPLES } from '../lib/feedExamples'
+import { FeedExampleIcon } from '../lib/FeedExampleIcon'
 
 export default function AddFeedModal(): JSX.Element {
   const [url, setUrl] = useState('')

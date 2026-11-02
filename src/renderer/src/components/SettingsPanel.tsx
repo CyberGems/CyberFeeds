@@ -1228,6 +1228,22 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               </div>
 
               <div className="settings-card">
+                <CardTitle icon={Zap} accent={TAB_META.general.accent}>{t.onboarding.settingsPreviewTitle}</CardTitle>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--text-muted)' }}>
+                    {t.onboarding.settingsPreviewHint}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__?.()}
+                  >
+                    {t.onboarding.settingsPreviewAction}
+                  </button>
+                </div>
+              </div>
+
+              <div className="settings-card">
                 <CardTitle icon={Sparkles} accent={TAB_META.general.accent}>{t.settings.general.personalizationTitle}</CardTitle>
                 <div className="form-group" style={{ marginBottom: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

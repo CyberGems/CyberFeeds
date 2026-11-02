@@ -25,6 +25,7 @@ import NotificationHistoryPanel from './components/NotificationHistoryPanel'
 import AboutModal from './components/AboutModal'
 import DoctorPanel from './components/DoctorPanel'
 import CloseDialog from './components/CloseDialog'
+import OnboardingWizard from './components/OnboardingWizard'
 import Tooltip from './components/Tooltip'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
 import { CleanupBanner } from './components/CleanupBanner'
@@ -66,6 +67,21 @@ export default function App(): JSX.Element {
   const dismissInbox = useOverlayDismiss(closePanel)
   const dismissHistory = useOverlayDismiss(closePanel)
 
+  // First-run wizard: only after settings and feeds finish loading, and only
+  // for profiles that never completed it and have no feeds yet. The preview
+  // hook (Settings) forces it on regardless, without saving anything.
+  const [bootReady, setBootReady] = useState(false)
+  const [onboardingPreview, setOnboardingPreview] = useState(false)
+  const feedCount = useFeedsStore((s) => s.feeds.length)
+  const showOnboarding = bootReady && (onboardingPreview || (!settings.onboardingDone && feedCount === 0))
+
+  useEffect(() => {
+    window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__ = () => setOnboardingPreview(true)
+    return () => {
+      delete window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__
+    }
+  }, [])
+
   const [isSettingsClosing, setIsSettingsClosing] = useState(false)
   const handleCloseSettings = useCallback(() => {
     setIsSettingsClosing(true)
@@ -105,10 +121,10 @@ export default function App(): JSX.Element {
 
   // Bootstrap
   useEffect(() => {
-    loadSettings().then(() => {
-      void useTabsStore.getState().restoreSession()
+    Promise.all([loadSettings(), loadAll()]).then(() => {
+      setBootReady(true)
     })
-    loadAll()
+    void useTabsStore.getState().restoreSession()
     load({ limit: 60, offset: 0 })
 
     // Load unseen notifications count
@@ -609,6 +625,12 @@ export default function App(): JSX.Element {
 
   return (
     <div id="root">
+      {showOnboarding && (
+        <OnboardingWizard
+          preview={onboardingPreview}
+          onClose={() => setOnboardingPreview(false)}
+        />
+      )}
       <TopBar />
       {cleanupNotice && (
         <CleanupBanner notice={cleanupNotice} onDismiss={dismissCleanupNotice} />

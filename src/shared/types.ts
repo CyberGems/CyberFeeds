@@ -68,6 +68,7 @@ export interface AppSettings {
   theme: 'dark' | 'grayscale' | 'light'
   layout: 'three-panel' | 'two-panel' | 'one-panel' | 'horizontal-split'
   language: 'en' | 'es'
+  onboardingDone: boolean
   pollingInterval: number
   autoStart: boolean
   startMinimized: boolean
@@ -236,6 +237,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   layout: 'three-panel',
   language: 'en',
+  onboardingDone: false,
   pollingInterval: 15,
   autoStart: false,
   startMinimized: false,

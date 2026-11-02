@@ -19,6 +19,8 @@ declare global {
 
   interface Window {
     api: import('../../preload/index').API
+    // Set by App to open the onboarding wizard in preview mode (Settings > General).
+    __CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__?: () => void
   }
 }
 
