@@ -2035,15 +2035,10 @@ const ArticleItem = memo(
         {/* Snippet */}
         <div className="article-snippet">{article.snippet}</div>
 
-        {/* Meta: unread dot + feed name + author (left) ... timestamp (right) */}
+        {/* Meta: feed name + author (left) ... timestamp (right). Unread cards
+            are marked by the accent stripe on the card's left edge instead of
+            a dot here, so read cards never leave an empty slot. */}
         <div className="article-meta">
-          {!article.read ? (
-            <Tooltip label={t.articleList.unread} placement="bottom">
-              <div className="unread-dot" style={{ flexShrink: 0 }} />
-            </Tooltip>
-          ) : (
-            <div style={{ width: 6, height: 6, flexShrink: 0 }} />
-          )}
           {article.feedTitle && (
             <span
               style={{

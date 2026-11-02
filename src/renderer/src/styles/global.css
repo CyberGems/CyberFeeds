@@ -1317,12 +1317,15 @@ body {
   object-fit: cover;
   display: block;
 }
-.unread-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex-shrink: 0;
+/* Unread cards carry a subtle accent stripe on the left edge; read cards stay
+   clean with no reserved slot in the meta row. The stripe is intentionally
+   different from the header status LED (a glowing dot). */
+.article-item:not(.read) {
+  box-shadow: inset 2px 0 0 0 var(--accent);
+}
+.article-item:not(.read).active {
+  /* Active already shows the accent border-left; avoid a doubled stripe */
+  box-shadow: none;
 }
 .article-feed-icon {
   width: 12px;
