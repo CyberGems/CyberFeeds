@@ -1980,11 +1980,12 @@ const ArticleItem = memo(
               alt=""
               loading="lazy"
               onError={(e) => {
-                const thumbnail = e.currentTarget.parentElement
-                if (!thumbnail) return
-                thumbnail.style.display = 'none'
-                const item = e.currentTarget.closest<HTMLElement>('.article-item')
-                if (item) measureRef?.(item)
+                // Hide only the broken image: the container has a fixed
+                // height, so the card keeps its measured size and the
+                // virtual list never reflows when an image 404s. Collapsing
+                // the container here made every remount of a failed
+                // thumbnail shift the whole list (scroll flicker).
+                e.currentTarget.style.display = 'none'
               }}
             />
             {hasVideo && (
