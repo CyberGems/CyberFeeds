@@ -507,7 +507,10 @@ export function getArticles(query: ArticleQuery = {}): Article[] {
     }
   }
 
-  sql += ' ORDER BY a.pubDate DESC LIMIT ? OFFSET ?'
+  // The id tiebreaker keeps pagination deterministic when articles share a
+  // pubDate: without it, LIMIT/OFFSET pages can repeat or skip rows across
+  // queries and the article list renders duplicated entries.
+  sql += ' ORDER BY a.pubDate DESC, a.id DESC LIMIT ? OFFSET ?'
   params.push(limit, offset)
 
   return db.prepare(sql).all(...params) as Article[]

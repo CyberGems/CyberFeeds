@@ -106,7 +106,14 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
     if (loadingMore || articles.length >= totalCount) return
     set({ loadingMore: true })
     const more = await window.api.getArticles({ ...currentQuery, limit: PAGE_SIZE, offset: articles.length })
-    set(s => ({ articles: [...s.articles, ...more], loadingMore: false }))
+    // A refresh can replace the dataset while the page is in flight (polling
+    // fetches land at any moment). Appending against a moved base would add
+    // duplicate entries, which corrupts the virtual list, so filter by id.
+    set(s => {
+      const known = new Set(s.articles.map(a => a.id))
+      const fresh = more.filter(a => !known.has(a.id))
+      return { articles: fresh.length > 0 ? [...s.articles, ...fresh] : s.articles, loadingMore: false }
+    })
   },
 
   markRead: async (id, read) => {
@@ -262,3 +269,10 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
     await get().refresh()
   }
 }))
+
+// Dev-only test seam: lets CDP tooling drive store operations directly to
+// reproduce races (loadMore vs refresh) in a controlled way.
+if (import.meta.env.DEV) {
+  ;(window as unknown as { __articlesStore?: typeof useArticlesStore }).__articlesStore =
+    useArticlesStore
+}
