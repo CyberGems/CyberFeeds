@@ -1321,7 +1321,7 @@ body {
    clean with no reserved slot in the meta row. The stripe is intentionally
    different from the header status LED (a glowing dot). */
 .article-item:not(.read) {
-  box-shadow: inset 2px 0 0 0 var(--accent);
+  box-shadow: inset 3px 0 0 0 var(--accent);
 }
 .article-item:not(.read).active {
   /* Active already shows the accent border-left; avoid a doubled stripe */

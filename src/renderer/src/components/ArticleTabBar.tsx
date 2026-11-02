@@ -103,7 +103,7 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
           holdState.current.raf = requestAnimationFrame(step)
         }
         holdState.current.raf = requestAnimationFrame(step)
-      }, 280)
+      }, 120)
     },
     [stopHoldScroll, updateScrollState]
   )

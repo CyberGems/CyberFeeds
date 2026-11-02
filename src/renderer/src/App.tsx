@@ -82,7 +82,10 @@ export default function App(): JSX.Element {
   }, [bootReady, settings.onboardingDone, feedCount])
   const showOnboarding = bootReady && (onboardingPreview || (onboardingActive && !settings.onboardingDone))
 
+  // Preview trigger for the wizard. Dev-only: production gets the real
+  // first-run flow with no preview entry point.
   useEffect(() => {
+    if (!import.meta.env.DEV) return
     window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__ = () => setOnboardingPreview(true)
     return () => {
       delete window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__
