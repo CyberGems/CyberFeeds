@@ -25,7 +25,7 @@
 
 <div align="center">
 
-### Un lector RSS y Atom local-first para una lectura rápida, privada y limpia
+### Tus feeds RSS, canales de YouTube y comunidades de Reddit, en un lector rápido y privado que guarda todo en tu PC
 
 </div>
 
@@ -58,7 +58,7 @@
 
 ## 👋 Introducción
 
-CyberFeeds es un lector de **RSS y Atom** local-first, enfocado en el rendimiento, para Windows. Suscríbete a sitios web, canales y listas de reproducción de YouTube, y feeds de Reddit; extrae artículos completos; busca en bibliotecas grandes; y organiza tu lectura con carpetas, estrellas, estados de leído y papelera. La obtención basada en workers mantiene la interfaz receptiva, mientras que las notificaciones inteligentes, el vídeo flotante, las copias de seguridad automáticas y una base de datos local SQLite te mantienen al día sin una cuenta ni servicio en la nube. Construido con **Electron + React + TypeScript**.
+Estar al día con los sitios que de verdad te importan suele significar una docena de pestañas abiertas y una app distinta para cada plataforma. CyberFeeds reúne feeds RSS y Atom, canales y listas de YouTube y comunidades de Reddit en una sola biblioteca de escritorio: artículos completos en lugar de resúmenes recortados, búsqueda instantánea entre miles de publicaciones, carpetas, favoritos y estados de lectura para mantener el orden, y avisos que puedes ajustar por palabra clave, momento y monitor. La descarga se ejecuta en hilos worker sobre una base de datos SQLite local, así que la ventana se mantiene ágil y tu biblioteca nunca sale de tu PC: sin cuenta y sin nube. Construido con **Electron + React + TypeScript**.
 
 *Gratuito y de código abierto (GPLv3): sin anuncios, sin rastreo y sin recogida de datos. Solo disfrútalo.*
 
