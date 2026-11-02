@@ -1235,7 +1235,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   </p>
                   <button
                     type="button"
-                    className="btn"
+                    className="btn btn-ghost"
                     onClick={() => window.__CYBERFEEDS_SHOW_ONBOARDING_PREVIEW__?.()}
                   >
                     {t.onboarding.settingsPreviewAction}
