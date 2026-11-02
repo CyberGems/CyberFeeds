@@ -376,6 +376,14 @@ function ensureTrayWindow(): BrowserWindow {
   trayWindow.setAlwaysOnTop(true, 'pop-up-menu')
   trayWindow.webContents.setBackgroundThrottling(false)
 
+  // Log-only: ensureTrayWindow recreates the window if it was destroyed, so a
+  // dead tray renderer self-heals on the next open. Main-window recovery lives
+  // in createMainWindow (index.ts).
+  trayWindow.webContents.on('render-process-gone', (_event, details) => {
+    if (details.reason === 'clean-exit') return
+    console.error('[Tray] Tray window renderer gone:', details.reason, 'exitCode', details.exitCode)
+  })
+
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
   } else {

@@ -18,6 +18,13 @@ import { initNotifier, registerNotifierIpc, showNotificationsBatch } from './not
 import { createTray, destroyTray, rebuildTrayMenu } from './tray'
 import { clampWindowBounds, MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT } from './window-bounds'
 import { initAutoBackup } from './auto-backup'
+import { initLogger } from './logger'
+import {
+  startupRecovery,
+  markCleanExit,
+  clearRecoveryAttempts,
+  relaunchWithRecovery
+} from './recovery'
 import type { NotificationHistoryItem, WindowState } from './types'
 import crypto from 'crypto'
 
@@ -32,6 +39,11 @@ if (is.dev) {
   fs.mkdirSync(portableUserDataPath, { recursive: true })
   app.setPath('userData', portableUserDataPath)
 }
+
+// Mirror console output into <userData>/logs/main.log. Packaged builds have no
+// console, so this is the only durable diagnostic trail. Must run after the
+// userData path above is final so dev/portable profiles log to their own dir.
+initLogger()
 
 // Single instance lock
 const gotTheLock = app.requestSingleInstanceLock()
@@ -312,18 +324,109 @@ function createMainWindow(): BrowserWindow {
     }, 32)
   }
 
+  // ─── First-paint watchdog & renderer recovery ─────────────────────────
+  // The renderer acks 'ui-ready' after its first paint. If the ack never
+  // arrives while the window is visible (e.g. GPU caches corrupted by a
+  // power cut leave Chromium alive but unable to paint), reload once and
+  // then hand over to relaunchWithRecovery. Armed only while visible:
+  // hidden windows never paint, and --hidden autostart stays hidden for hours.
+  const watchdogTestMode = process.env.CYBERFEEDS_WATCHDOG_TEST === '1'
+  let uiReadyAcked = false
+  let watchdogTimer: ReturnType<typeof setTimeout> | null = null
+  let watchdogBreachCount = 0
+
+  const stopWatchdog = (): void => {
+    if (watchdogTimer) {
+      clearTimeout(watchdogTimer)
+      watchdogTimer = null
+    }
+  }
+
+  const armWatchdog = (timeoutMs: number): void => {
+    if (uiReadyAcked || win.isDestroyed() || !win.isVisible()) return
+    stopWatchdog()
+    watchdogTimer = setTimeout(() => {
+      watchdogTimer = null
+      if (win.isDestroyed() || uiReadyAcked) return
+      watchdogBreachCount += 1
+      console.error(`[Recovery] Renderer did not signal first paint (breach ${watchdogBreachCount})`)
+      if (watchdogBreachCount === 1) {
+        try {
+          win.webContents.reload()
+        } catch {
+          /* ignore */
+        }
+        armWatchdog(15000)
+      } else {
+        relaunchWithRecovery()
+      }
+    }, timeoutMs)
+  }
+
   const onUiReady = (): void => {
     ipcMain.removeListener('ui-ready', onUiReady)
+    uiReadyAcked = true
+    stopWatchdog()
+    clearRecoveryAttempts()
     revealWindow()
   }
   // Register before loadURL to avoid missing a fast ui-ready
-  ipcMain.on('ui-ready', onUiReady)
+  if (watchdogTestMode) {
+    // Test seam: ignore acks so the watchdog and escalation path can be
+    // exercised on demand. The recovery flow is identical to production.
+    console.warn('[Recovery] CYBERFEEDS_WATCHDOG_TEST=1: ui-ready acks are ignored for this window')
+  } else {
+    ipcMain.on('ui-ready', onUiReady)
+  }
   win.once('ready-to-show', () => {
     // Fallback if renderer never acks
     setTimeout(() => revealWindow(), 1500)
   })
   win.on('closed', () => {
     ipcMain.removeListener('ui-ready', onUiReady)
+  })
+
+  // Renderer process died (crash, OOM, launch failure). Reload once; if it
+  // keeps dying, escalate to a recovery relaunch that clears the GPU caches.
+  let goneCount = 0
+  let lastGoneAt = 0
+  win.webContents.on('render-process-gone', (_event, details) => {
+    if (details.reason === 'clean-exit') return
+    console.error('[Recovery] render-process-gone:', details.reason, 'exitCode', details.exitCode)
+    const now = Date.now()
+    goneCount = now - lastGoneAt < 60000 ? goneCount + 1 : 1
+    lastGoneAt = now
+    if (goneCount >= 2) {
+      relaunchWithRecovery()
+      return
+    }
+    if (!uiReadyAcked && watchdogTimer) return // watchdog already owns this load
+    setTimeout(() => {
+      if (win.isDestroyed()) return
+      try {
+        win.webContents.reload()
+      } catch {
+        /* ignore */
+      }
+      armWatchdog(20000)
+    }, 1000)
+  })
+
+  // Main frame failed to load (e.g. ERR_FILE_NOT_FOUND on a damaged install)
+  let loadRetried = false
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription, _url, isMainFrame) => {
+    if (!isMainFrame || errorCode === -3) return // -3 = aborted, navigation noise
+    console.error(`[Recovery] Main frame failed to load (${errorCode}):`, errorDescription)
+    if (loadRetried) return
+    loadRetried = true
+    setTimeout(() => {
+      if (win.isDestroyed()) return
+      try {
+        win.webContents.reload()
+      } catch {
+        /* ignore */
+      }
+    }, 1000)
   })
 
   // Open external links in configured browser (including links clicked inside embedded iframes like YouTube)
@@ -358,15 +461,19 @@ function createMainWindow(): BrowserWindow {
   win.on('resize', schedulePersist)
   win.on('show', () => {
     if (!win.isDestroyed()) win.webContents.send('window:shown')
+    armWatchdog(20000)
   })
   win.on('restore', () => {
     if (!win.isDestroyed()) win.webContents.send('window:shown')
+    armWatchdog(20000)
   })
   win.on('hide', () => {
     if (!win.isDestroyed()) win.webContents.send('window:hidden')
+    stopWatchdog()
   })
   win.on('minimize', () => {
     if (!win.isDestroyed()) win.webContents.send('window:hidden')
+    stopWatchdog()
   })
   win.on('maximize', () => {
     persistMainWindowState(win)
@@ -412,6 +519,12 @@ function createMainWindow(): BrowserWindow {
 
 app.whenReady().then(() => {
   if (!gotTheLock) return
+
+  // Clear regenerable GPU caches after an unclean shutdown or a recovery
+  // relaunch, before any window exists (deleting them while Chromium runs
+  // them is unsafe). Corrupted caches are the cause of the black-window
+  // state seen after power cuts.
+  startupRecovery()
 
   initDb()
   backfillFavicons() // Assign Google S2 favicon URLs to any feeds missing icons
@@ -562,10 +675,28 @@ app.on('before-quit', () => {
     persistMainWindowState(mainWindow)
   }
   destroyTray()
+  // Written last: if anything above fails, the next start correctly treats
+  // the run as unclean and clears the GPU caches as a precaution.
+  markCleanExit()
 })
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+// GPU process crashes: Chromium normally respawns it (falling back to software
+// rendering), but repeated losses point at corrupted GPU caches. App-level
+// event: covers every child process except renderers (those have their own
+// render-process-gone handler on the window).
+let gpuGoneCount = 0
+let lastGpuGoneAt = 0
+app.on('child-process-gone', (_event, details) => {
+  if (details.type !== 'GPU' || details.reason === 'clean-exit') return
+  console.error('[Recovery] GPU process gone:', details.reason, 'exitCode', details.exitCode)
+  const now = Date.now()
+  gpuGoneCount = now - lastGpuGoneAt < 120000 ? gpuGoneCount + 1 : 1
+  lastGpuGoneAt = now
+  if (gpuGoneCount >= 3) relaunchWithRecovery()
 })
 
 app.on('activate', () => {
