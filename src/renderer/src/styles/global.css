@@ -6230,7 +6230,7 @@ input[type="radio"] {
 .onboarding-urlrow {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-bottom: 16px;
 }
 
 .onboarding-urlrow input {

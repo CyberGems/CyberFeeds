@@ -248,6 +248,15 @@ export default function OnboardingWizard({ preview = false, onClose }: Onboardin
             <h2>{t.onboarding.feedsTitle}</h2>
             <p className="onboarding-sub">{t.onboarding.feedsSub}</p>
             <div className="onboarding-fieldset">
+              <div className="onboarding-urlrow">
+                <input
+                  type="url"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  placeholder={t.onboarding.urlPlaceholder}
+                  aria-label={t.onboarding.urlLabel}
+                />
+              </div>
               <div className="onboarding-legend">{t.onboarding.suggestionsLegend}</div>
               <div className="onboarding-exgrid">
                 {FEED_EXAMPLES.map((ex) => (
@@ -270,15 +279,6 @@ export default function OnboardingWizard({ preview = false, onClose }: Onboardin
                     </span>
                   </button>
                 ))}
-              </div>
-              <div className="onboarding-urlrow">
-                <input
-                  type="url"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  placeholder={t.onboarding.urlPlaceholder}
-                  aria-label={t.onboarding.urlLabel}
-                />
               </div>
             </div>
             <div className="onboarding-auxrow">
