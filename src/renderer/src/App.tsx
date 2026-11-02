@@ -75,11 +75,13 @@ export default function App(): JSX.Element {
   const feedCount = useFeedsStore((s) => s.feeds.length)
   // Latch: once the wizard is up it must not disappear mid-flow when the user
   // adds their first feed (feeds.length changes from 0); it closes only when
-  // onboardingDone is saved (finish/skip) or the preview is dismissed.
+  // onboardingDone is saved (finish/skip) or the preview is dismissed. The
+  // guarded render-phase setState is React's documented "adjust state during
+  // render" pattern for storing information from previous renders.
   const [onboardingActive, setOnboardingActive] = useState(false)
-  useEffect(() => {
-    if (bootReady && !settings.onboardingDone && feedCount === 0) setOnboardingActive(true)
-  }, [bootReady, settings.onboardingDone, feedCount])
+  if (bootReady && !settings.onboardingDone && feedCount === 0 && !onboardingActive) {
+    setOnboardingActive(true)
+  }
   const showOnboarding = bootReady && (onboardingPreview || (onboardingActive && !settings.onboardingDone))
 
   // Preview trigger for the wizard. Dev-only: production gets the real
