@@ -571,6 +571,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const [belowCount, setBelowCount] = useState(0)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const rafRef = useRef<number | undefined>(undefined)
+  const prevTopRef = useRef(0)
 
   const computeScrollState = useCallback(() => {
     const el = parentRef.current
@@ -582,7 +583,17 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     }
     setBelowCount(lastVisible < 0 ? 0 : Math.max(0, totalCount - (lastVisible + 1)))
     setShowScrollTop(el.scrollTop > 400)
-  }, [rowVirtualizer, totalCount])
+    // Arriving at the top by scrolling counts as having seen the pending
+    // incoming articles: apply them in place so they appear where the user
+    // is looking. A reader already parked at the top keeps the pill (and an
+    // undisturbed reading position) until they click it or scroll away and
+    // back.
+    const arrivedAtTop = prevTopRef.current > 4 && el.scrollTop <= 4
+    prevTopRef.current = el.scrollTop
+    if (incomingCount > 0 && arrivedAtTop) {
+      void applyIncomingArticles()
+    }
+  }, [rowVirtualizer, totalCount, incomingCount, applyIncomingArticles])
 
   const handleListScroll = useCallback(() => {
     if (rafRef.current != null) return
