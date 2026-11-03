@@ -1,7 +1,56 @@
 # Changelog
 
-Notable changes per release. Prior releases (1.28.0 and earlier) are
+Notable changes per release. Prior releases (1.29.0 and earlier) are
 summarized in their respective GitHub Releases.
+
+## 1.30.0 (2026-11-03)
+
+### Added
+
+- First-run welcome wizard: a full-window setup shown when the library is
+  empty and the profile never completed it. Step 1 picks language and theme
+  with live preview, step 2 adds the first feeds (suggestions shared with the
+  Add Feed modal, a custom URL, or OPML import), step 3 summarizes and points
+  to keyboard basics. Skippable (Esc), and the dev build exposes a preview
+  entry in Settings > General.
+- Self-recovery for renderer/GPU failures: the main process reloads the
+  renderer on crash, watches the first paint and reloads or relaunches with
+  GPU caches cleared when the window stays black; relaunches are capped and
+  end in an error dialog. Unclean shutdowns (power cuts) clear the GPU caches
+  proactively on the next start.
+- Persistent main-process logging: console output mirrors to
+  `logs/main.log` (rotating, with `uncaughtException`/`unhandledRejection`
+  records).
+- React ErrorBoundary with a themed reload fallback for uncaught renderer
+  errors.
+- Press-and-hold on the tab strip navigation buttons glides the strip
+  continuously; a quick click keeps the previous jump.
+- Failed article thumbnails render a muted image-off placeholder inside the
+  fixed-height container.
+
+### Fixed
+
+- Duplicated articles corrupted the virtual list (overlapping rows and
+  flicker): pagination now breaks pubDate ties by id and the infinite-scroll
+  page merge filters by id, so concurrent refreshes can no longer inject
+  duplicate entries.
+- Broken thumbnails collapsed their 100px container after measurement on
+  every remount, swinging the list height by over a thousand pixels while
+  scrolling; the placeholder keeps heights invariant.
+- The new-articles pill fragmented into several consecutive pills during a
+  fetch wave and applying it moved the list by only a fraction of the
+  announced count. Checks now consolidate per wave (trailing debounce) and
+  applying loads the full pending count; scrolling back to the top manually
+  applies the pending articles in place.
+- The "more below" footer indicator read as a clickable button; it is now a
+  passive, slightly larger status line.
+
+### Changed
+
+- Add-feed suggestions updated: BBC News replaces Hacker News (its bare RSS
+  made a poor first impression) and a single Reddit entry remains.
+- The welcome wizard preview entry point (Settings > General) is now
+  development-only; production shows just the real first-run flow.
 
 ## 1.29.0 (2026-10-29)
 

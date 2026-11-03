@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. -->
 <!-- changelog-summary:start -->
-Settings gain a filter-as-you-type search with match highlighting, cross-tab jumps, and keyboard navigation. Notification View and tray menu reliability on mixed-DPI monitors are fixed, the show/hide hotkey joins the Alt+Shift+R suite pattern, and the app upgrades to Electron 42.
+A first-run welcome wizard sets up language, theme and feeds in seconds. Scroll stability is rebuilt (no more duplicated or jumping articles), failed thumbnails show a clean placeholder, and the new-articles pill now applies everything in one go.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,56 +17,60 @@ Settings gain a filter-as-you-type search with match highlighting, cross-tab jum
 
 ### ✨ Key Features & Highlights
 
-- 🔍 **Settings Search**:
-  - Filter-as-you-type: settings cards without matches hide while searching, and tabs without matches leave the sidebar.
-  - Every match is highlighted with an n/m counter, Enter/Shift+Enter navigation, and automatic scrolling to the current match.
-  - Cross-tab chips list other tabs containing the query; the bar is focused when the modal opens, Ctrl+F refocuses it, and Escape clears the query before closing.
+- 🧙 **Welcome Wizard**:
+  - First launch with an empty library opens a three-step setup: language, theme with live preview, and your first feeds.
+  - Add feeds from curated suggestions (CyberFeeds releases, Reddit, YouTube, BBC News, GitHub Blog), any URL, or an OPML import.
+  - Skippable anytime with Esc; the wizard re-opens only for profiles that never completed it.
 
-- 🖥️ **Tray Menu Reliability on Mixed-DPI Monitors**:
-  - The first open after launch now anchors to the real tray icon position on monitors whose scale differs from the primary.
-  - Menu geometry is re-stamped after display-scale crossings, ending far-from-taskbar placements.
+- 📜 **Rock-Solid Article List**:
+  - Duplicated entries that overlapped rows and flickered the strip are gone: pagination is now deterministic and the infinite-scroll merge is deduplicated.
+  - Failed thumbnails keep a fixed-height placeholder (muted image-off icon), ending the height swings while scrolling.
+  - The new-articles pill consolidates each fetch wave into a single count and applies everything in one go; scrolling back to the top manually applies the pending articles in place.
+  - The "more below" footer indicator is now a passive status line.
 
-- 🔔 **Notification Popup Reliability**:
-  - "View" and card clicks always reach the reader article, even from a cold tray session.
-  - The popup stays open while interacting until the cursor verifiably leaves its area, and hover text blur is gone.
+- 🛡️ **Self-Recovery & Logging**:
+  - A black window after crashes or power cuts is handled automatically: the renderer reloads, first paint is watched, and recovery relaunches clear the GPU caches with a capped budget before showing a clear error.
+  - Unclean shutdowns proactively clear the GPU caches on the next start.
+  - Main-process activity now persists to a rotating logs/main.log, and uncaught renderer errors show a themed reload fallback.
 
-- ⌨️ **Alt+Shift+R Show/Hide Hotkey**:
-  - New default following the suite Alt+Shift+X pattern; legacy Alt+S / Alt+Shift+S values migrate automatically.
-  - Show/hide is always global, and the tray tooltip now shows it alongside a "Refreshing feeds..." status while fetching.
+- 🖱️ **Press-and-Hold Tab Scrolling**:
+  - Holding the tab strip chevrons glides the tabs continuously; quick clicks keep the previous smooth jump.
 
-- 🧱 **Electron 42 Runtime**:
-  - Upgraded from Electron 34 to 42 (Chromium 148, Node 24) with better-sqlite3 v13.
+- 📰 **Refreshed Feed Suggestions**:
+  - BBC News (rich, image-bearing RSS) replaces Hacker News, and a single Reddit entry remains among the starter suggestions.
 
 <details>
 <summary><b>🌐 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Los ajustes incorporan un buscador con filtro al escribir, resaltado de coincidencias, salto entre pestañas y navegación por teclado. Se corrigen Ver en notificaciones y el menú del tray en DPI mixto; el atajo de mostrar/ocultar pasa a Alt+Shift+R y llega Electron 42.
+Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La estabilidad del scroll queda reconstruida (sin artículos duplicados ni saltos), las miniaturas rotas muestran un marcador limpio y el pill de novedades aplica todo de una sola vez.
 
 ---
 
 ### ✨ Novedades destacadas
 
-- 🔍 **Buscador de ajustes**:
-  - Filtro al escribir: las tarjetas sin coincidencias se ocultan y las pestañas sin resultados salen del menú lateral.
-  - Todas las coincidencias se resaltan con contador n/m, navegación con Enter/Shift+Enter y desplazamiento automático a la coincidencia actual.
-  - Chips de otras pestañas con la consulta; la barra se enfoca al abrir el modal, Ctrl+F la re-enfoca y Escape limpia antes de cerrar.
+- 🧙 **Asistente de bienvenida**:
+  - El primer arranque con la biblioteca vacía abre una configuración de tres pasos: idioma, tema con vista previa en vivo y tus primeras fuentes.
+  - Añade feeds desde sugerencias curadas (lanzamientos de CyberFeeds, Reddit, YouTube, BBC News, Blog de GitHub), cualquier URL o una importación OPML.
+  - Omitible en cualquier momento con Esc; el asistente solo reaparece en perfiles que no lo completaron.
 
-- 🖥️ **Menú del tray fiable en monitores de DPI mixto**:
-  - La primera apertura tras iniciar se ancla a la posición real del icono en monitores con escala distinta a la del primario.
-  - La geometría se re-estampa tras los cambios de escala, eliminando las apariciones lejos de la barra de tareas.
+- 📜 **Lista de artículos sólida**:
+  - Los duplicados que solapaban filas y hacían parpadear la lista desaparecieron: la paginación ahora es determinista y el scroll infinito fusiona sin repetir.
+  - Las miniaturas rotas conservan un contenedor de altura fija (icono discreto de imagen no disponible), acabando con los saltos de altura al scrollear.
+  - El pill de novedades consolida cada tanda en una sola cifra y aplica todo de una vez; volver arriba manualmente aplica lo pendiente en el sitio.
+  - El indicador "más abajo" del pie es ahora una línea de estado pasiva.
 
-- 🔔 **Fiabilidad de las notificaciones**:
-  - "Ver" y el click en la tarjeta siempre llegan al artículo, incluso desde una sesión fría del tray.
-  - El popup permanece abierto mientras interactúas hasta que el cursor sale de su zona, y el texto borroso en hover desapareció.
+- 🛡️ **Autorrecuperación y registro**:
+  - Una ventana en negro tras fallos o cortes de luz se maneja sola: el renderer se recarga, se vigila el primer pintado y las recauchutados de recuperación limpian las cachés de GPU con presupuesto acotado antes de avisar.
+  - Los apagados sucios limpian preventivamente las cachés de GPU en el siguiente arranque.
+  - La actividad del proceso principal persiste en logs/main.log rotativo, y los errores no capturados del renderer muestran un fallback con recarga.
 
-- ⌨️ **Atajo Alt+Shift+R para mostrar/ocultar**:
-  - Nuevo valor por defecto siguiendo el patrón Alt+Shift+X de la suite; los valores previos Alt+S / Alt+Shift+S migran automáticamente.
-  - Siempre global, y el tooltip del tray lo muestra junto al estado "Actualizando feeds..." durante la obtención.
+- 🖱️ **Desplazamiento de pestañas manteniendo el click**:
+  - Mantener pulsados los chevrons de la barra desliza las pestañas de forma continua; el click rápido conserva el salto anterior.
 
-- 🧱 **Runtime Electron 42**:
-  - Actualización de Electron 34 a 42 (Chromium 148, Node 24) con better-sqlite3 v13.
+- 📰 **Sugerencias de feeds renovadas**:
+  - BBC News (RSS completo con imágenes) sustituye a Hacker News, y queda una sola entrada de Reddit entre las sugerencias iniciales.
 
 </details>
 
