@@ -34,6 +34,7 @@
 ## 📑 Table of Contents
 
 - [👋 Introducción](#-introducción)
+- [📸 Capturas](#-capturas)
 - [📡 ¿Por qué CyberFeeds?](#-por-qué-cyberfeeds)
 - [✨ Funciones principales](#-funciones-principales)
 - [🚀 Primeros pasos](#-primeros-pasos)
@@ -61,6 +62,14 @@
 Estar al día con los sitios que de verdad te importan suele significar una docena de pestañas abiertas y una app distinta para cada plataforma. CyberFeeds reúne feeds RSS y Atom, canales y listas de YouTube y comunidades de Reddit en una sola biblioteca de escritorio: artículos completos en lugar de resúmenes recortados, búsqueda instantánea entre miles de publicaciones, carpetas, favoritos y estados de lectura para mantener el orden, y avisos que puedes ajustar por palabra clave, momento y monitor. La descarga se ejecuta en hilos worker sobre una base de datos SQLite local, así que la ventana se mantiene ágil y tu biblioteca se queda en tu PC —sin cuenta y sin nube—, mientras las copias automáticas pueden ir a la carpeta o unidad que elijas. Construido con **Electron + React + TypeScript**.
 
 *Gratuito y de código abierto (GPLv3): sin anuncios, sin rastreo y sin recogida de datos. Solo disfrútalo.*
+
+---
+
+<!-- Capturas: pendiente de la galería bilingüe ES/EN del plan en https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — sustituir la cita, conservar este título y su entrada en el índice. -->
+
+## 📸 Capturas
+
+> Próximamente...
 
 ---
 

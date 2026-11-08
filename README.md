@@ -34,6 +34,7 @@
 ## 📑 Table of Contents
 
 - [👋 Introduction](#-introduction)
+- [📸 Screenshots](#-screenshots)
 - [📡 Why CyberFeeds?](#-why-cyberfeeds)
 - [✨ Key Features](#-key-features)
 - [🚀 Getting Started](#-getting-started)
@@ -61,6 +62,14 @@
 Keeping up with the sites you actually care about usually means a dozen open tabs and a different app for every platform. CyberFeeds pulls RSS and Atom feeds, YouTube channels and playlists, and Reddit communities into one desktop library: full articles instead of truncated summaries, instant search across thousands of posts, folders, stars and read states to keep things organized, and notifications you can tune by keyword, timing and monitor. Fetching runs in worker threads over a local SQLite database, so the window stays responsive and your library stays on your PC — no account, no cloud — while automatic backups can land in any folder or drive you choose. Built with **Electron + React + TypeScript**.
 
 *Free and open source (GPLv3): no ads, no tracking, and no data collection. Just enjoy it.*
+
+---
+
+<!-- Screenshots: pending the bilingual EN/ES gallery in the capture plan at https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — replace the blockquote, keep this heading and the TOC entry. -->
+
+## 📸 Screenshots
+
+> Coming soon...
 
 ---
 
