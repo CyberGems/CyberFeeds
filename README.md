@@ -37,7 +37,8 @@
 - [🖼️ Screenshots](#️-screenshots)
 - [📡 Why CyberFeeds?](#-why-cyberfeeds)
 - [✨ Key Features](#-key-features)
-- [🚀 Getting Started](#-getting-started)
+- [🚀 Installation](#-installation)
+- [🧭 Using the App](#-using-the-app)
 - [🛠️ Tech Stack & Architecture](#️-tech-stack--architecture)
 - [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
 - [❤️ Donate](#️-donate)
@@ -151,7 +152,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Installation
 
 ### Install (Recommended)
 
@@ -184,6 +185,20 @@ Windows shows this warning for any installer without a paid code-signing certifi
 You can verify the file independently: compare the SHA with the GitHub release, scan it on VirusTotal, or build from source. More details: [SmartScreen guide on the website](https://cybergems.org/download#smartscreen).
 
 </details>
+
+---
+
+## 🧭 Using the App
+
+CyberFeeds opens to your feed library; press `Alt+Shift+R` to show or hide it from anywhere.
+
+1. Click **Add Feed**, paste the URL of a blog or news site and check **Preview** before you subscribe.
+2. Repeat with a few sites, then group them into folders such as News, Tech and Hobbies.
+3. Each morning, open the **Unread** filter to see only what is new.
+
+On an empty library a welcome wizard sets the language, the theme and your first feeds; it can be reopened later from the settings. Everything is stored in a local SQLite database, so your library stays on your PC without an account.
+
+See [How Do You Use CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use) for everyday examples and the full guides.
 
 ---
 

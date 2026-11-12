@@ -37,7 +37,8 @@
 - [🖼️ Capturas](#️-capturas)
 - [📡 ¿Por qué CyberFeeds?](#-por-qué-cyberfeeds)
 - [✨ Funciones principales](#-funciones-principales)
-- [🚀 Primeros pasos](#-primeros-pasos)
+- [🚀 Instalación](#-instalación)
+- [🧭 Cómo usar la app](#-cómo-usar-la-app)
 - [🛠️ Stack tecnológico y arquitectura](#️-stack-tecnológico-y-arquitectura)
 - [⌨️ Atajos de teclado](#️-atajos-de-teclado)
 - [❤️ Donar](#️-donar)
@@ -150,7 +151,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Base de datos SQLite**: almacenamiento local de alto rendimiento con modo WAL
 ---
 
-## 🚀 Primeros pasos
+## 🚀 Instalación
 
 ### Instalación (recomendada)
 
@@ -183,6 +184,20 @@ Windows muestra este aviso para cualquier instalador sin un certificado de firma
 Puedes verificar el archivo de forma independiente: compara el SHA con el release de GitHub, escanéalo en VirusTotal o compila desde el código fuente. Más detalles: [guía de SmartScreen en el sitio web](https://cybergems.org/download#smartscreen).
 
 </details>
+---
+
+## 🧭 Cómo usar la app
+
+CyberFeeds se abre en tu biblioteca de feeds; pulsa `Alt+Shift+R` para mostrarlo u ocultarlo desde cualquier parte.
+
+1. Añade tu primer feed pegando la URL de un blog o sitio de noticias y revisa la **Vista previa** antes de suscribirte.
+2. Repite con unos cuantos sitios y ordénalos en carpetas como Noticias, Tecnología o Aficiones.
+3. Cada mañana, abre el filtro de **no leídos** para ver solo lo nuevo.
+
+Con la biblioteca vacía, un asistente de bienvenida configura el idioma, el tema y tus primeros feeds; puedes volver a abrirlo desde la configuración general. Todo se guarda en una base SQLite local, así que tu biblioteca se queda en tu PC, sin cuenta ni nube.
+
+Consulta [¿Cómo se usa CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use) para ver ejemplos cotidianos y las guías completas de la wiki (en inglés).
+
 ---
 
 ## 🛠️ Stack tecnológico y arquitectura
