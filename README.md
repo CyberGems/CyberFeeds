@@ -37,7 +37,7 @@
 - [🖼️ Screenshots](#️-screenshots)
 - [📡 Why CyberFeeds?](#-why-cyberfeeds)
 - [✨ Key Features](#-key-features)
-- [🚀 Installation](#-installation)
+- [⬇️ Installation](#️-installation)
 - [🧭 Using the App](#-using-the-app)
 - [🛠️ Tech Stack & Architecture](#️-tech-stack--architecture)
 - [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
@@ -152,7 +152,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 
 ---
 
-## 🚀 Installation
+## ⬇️ Installation
 
 ### Install (Recommended)
 

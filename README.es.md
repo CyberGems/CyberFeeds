@@ -37,7 +37,7 @@
 - [🖼️ Capturas](#️-capturas)
 - [📡 ¿Por qué CyberFeeds?](#-por-qué-cyberfeeds)
 - [✨ Funciones principales](#-funciones-principales)
-- [🚀 Instalación](#-instalación)
+- [⬇️ Instalación](#️-instalación)
 - [🧭 Cómo usar la app](#-cómo-usar-la-app)
 - [🛠️ Stack tecnológico y arquitectura](#️-stack-tecnológico-y-arquitectura)
 - [⌨️ Atajos de teclado](#️-atajos-de-teclado)
@@ -149,9 +149,10 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Copia y restauración manual:** exporta o importa toda la configuración en un archivo JSON, o consulta, restaura y elimina cualquier copia automática desde Configuración
 - **Limpieza automática**: elimina automáticamente artículos leídos antiguos
 - **Base de datos SQLite**: almacenamiento local de alto rendimiento con modo WAL
+
 ---
 
-## 🚀 Instalación
+## ⬇️ Instalación
 
 ### Instalación (recomendada)
 
@@ -184,6 +185,7 @@ Windows muestra este aviso para cualquier instalador sin un certificado de firma
 Puedes verificar el archivo de forma independiente: compara el SHA con el release de GitHub, escanéalo en VirusTotal o compila desde el código fuente. Más detalles: [guía de SmartScreen en el sitio web](https://cybergems.org/download#smartscreen).
 
 </details>
+
 ---
 
 ## 🧭 Cómo usar la app
@@ -282,6 +284,7 @@ npm run typecheck      # Comprobación de tipos
 npm run lint           # Análisis de código
 npm run format         # Formato
 ```
+
 ---
 
 ## ⌨️ Atajos de teclado
