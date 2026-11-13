@@ -2,7 +2,7 @@
   "name": "cyberfeeds",
   "productName": "CyberFeeds",
   "version": "1.30.0",
-  "description": "CyberGems — Performance-first, full featured RSS Reader",
+  "description": "Follow websites, YouTube and Reddit in one calm, private reading space.",
   "main": "./out/main/index.js",
   "author": "CyberGems",
   "license": "GPL-3.0-only",
