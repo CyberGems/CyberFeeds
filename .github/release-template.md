@@ -40,7 +40,7 @@ A first-run welcome wizard sets up language, theme and feeds in seconds. Scroll 
   - BBC News (rich, image-bearing RSS) replaces Hacker News, and a single Reddit entry remains among the starter suggestions.
 
 <details>
-<summary><b>🌐 Ver notas de la versión en Español</b></summary>
+<summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
