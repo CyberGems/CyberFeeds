@@ -72,7 +72,17 @@ Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La esta
 - 📰 **Sugerencias de feeds renovadas**:
   - BBC News (RSS completo con imágenes) sustituye a Hacker News, y queda una sola entrada de Reddit entre las sugerencias iniciales.
 
+### ⚠️ Antes de instalar
+
+- **Windows:** esta versión aún no está firmada digitalmente. SmartScreen puede avisar antes de ejecutarla: **Más información › Ejecutar de todas formas**. Cuando Smart App Control está activado, Windows rechaza programas sin firmar; consulta la [política de firma de código](https://github.com/CyberGems/.github/blob/main/CODE_SIGNING.md). Verifica la descarga con los checksums SHA256 que aparecen más abajo.
+
 </details>
+
+---
+
+### ⚠️ Before you install
+
+- **Windows:** this release is not code-signed yet. SmartScreen may ask before it runs: **More info › Run anyway**. Where Smart App Control is on, Windows refuses unsigned programs; see the [code signing policy](https://github.com/CyberGems/.github/blob/main/CODE_SIGNING.md). Verify the download with the SHA256 checksums below.
 
 ---
 
