@@ -350,9 +350,6 @@ const TopBar = memo(function TopBar(): JSX.Element {
       } else if (key === 'm') {
         e.preventDefault()
         void window.api.windowMinimize()
-      } else if (key === 'w') {
-        e.preventDefault()
-        void window.api.windowClose()
       }
     }
 
@@ -364,6 +361,11 @@ const TopBar = memo(function TopBar(): JSX.Element {
     setMenuOpen(false)
     await togglePolling()
   }
+
+  const closeLabel =
+    settings.closeChoiceRemembered && settings.minimizeToTray
+      ? t.topBar.minimizeToTray
+      : t.topBar.close
 
   return (
     <div className="topbar">
@@ -586,16 +588,13 @@ const TopBar = memo(function TopBar(): JSX.Element {
             {maximized ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
           </button>
         </Tooltip>
-        <Tooltip
-          label={withShortcut(
-            settings.closeChoiceRemembered
-              ? (settings.minimizeToTray ? t.topBar.minimizeToTray : t.topBar.close)
-              : t.topBar.close,
-            'Ctrl+W'
-          )}
-          placement="bottom"
-        >
-          <button className="win-btn close" onClick={() => window.api.windowClose()}>
+        <Tooltip label={withShortcut(closeLabel, 'Alt+F4')} placement="bottom">
+          <button
+            className="win-btn close"
+            aria-label={closeLabel}
+            aria-keyshortcuts="Alt+F4"
+            onClick={() => window.api.windowClose()}
+          >
             <X size={13} />
           </button>
         </Tooltip>

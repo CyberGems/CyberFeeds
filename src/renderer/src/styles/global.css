@@ -564,6 +564,9 @@ body {
   background: var(--red);
   color: #fff;
 }
+[data-theme='grayscale'] .win-btn.close:hover {
+  color: var(--bg-1);
+}
 
 /* ─── Topbar Notification Badge ─────────────────────────────────────────── */
 .topbar-notification-badge {
