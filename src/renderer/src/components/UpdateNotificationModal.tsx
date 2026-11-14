@@ -96,6 +96,13 @@ export function parseChangelogPeek(
       continue
     }
 
+    // The Before you install block is release-page furniture: the updater is
+    // automatic, so the peek never includes SmartScreen guidance.
+    if (/^###?\s.*(?:before you install|antes de instalar)/i.test(line)) {
+      inHighlightsSection = false
+      continue
+    }
+
     // Match section headers
     if (
       /^###?\s.*(?:highlights|features|novedades|what's new|cambios|destacadas|changelog)/i.test(
@@ -131,7 +138,8 @@ export function parseChangelogPeek(
           text &&
           !text.toLowerCase().includes('recommended installer') &&
           !text.toLowerCase().includes('setup installer') &&
-          !text.toLowerCase().includes('virustotal')
+          !text.toLowerCase().includes('virustotal') &&
+          !/(?:not code-signed|no está firmada)/i.test(text)
         ) {
           items.push({ text, isSubItem })
         }
@@ -145,7 +153,7 @@ export function parseChangelogPeek(
       const line = raw.trim()
       if (line && !line.startsWith('#') && !line.startsWith('---') && !line.startsWith('|')) {
         const text = cleanItemText(line)
-        if (text.length > 15) {
+        if (text.length > 15 && !/(?:not code-signed|no está firmada)/i.test(text)) {
           items.push({ text, isSubItem: false })
           if (items.length >= 4) break
         }
