@@ -117,4 +117,6 @@ Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La esta
 
 ---
 
+📜 **Full changelog:** browse every version in [CHANGELOG.md](https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md).
+
 *Crafted with precision by [CyberGems](https://cybergems.org)*
