@@ -567,6 +567,7 @@ export default function App(): JSX.Element {
       }
 
       if (e.key === 'Escape') {
+        if (e.target instanceof Element && e.target.closest('.form-select:open')) return
         if (activePanel) {
           if (activePanel === 'settings') {
             // Offer the Escape to the settings search first: while it has a

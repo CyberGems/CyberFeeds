@@ -1218,6 +1218,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <div className="form-group" style={{ marginBottom: 0 }}>
                   <select
                     className="form-select"
+                    aria-label={t.settings.general.language}
                     value={local.language || 'en'}
                     onChange={e => update({ language: e.target.value as 'en' | 'es' })}
                   >
@@ -1378,6 +1379,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     </label>
                     <select
                       className="form-select"
+                      aria-label={t.settings.general.fetchOnStartup}
                       disabled={local.fetchOnStartup === false}
                       value={local.fetchOnStartupDelay ?? 15}
                       onChange={e => update({ fetchOnStartupDelay: Number(e.target.value) })}
@@ -1477,6 +1479,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <select
                     className="form-select"
+                    aria-label={t.settings.general.linksOpenIn}
                     value={
                       !local.customBrowserPath
                         ? 'default'
@@ -1578,6 +1581,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   </div>
                   <select
                     className="form-select"
+                    aria-label={t.settings.general.articleTabsSession}
                     disabled={local.openArticlesInTabs === false}
                     value={local.articleTabsSession || 'restore'}
                     onChange={(e) => update({ articleTabsSession: e.target.value as 'restore' | 'clean' })}
@@ -1674,6 +1678,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <CardTitle icon={LayoutDashboard} accent={TAB_META.appearance.accent}>{t.settings.general.layout}</CardTitle>
                 <select
                   className="form-select"
+                  aria-label={t.settings.general.layout}
                   value={local.layout}
                   onChange={e => update({ layout: e.target.value as AppSettings['layout'] })}
                 >
@@ -1926,10 +1931,11 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </p>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, paddingBottom: 14, borderBottom: '1px solid var(--border-muted)' }}>
-                  <label className="form-label" style={{ margin: 0, fontSize: 13 }}>
+                  <label className="form-label" htmlFor="settings-mute-action" style={{ margin: 0, fontSize: 13 }}>
                     {t.settings.filters.muteAction}
                   </label>
                   <select
+                    id="settings-mute-action"
                     className="form-select"
                     style={{ width: 'auto', minWidth: 200 }}
                     value={local.filters?.muteAction ?? 'hide'}
@@ -2011,8 +2017,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </label>
 
                 <div className="form-group">
-                  <label className="form-label">{t.settings.notifications.displayMode}</label>
+                  <label className="form-label" htmlFor="settings-notification-display-mode">{t.settings.notifications.displayMode}</label>
                   <select
+                    id="settings-notification-display-mode"
                     className="form-select"
                     value={local.notifications.displayMode || 'automatic'}
                     onChange={e => updateNotif({ displayMode: e.target.value as AppSettings['notifications']['displayMode'] })}
@@ -2079,11 +2086,12 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               <div className="settings-card">
                 <CardTitle icon={Monitor} accent={TAB_META.notifications.accent}>{t.settings.notifications.displayAndPositionTitle}</CardTitle>
                 <div className="form-group">
-                  <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <label className="form-label" htmlFor="settings-notification-monitor" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <Monitor size={12} />
                     {t.settings.notifications.displayMonitor}
                   </label>
                   <select
+                    id="settings-notification-monitor"
                     className="form-select"
                     value={local.notifications.displayId}
                     onChange={e => {
@@ -2230,8 +2238,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">{t.settings.notifications.historyLimit}</label>
+                  <label className="form-label" htmlFor="settings-notification-history-limit">{t.settings.notifications.historyLimit}</label>
                   <select
+                    id="settings-notification-history-limit"
                     className="form-select"
                     value={local.notifications.historyLimit ?? 1000}
                     onChange={e => updateNotif({ historyLimit: Number(e.target.value) })}
@@ -2250,8 +2259,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 </div>
 
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">{t.settings.notifications.snoozeDuration}</label>
+                  <label className="form-label" htmlFor="settings-notification-snooze-duration">{t.settings.notifications.snoozeDuration}</label>
                   <select
+                    id="settings-notification-snooze-duration"
                     className="form-select"
                     value={local.notifications.snoozeMinutes ?? 30}
                     onChange={e => updateNotif({ snoozeMinutes: Number(e.target.value) })}
@@ -2534,8 +2544,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 {(local.autoBackup || DEFAULT_SETTINGS.autoBackup).enabled && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">{t.settings.autoBackup.frequency}</label>
+                      <label className="form-label" htmlFor="settings-backup-frequency">{t.settings.autoBackup.frequency}</label>
                       <select
+                        id="settings-backup-frequency"
                         className="form-select"
                         value={(local.autoBackup || DEFAULT_SETTINGS.autoBackup).frequency}
                         onChange={(e) => {
@@ -2739,8 +2750,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <p className="settings-card-hint">{t.settings.maintenance.trashRetention}</p>
 
                 <div className="form-group" style={{ marginTop: 14 }}>
-                  <label className="form-label">{t.settings.maintenance.scopeLabel}</label>
+                  <label className="form-label" htmlFor="settings-cleanup-scope">{t.settings.maintenance.scopeLabel}</label>
                   <select
+                    id="settings-cleanup-scope"
                     className="form-select"
                     value={local.cleanupScope ?? 'all'}
                     onChange={(e) => update({ cleanupScope: e.target.value as CleanupScope })}
