@@ -46,6 +46,8 @@ A first-run welcome wizard sets up language, theme and feeds in seconds. Scroll 
 
 Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La estabilidad del scroll queda reconstruida (sin artículos duplicados ni saltos), las miniaturas rotas muestran un marcador limpio y el pill de novedades aplica todo de una sola vez.
 
+> **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
+
 ---
 
 ### ✨ Novedades destacadas
