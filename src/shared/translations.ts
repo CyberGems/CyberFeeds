@@ -937,7 +937,7 @@ export const translations = {
       quitDesc: 'Quits CyberFeeds completely',
       rememberChoice: 'Remember my choice',
       space: 'Space',
-      close: 'Close'
+      cancel: 'Cancel'
     }
   },
   es: {
@@ -1894,7 +1894,7 @@ export const translations = {
       quitDesc: 'Cierra CyberFeeds por completo',
       rememberChoice: 'Recordar mi elección',
       space: 'Espacio',
-      close: 'Cerrar'
+      cancel: 'Cancelar'
     }
   }
 }

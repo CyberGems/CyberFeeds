@@ -81,12 +81,12 @@ export default function CloseDialog({ isOpen, onClose }: CloseDialogProps): JSX.
           <h2 id="close-dialog-title" className="close-dialog-title">
             {t.closeDialog.title}
           </h2>
-          <Tooltip label={t.closeDialog.close} placement="bottom">
+          <Tooltip label={t.closeDialog.cancel} placement="bottom">
             <button
               type="button"
               className="close-dialog-close"
               onClick={onClose}
-              aria-label={t.closeDialog.close}
+              aria-label={t.closeDialog.cancel}
             >
               <X size={15} />
             </button>
