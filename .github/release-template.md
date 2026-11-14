@@ -97,16 +97,21 @@ Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La esta
 
 ---
 
-### VirusTotal and SHA256
+### 🔐 VirusTotal and SHA256
 
-- **Installer**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}}) · SHA256:
-  ```text
-  {{INSTALLER_HASH}}
-  ```
-- **Portable archive**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}}) · SHA256:
-  ```text
-  {{PORTABLE_HASH}}
-  ```
+> 🛡️ The report opens on VirusTotal and does not download anything.
+
+**Installer**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{INSTALLER_HASH}})
+
+```text
+{{INSTALLER_HASH}}
+```
+
+**Portable**: [View VirusTotal report](https://www.virustotal.com/gui/file/{{PORTABLE_HASH}})
+
+```text
+{{PORTABLE_HASH}}
+```
 
 ---
 
