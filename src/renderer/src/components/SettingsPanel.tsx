@@ -1926,7 +1926,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
               {/* Noise & Mute Rules Card */}
               <div className="settings-card">
-                <CardTitle icon={Ban} accent="#f85149">
+                <CardTitle icon={Ban} accent={TAB_META.filters.accent}>
                   {t.settings.filters.muteTitle}
                 </CardTitle>
                 <p className="form-hint" style={{ marginTop: 0, marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>

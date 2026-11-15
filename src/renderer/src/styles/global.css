@@ -2870,7 +2870,7 @@ mark.reader-search-match.reader-search-active {
   border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 34%, var(--border));
 }
 .settings-nav-btn.active {
-  color: color-mix(in srgb, var(--nav-accent, var(--accent)) 86%, var(--text-primary));
+  color: var(--text-primary);
   background: color-mix(in srgb, var(--nav-accent, var(--accent)) 9%, var(--bg-1));
   border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 30%, var(--border));
 }
