@@ -8,7 +8,7 @@ import { app } from 'electron'
 import * as db from './db'
 import * as polling from './polling'
 import { importOpml, exportOpml } from './opml'
-import { updateNotifierSettings, pruneFeedFilter } from './notifications'
+import { updateNotifierSettings, updateNotifierTheme, pruneFeedFilter } from './notifications'
 import { setAutoUpdate } from './updater'
 import { rebuildTrayMenu, rebuildGlobalShortcuts, refreshTrayTooltip } from './tray'
 import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
@@ -593,6 +593,7 @@ export function registerIpc(): void {
     db.saveSettings(normalized)
 
     updateNotifierSettings(settings.notifications)
+    updateNotifierTheme(normalized.theme)
     if (settings.pollingInterval !== current.pollingInterval) {
       polling.restartPolling(settings.pollingInterval)
     }

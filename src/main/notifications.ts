@@ -101,6 +101,12 @@ export function updateNotifierSettings(s: NotificationSettings): void {
   }
 }
 
+export function updateNotifierTheme(theme: string): void {
+  if (!notifierWindow || notifierWindow.isDestroyed()) return
+  const resolvedTheme = theme === 'grayscale' || theme === 'light' ? theme : 'dark'
+  notifierWindow.webContents.send('notifier:theme', resolvedTheme)
+}
+
 function resolveDisplay(s: NotificationSettings): Display {
   const displays = screen.getAllDisplays()
   const primaryDisplay = screen.getPrimaryDisplay()
@@ -450,7 +456,8 @@ async function pushToWindow(s: NotificationSettings = settings): Promise<boolean
       s,
       db.getSettings().language || 'en',
       db.getUnseenNotificationCount(),
-      resolveDisplayMode(s, displayStack.length)
+      resolveDisplayMode(s, displayStack.length),
+      db.getSettings().theme || 'dark'
     )
 
     // 3. Re-apply alwaysOnTop to ensure window stays in foreground
@@ -1019,7 +1026,8 @@ async function showSettingsPreview(
     effectiveSettings,
     lang,
     db.getUnseenNotificationCount(),
-    resolveDisplayMode(effectiveSettings, displayStack.length)
+    resolveDisplayMode(effectiveSettings, displayStack.length),
+    db.getSettings().theme || 'dark'
   )
   win.setAlwaysOnTop(true, 'screen-saver')
   win.setIgnoreMouseEvents(false)

@@ -251,7 +251,8 @@ const api = {
       settings: object,
       language?: string,
       unseenCount?: number,
-      displayMode?: string
+      displayMode?: string,
+      theme?: string
     ) => void
   ) => {
     const handler = (
@@ -260,8 +261,9 @@ const api = {
       settings: object,
       language?: string,
       unseenCount?: number,
-      displayMode?: string
-    ) => cb(stack, settings, language, unseenCount, displayMode)
+      displayMode?: string,
+      theme?: string
+    ) => cb(stack, settings, language, unseenCount, displayMode, theme)
     ipcRenderer.on('notifier:stack', handler)
     return () => {
       ipcRenderer.removeListener('notifier:stack', handler)
@@ -272,6 +274,13 @@ const api = {
     ipcRenderer.on('notifier:clear', handler)
     return () => {
       ipcRenderer.removeListener('notifier:clear', handler)
+    }
+  },
+  onNotifierTheme: (cb: (theme: string) => void) => {
+    const handler = (_: unknown, theme: string) => cb(theme)
+    ipcRenderer.on('notifier:theme', handler)
+    return () => {
+      ipcRenderer.removeListener('notifier:theme', handler)
     }
   },
 

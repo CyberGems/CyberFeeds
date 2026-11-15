@@ -4330,8 +4330,8 @@ input[type="radio"] {
 }
 .notif-close:hover {
   color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
   transform: scale(1.08);
 }
 .notif-close:active {
@@ -4446,7 +4446,7 @@ input[type="radio"] {
   font-weight: 500;
   letter-spacing: 0.3px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-sm);
   transition: all 0.15s ease, transform 0.1s ease;
 }
 .clear-all-btn:hover {
@@ -4485,7 +4485,7 @@ input[type="radio"] {
   background: transparent;
 }
 .notif-scroll-area::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.22);
+  background-color: color-mix(in srgb, var(--text-secondary) 40%, transparent);
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -4493,7 +4493,7 @@ input[type="radio"] {
 }
 .notif-scroll-area::-webkit-scrollbar-thumb:hover,
 .notif-scroll-area::-webkit-scrollbar-thumb:active {
-  background-color: rgba(255, 255, 255, 0.38);
+  background-color: color-mix(in srgb, var(--text-secondary) 65%, transparent);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
@@ -4543,6 +4543,39 @@ input[type="radio"] {
 .notif-scroll-area::-webkit-scrollbar-button:vertical:end:increment:active {
   background-color: rgba(255, 255, 255, 0.38);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 4.5L5 1.5L8.5 4.5' stroke='%235a6270' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:end {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='%235a6270' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:end:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:active,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:active {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 4.5L5 1.5L8.5 4.5' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:end:hover,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:active,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:end:active {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1.5 1.5L5 4.5L8.5 1.5' stroke='%231a1a1a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:decrement:active,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:start:decrement:active,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:single-button:vertical:increment:active,
+[data-theme='light'] .notif-scroll-area::-webkit-scrollbar-button:vertical:end:active {
+  background-color: rgba(0, 0, 0, 0.12);
 }
 
 /* ─── Context Menu ──────────────────────────────────────────────────────── */

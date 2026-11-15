@@ -16,6 +16,13 @@ const SNOOZE_LABELS: Record<number, string> = {
   1440: '24h'
 }
 const AUTO_HIDE_BUFFER_MS = 500
+type NotifierTheme = 'dark' | 'grayscale' | 'light'
+
+function applyNotifierTheme(value: string | undefined): void {
+  const theme: NotifierTheme =
+    value === 'grayscale' || value === 'light' || value === 'dark' ? value : 'dark'
+  document.documentElement.setAttribute('data-theme', theme)
+}
 
 function formatSnoozeLabel(minutes: number): string {
   return SNOOZE_LABELS[minutes] ?? `${minutes}m`
@@ -148,6 +155,20 @@ export default function NotifierApp(): JSX.Element {
   const [lang, setLang] = useState<'en' | 'es'>('en')
   const scrollRef = useRef<HTMLDivElement>(null)
   const isProgrammaticScroll = useRef(false)
+
+  useEffect(() => {
+    let receivedThemeUpdate = false
+    const unsubscribe = window.api.onNotifierTheme((theme) => {
+      receivedThemeUpdate = true
+      applyNotifierTheme(theme)
+    })
+    void window.api.getSettings().then((settings: { theme?: string }) => {
+      if (!receivedThemeUpdate) applyNotifierTheme(settings.theme)
+    }).catch(() => {
+      applyNotifierTheme(undefined)
+    })
+    return unsubscribe
+  }, [])
   const stackLengthRef = useRef(0)
   const [belowCount, setBelowCount] = useState(0)
   const [scrollbarW, setScrollbarW] = useState(0)
@@ -348,8 +369,10 @@ export default function NotifierApp(): JSX.Element {
         settingsPayload: object,
         language?: string,
         unseenCount?: number,
-        resolvedDisplayMode?: string
+        resolvedDisplayMode?: string,
+        theme?: string
       ) => {
+        applyNotifierTheme(theme)
         const payloadSettings = settingsPayload as NotificationSettings
         const displayMode: NotificationDisplayMode =
           resolvedDisplayMode === 'compact' || resolvedDisplayMode === 'detailed'
@@ -648,7 +671,7 @@ export default function NotifierApp(): JSX.Element {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        background: 'rgba(0,0,0,0.01)',
+        background: 'transparent',
         pointerEvents: state.stack.length > 0 ? 'auto' : 'none'
       }}
     >
@@ -809,7 +832,7 @@ export default function NotifierApp(): JSX.Element {
             right: scrollbarW > 0 ? scrollbarW : 16,
             height: 38,
             background:
-              'linear-gradient(to bottom, rgba(13, 17, 23, 0.96) 0%, rgba(13, 17, 23, 0.8) 45%, rgba(13, 17, 23, 0.25) 80%, transparent 100%)',
+              'linear-gradient(to bottom, color-mix(in srgb, var(--bg-0) 96%, transparent) 0%, color-mix(in srgb, var(--bg-0) 80%, transparent) 45%, color-mix(in srgb, var(--bg-0) 25%, transparent) 80%, transparent 100%)',
             pointerEvents: 'none',
             zIndex: 10,
             opacity: hasScrolled ? 1 : 0,
@@ -993,7 +1016,7 @@ export default function NotifierApp(): JSX.Element {
               right: scrollbarW > 0 ? scrollbarW : 16,
               height: 48,
               background:
-                'linear-gradient(to top, rgba(13, 17, 23, 0.96) 0%, rgba(13, 17, 23, 0.8) 45%, rgba(13, 17, 23, 0.25) 80%, transparent 100%)',
+                'linear-gradient(to top, color-mix(in srgb, var(--bg-0) 96%, transparent) 0%, color-mix(in srgb, var(--bg-0) 80%, transparent) 45%, color-mix(in srgb, var(--bg-0) 25%, transparent) 80%, transparent 100%)',
               pointerEvents: 'none',
               display: 'flex',
               alignItems: 'flex-end',
@@ -1019,7 +1042,7 @@ export default function NotifierApp(): JSX.Element {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 4,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+                  boxShadow: 'var(--shadow-sm)',
                   transition: 'opacity 0.2s ease, transform 0.15s ease'
                 }}
               >
