@@ -12,6 +12,18 @@ interface TabContextMenuState {
   tab: ArticleTab
 }
 
+function prepareTabTitleScroll(tab: HTMLDivElement): void {
+  const title = tab.querySelector<HTMLElement>('.article-tab-title')
+  const text = title?.querySelector<HTMLElement>('.article-tab-title-text')
+  if (!title || !text) return
+  const distance = text.scrollWidth - title.clientWidth
+  title.toggleAttribute('data-overflow', distance > 1)
+  if (distance > 1) {
+    title.style.setProperty('--tab-title-shift', `${-distance}px`)
+    title.style.setProperty('--tab-title-duration', `${Math.min(8000, Math.max(500, distance / 48 * 1000))}ms`)
+  }
+}
+
 export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   const {
     tabs,
@@ -314,6 +326,8 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
+                onPointerEnter={(e) => prepareTabTitleScroll(e.currentTarget)}
+                onPointerLeave={(e) => e.currentTarget.querySelector('.article-tab-title')?.removeAttribute('data-overflow')}
                 onClick={() => setActiveTab(tab.id)}
                 onAuxClick={(e) => {
                   // Middle-click closes tab
@@ -327,7 +341,9 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
                 <div className="article-tab-favicon">
                   <FeedFavicon icon={tab.feedIcon} title={tab.feedTitle || tab.title} size={14} />
                 </div>
-                <span className="article-tab-title">{tab.title}</span>
+                <span className="article-tab-title">
+                  <span className="article-tab-title-text">{tab.title}</span>
+                </span>
                 <Tooltip label={t.articleTabs.closeTab} placement="bottom">
                   <button
                     type="button"

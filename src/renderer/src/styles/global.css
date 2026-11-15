@@ -5253,8 +5253,8 @@ input[type="radio"] {
   align-items: center;
   gap: 7px;
   height: 29px;
-  max-width: 210px;
-  min-width: 80px;
+  max-width: 224px;
+  min-width: 108px;
   padding: 0 6px 0 9px;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: transparent;
@@ -5311,9 +5311,30 @@ input[type="radio"] {
 
 .article-tab-title {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.article-tab-title-text {
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .article-tab:hover .article-tab-title[data-overflow] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 6px), transparent);
+  }
+  .article-tab:hover .article-tab-title[data-overflow] .article-tab-title-text {
+    width: max-content;
+    animation: article-tab-title-scroll var(--tab-title-duration) linear 160ms both;
+  }
+}
+
+@keyframes article-tab-title-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(var(--tab-title-shift) - 6px)); }
 }
 
 .article-tab-close {
