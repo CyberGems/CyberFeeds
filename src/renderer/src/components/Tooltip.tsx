@@ -1,4 +1,4 @@
-import { useState, useEffect, useLayoutEffect, useRef, cloneElement, isValidElement } from 'react'
+import { useCallback, useState, useEffect, useLayoutEffect, useRef, cloneElement, isValidElement } from 'react'
 import type { ReactElement, ReactNode, MouseEvent as ReactMouseEvent, CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -12,6 +12,8 @@ interface TooltipProps {
 
 const VIEWPORT_MARGIN = 8 // separación mínima respecto al borde de la ventana
 const GAP = 8 // separación respecto al elemento ancla
+const HOVER_DELAY_MS = 300
+const NESTED_TRIGGER = '[data-has-tooltip="true"], button, a, [role="button"]'
 
 function clamp(value: number, min: number, max: number) {
   if (max < min) return min // el tooltip es más grande que el espacio: prioriza el margen
@@ -23,10 +25,26 @@ function clamp(value: number, min: number, max: number) {
 // de modo que no altera los layouts flex existentes. Se reposiciona para no
 // salirse de la pantalla y la flecha se re-ancla al centro del elemento.
 export default function Tooltip({ label, placement = 'bottom', children }: TooltipProps) {
-  const [anchor, setAnchor] = useState<DOMRect | null>(null)
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ left: number; top: number; arrow: CSSProperties } | null>(null)
   const delayTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const scheduleShow = useCallback((trigger: HTMLElement): void => {
+    const showWhenReady = (): void => {
+      delayTimer.current = null
+      if (!trigger.isConnected || !trigger.matches(':hover')) return
+      const strip = trigger.closest('[data-scroll-hover]')
+      if (strip?.getAttribute('data-scroll-hover') === 'paused') {
+        delayTimer.current = setTimeout(showWhenReady, HOVER_DELAY_MS)
+        return
+      }
+      // The wheel may have moved the pointer over a nested trigger, such as Close tab.
+      if (strip && trigger.querySelector(`:hover:is(${NESTED_TRIGGER})`)) return
+      setAnchor(trigger)
+    }
+    delayTimer.current = setTimeout(showWhenReady, HOVER_DELAY_MS)
+  }, [])
 
   // Medimos el tooltip ya renderizado y calculamos la posición con clamping.
   useLayoutEffect(() => {
@@ -34,18 +52,19 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
       setPos(null)
       return
     }
+    const rect = anchor.getBoundingClientRect()
     const card = cardRef.current.getBoundingClientRect()
     const vw = window.innerWidth
     const vh = window.innerHeight
-    const cx = anchor.left + anchor.width / 2
-    const cy = anchor.top + anchor.height / 2
+    const cx = rect.left + rect.width / 2
+    const cy = rect.top + rect.height / 2
     let left = 0
     let top = 0
     let arrow: CSSProperties = {}
 
     if (placement === 'top' || placement === 'bottom') {
       left = clamp(cx - card.width / 2, VIEWPORT_MARGIN, vw - card.width - VIEWPORT_MARGIN)
-      top = placement === 'bottom' ? anchor.bottom + GAP : anchor.top - GAP - card.height
+      top = placement === 'bottom' ? rect.bottom + GAP : rect.top - GAP - card.height
       const ax = clamp(cx - left, 12, card.width - 12) // flecha alineada al centro del ancla
       arrow =
         placement === 'bottom'
@@ -65,7 +84,7 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
             }
     } else {
       top = clamp(cy - card.height / 2, VIEWPORT_MARGIN, vh - card.height - VIEWPORT_MARGIN)
-      left = placement === 'right' ? anchor.right + GAP : anchor.left - GAP - card.width
+      left = placement === 'right' ? rect.right + GAP : rect.left - GAP - card.width
       const ay = clamp(cy - top, 12, card.height - 12)
       arrow =
         placement === 'right'
@@ -92,14 +111,20 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
   // Ocultar al hacer scroll para que el tooltip no quede "flotando".
   useEffect(() => {
     if (!anchor) return
-    const hide = () => setAnchor(null)
+    const hide = (event: Event): void => {
+      setAnchor(null)
+      const strip = anchor.closest('[data-scroll-hover]')
+      if (!delayTimer.current && event.target instanceof Node && strip?.contains(event.target)) {
+        scheduleShow(anchor)
+      }
+    }
     window.addEventListener('scroll', hide, true)
     window.addEventListener('wheel', hide, true)
     return () => {
       window.removeEventListener('scroll', hide, true)
       window.removeEventListener('wheel', hide, true)
     }
-  }, [anchor])
+  }, [anchor, scheduleShow])
 
   // Limpiar temporizadores de retardo al desmontar
   useEffect(() => {
@@ -120,18 +145,11 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
 
     const target = e.target as HTMLElement
     const currentTarget = e.currentTarget as HTMLElement
-    const closestTooltipEl = target.closest('[data-has-tooltip="true"]')
-    const closestInteractive = target.closest('button, a, [role="button"]')
-    if (
-      (closestTooltipEl && closestTooltipEl !== currentTarget) ||
-      (closestInteractive && closestInteractive !== currentTarget)
-    ) {
+    const closestTrigger = target.closest(NESTED_TRIGGER)
+    if (closestTrigger && closestTrigger !== currentTarget) {
       setAnchor(null)
     } else if (label) {
-      const rect = currentTarget.getBoundingClientRect()
-      delayTimer.current = setTimeout(() => {
-        setAnchor(rect)
-      }, 300)
+      scheduleShow(currentTarget)
     }
   }
   const hide = (e: ReactMouseEvent<HTMLElement>): void => {
@@ -154,12 +172,8 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
     child.props.onMouseMove?.(e)
     const target = e.target as HTMLElement
     const currentTarget = e.currentTarget as HTMLElement
-    const closestTooltipEl = target.closest('[data-has-tooltip="true"]')
-    const closestInteractive = target.closest('button, a, [role="button"]')
-    if (
-      (closestTooltipEl && closestTooltipEl !== currentTarget) ||
-      (closestInteractive && closestInteractive !== currentTarget)
-    ) {
+    const closestTrigger = target.closest(NESTED_TRIGGER)
+    if (closestTrigger && closestTrigger !== currentTarget) {
       if (delayTimer.current) {
         clearTimeout(delayTimer.current)
         delayTimer.current = null
@@ -167,10 +181,7 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
       setAnchor(null)
     } else if (label) {
       if (!anchor && !delayTimer.current) {
-        const rect = currentTarget.getBoundingClientRect()
-        delayTimer.current = setTimeout(() => {
-          setAnchor(rect)
-        }, 300)
+        scheduleShow(currentTarget)
       }
     }
   }

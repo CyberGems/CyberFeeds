@@ -12,6 +12,9 @@ interface TabContextMenuState {
   tab: ArticleTab
 }
 
+const TAB_SCROLL_IDLE_MS = 140
+const TAB_TITLE_HOVER_MS = 160
+
 function prepareTabTitleScroll(tab: HTMLDivElement): void {
   const title = tab.querySelector<HTMLElement>('.article-tab-title')
   const text = title?.querySelector<HTMLElement>('.article-tab-title-text')
@@ -38,6 +41,8 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   const openArticlesInTabs = useSettingsStore((s) => s.settings.openArticlesInTabs !== false)
   const { t } = useTranslation()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const titleHoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const counterBtnRef = useRef<HTMLButtonElement>(null)
   const [ctxMenu, setCtxMenu] = useState<TabContextMenuState | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -195,11 +200,50 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     return () => clearTimeout(timer)
   }, [activeTabId, updateScrollState])
 
-  // Mouse wheel horizontal scroll handler
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft += e.deltaY
+  const pauseTabHover = useCallback((strip: HTMLDivElement): void => {
+    if (titleHoverTimer.current) clearTimeout(titleHoverTimer.current)
+    if (scrollIdleTimer.current) {
+      clearTimeout(scrollIdleTimer.current)
+    } else {
+      strip.dataset.scrollHover = 'paused'
+      strip.querySelector('.article-tab-title[data-overflow]')?.removeAttribute('data-overflow')
     }
+    scrollIdleTimer.current = setTimeout(() => {
+      scrollIdleTimer.current = null
+      if (!strip.isConnected) return
+      // The pointer can stay still while a different tab scrolls underneath it.
+      const tab = strip.querySelector<HTMLDivElement>('.article-tab:hover')
+      if (tab) prepareTabTitleScroll(tab)
+      strip.dataset.scrollHover = 'ready'
+    }, TAB_SCROLL_IDLE_MS)
+  }, [])
+
+  const handleTabScroll = useCallback((e: React.UIEvent<HTMLDivElement>): void => {
+    pauseTabHover(e.currentTarget)
+    updateScrollState()
+  }, [pauseTabHover, updateScrollState])
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>): void => {
+    if (!hasOverflow || !e.deltaY) return
+    pauseTabHover(e.currentTarget)
+    e.currentTarget.scrollLeft += e.deltaY
+  }, [hasOverflow, pauseTabHover])
+
+  const handleTabPointerEnter = useCallback((e: React.PointerEvent<HTMLDivElement>): void => {
+    if (scrollIdleTimer.current) return
+    const tab = e.currentTarget
+    if (titleHoverTimer.current) clearTimeout(titleHoverTimer.current)
+    titleHoverTimer.current = setTimeout(() => {
+      titleHoverTimer.current = null
+      if (tab.isConnected && tab.matches(':hover')) prepareTabTitleScroll(tab)
+    }, TAB_TITLE_HOVER_MS)
+  }, [])
+
+  useEffect(() => () => {
+    if (scrollIdleTimer.current) clearTimeout(scrollIdleTimer.current)
+    if (titleHoverTimer.current) clearTimeout(titleHoverTimer.current)
+    scrollIdleTimer.current = null
+    titleHoverTimer.current = null
   }, [])
 
   const handleContextMenu = useCallback((e: React.MouseEvent, tab: ArticleTab) => {
@@ -301,7 +345,8 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
       <div
         ref={scrollContainerRef}
         className="article-tab-bar-scroll"
-        onScroll={updateScrollState}
+        data-scroll-hover="ready"
+        onScroll={handleTabScroll}
         onWheel={handleWheel}
       >
         {tabs.map((tab, idx) => {
@@ -326,8 +371,12 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
                 onDragOver={(e) => handleDragOver(e, idx)}
                 onDrop={(e) => handleDrop(e, idx)}
                 onDragEnd={handleDragEnd}
-                onPointerEnter={(e) => prepareTabTitleScroll(e.currentTarget)}
-                onPointerLeave={(e) => e.currentTarget.querySelector('.article-tab-title')?.removeAttribute('data-overflow')}
+                onPointerEnter={handleTabPointerEnter}
+                onPointerLeave={(e) => {
+                  if (!scrollIdleTimer.current) {
+                    e.currentTarget.querySelector('.article-tab-title')?.removeAttribute('data-overflow')
+                  }
+                }}
                 onClick={() => setActiveTab(tab.id)}
                 onAuxClick={(e) => {
                   // Middle-click closes tab

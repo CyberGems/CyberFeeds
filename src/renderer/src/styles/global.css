@@ -5402,7 +5402,7 @@ input[type="radio"] {
   flex-shrink: 1;
 }
 
-.article-tab:hover {
+.article-tab-bar-scroll:not([data-scroll-hover='paused']) .article-tab:hover {
   background: var(--bg-2);
   color: var(--text-primary);
 }
@@ -5457,12 +5457,12 @@ input[type="radio"] {
 }
 
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .article-tab:hover .article-tab-title[data-overflow] {
+  .article-tab-bar-scroll:not([data-scroll-hover='paused']) .article-tab:hover .article-tab-title[data-overflow] {
     mask-image: linear-gradient(to right, #000 calc(100% - 6px), transparent);
   }
-  .article-tab:hover .article-tab-title[data-overflow] .article-tab-title-text {
+  .article-tab-bar-scroll:not([data-scroll-hover='paused']) .article-tab:hover .article-tab-title[data-overflow] .article-tab-title-text {
     width: max-content;
-    animation: article-tab-title-scroll var(--tab-title-duration) linear 160ms both;
+    animation: article-tab-title-scroll var(--tab-title-duration) linear both;
   }
 }
 
@@ -5488,12 +5488,12 @@ input[type="radio"] {
   transition: all 0.12s ease, transform 0.1s ease;
 }
 
-.article-tab:hover .article-tab-close,
+.article-tab-bar-scroll:not([data-scroll-hover='paused']) .article-tab:hover .article-tab-close,
 .article-tab.active .article-tab-close {
   opacity: 1;
 }
 
-.article-tab-close:hover {
+.article-tab-bar-scroll:not([data-scroll-hover='paused']) .article-tab-close:hover {
   background: rgba(235, 87, 87, 0.18);
   color: var(--red);
   transform: scale(1.12);
@@ -5501,6 +5501,10 @@ input[type="radio"] {
 
 .article-tab-close:active {
   transform: scale(0.88);
+}
+
+.article-tab-bar-scroll[data-scroll-hover='paused'] :is(.article-tab, .article-tab-close) {
+  transition: none;
 }
 
 .article-tab-bar-nav-btn {
