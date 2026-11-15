@@ -198,7 +198,7 @@ CyberFeeds se abre en tu biblioteca de feeds; pulsa `Alt+Shift+R` para mostrarlo
 
 Con la biblioteca vacía, un asistente de bienvenida configura el idioma, el tema y tus primeros feeds; puedes volver a abrirlo desde la configuración general. Todo se guarda en una base SQLite local, así que tu biblioteca se queda en tu PC, sin cuenta ni nube.
 
-Consulta [¿Cómo se usa CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use) para ver ejemplos cotidianos y las guías completas de la wiki (en inglés).
+Consulta [¿Cómo se usa CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use-es) para ver ejemplos cotidianos y las guías completas de la wiki.
 
 ---
 
