@@ -43,6 +43,9 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const titleHoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wheelScrollRaf = useRef<number | null>(null)
+  const wheelScrollTarget = useRef<number | null>(null)
+  const wheelScrollLastFrame = useRef<number | null>(null)
   const counterBtnRef = useRef<HTMLButtonElement>(null)
   const [ctxMenu, setCtxMenu] = useState<TabContextMenuState | null>(null)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
@@ -223,13 +226,53 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
     updateScrollState()
   }, [pauseTabHover, updateScrollState])
 
+  const animateWheelScroll = useCallback(function animate(timestamp: number): void {
+    const strip = scrollContainerRef.current
+    const target = wheelScrollTarget.current
+    if (!strip || target === null) {
+      wheelScrollRaf.current = null
+      wheelScrollLastFrame.current = null
+      return
+    }
+
+    const elapsed = wheelScrollLastFrame.current === null
+      ? 16
+      : Math.min(timestamp - wheelScrollLastFrame.current, 50)
+    wheelScrollLastFrame.current = timestamp
+
+    const maxScrollLeft = strip.scrollWidth - strip.clientWidth
+    const boundedTarget = Math.max(0, Math.min(maxScrollLeft, target))
+    wheelScrollTarget.current = boundedTarget
+    const remaining = boundedTarget - strip.scrollLeft
+    const movement = remaining * (1 - Math.exp(-elapsed / 65))
+    if (Math.abs(remaining) <= 0.5 || Math.abs(movement) <= 0.25) {
+      strip.scrollLeft = boundedTarget
+      wheelScrollTarget.current = null
+      wheelScrollRaf.current = null
+      wheelScrollLastFrame.current = null
+      return
+    }
+
+    strip.scrollLeft += movement
+    wheelScrollRaf.current = requestAnimationFrame(animate)
+  }, [])
+
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>): void => {
     if (!hasOverflow || !e.deltaY) return
     const strip = e.currentTarget
-    const currentScrollLeft = strip.scrollLeft
-    strip.scrollLeft = currentScrollLeft + e.deltaY
-    if (strip.scrollLeft !== currentScrollLeft) pauseTabHover(strip)
-  }, [hasOverflow, pauseTabHover])
+    const currentTarget = wheelScrollTarget.current ?? strip.scrollLeft
+    const maxScrollLeft = strip.scrollWidth - strip.clientWidth
+    const nextTarget = Math.max(0, Math.min(maxScrollLeft, currentTarget + e.deltaY))
+    if (nextTarget === currentTarget) return
+
+    e.preventDefault()
+    wheelScrollTarget.current = nextTarget
+    pauseTabHover(strip)
+    if (wheelScrollRaf.current === null) {
+      wheelScrollLastFrame.current = null
+      wheelScrollRaf.current = requestAnimationFrame(animateWheelScroll)
+    }
+  }, [animateWheelScroll, hasOverflow, pauseTabHover])
 
   const handleTabPointerEnter = useCallback((e: React.PointerEvent<HTMLDivElement>): void => {
     if (scrollIdleTimer.current) return
@@ -242,8 +285,12 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
   }, [])
 
   useEffect(() => () => {
+    if (wheelScrollRaf.current !== null) cancelAnimationFrame(wheelScrollRaf.current)
     if (scrollIdleTimer.current) clearTimeout(scrollIdleTimer.current)
     if (titleHoverTimer.current) clearTimeout(titleHoverTimer.current)
+    wheelScrollRaf.current = null
+    wheelScrollTarget.current = null
+    wheelScrollLastFrame.current = null
     scrollIdleTimer.current = null
     titleHoverTimer.current = null
   }, [])
