@@ -26,6 +26,7 @@ import {
   buildYouTubeArticleContent
 } from '../shared/youtube'
 import { robustParse } from './feed-parse'
+import { isThumbnailPageForSource } from './thumbnail-source'
 import type { Feed, Folder } from './types'
 
 /**
@@ -126,7 +127,13 @@ function uuid(): string { return crypto.randomUUID() }
 
 // Content extractor worker (persistent, reused across requests)
 let extractorWorker: Worker | null = null
-let pendingExtractions = new Map<string, (result: { html?: string; error?: string }) => void>()
+interface ExtractedContent {
+  html?: string
+  thumbnail?: string
+  error?: string
+}
+
+const pendingExtractions = new Map<string, (result: ExtractedContent) => void>()
 
 function getExtractorWorker(): Worker {
   if (extractorWorker) return extractorWorker
@@ -136,7 +143,7 @@ function getExtractorWorker(): Worker {
     : path.join(app.getAppPath(), 'out', 'main', 'content-extractor.worker.js')
 
   extractorWorker = new Worker(workerPath)
-  extractorWorker.on('message', (result: { reqId: string; html?: string; error?: string }) => {
+  extractorWorker.on('message', (result: ExtractedContent & { reqId: string }) => {
     const resolve = pendingExtractions.get(result.reqId)
     if (resolve) {
       pendingExtractions.delete(result.reqId)
@@ -148,11 +155,11 @@ function getExtractorWorker(): Worker {
   return extractorWorker
 }
 
-function extractContent(url: string): Promise<{ html?: string; error?: string }> {
+function extractContent(url: string, thumbnailOnly = false): Promise<ExtractedContent> {
   return new Promise(resolve => {
     const reqId = uuid()
     pendingExtractions.set(reqId, resolve)
-    getExtractorWorker().postMessage({ reqId, url })
+    getExtractorWorker().postMessage({ reqId, url, thumbnailOnly })
     // Timeout safety
     setTimeout(() => {
       if (pendingExtractions.has(reqId)) {
@@ -161,6 +168,21 @@ function extractContent(url: string): Promise<{ html?: string; error?: string }>
       }
     }, 15000)
   })
+}
+
+async function resolveArticleThumbnail(id: string): Promise<{ id: string; thumbnail: string } | undefined> {
+  const article = db.getArticleById(id)
+  if (!article || article.deletedAt) return
+  if (article.thumbnail) return { id, thumbnail: article.thumbnail }
+
+  const url = URL.parse(article.link)
+  const feed = db.getFeedById(article.feedId)
+  const feedUrl = feed ? URL.parse(feed.url) : null
+  if (!url || !isThumbnailPageForSource(url, feedUrl)) return
+
+  const { thumbnail } = await extractContent(url.href, true)
+  if (thumbnail && db.fillArticleThumbnail(id, thumbnail)) return { id, thumbnail }
+  return undefined
 }
 
 export function registerIpc(): void {
@@ -544,6 +566,12 @@ export function registerIpc(): void {
     if (!article) return { error: 'Article not found' }
     const result = await extractContent(article.link)
     return result
+  })
+
+  ipcMain.handle('articles:resolveThumbnails', async (_, ids: string[]) => {
+    if (!db.getSettings().showArticleThumbnails) return []
+    const results = await Promise.all(ids.slice(0, 4).map(resolveArticleThumbnail))
+    return results.filter((result) => result !== undefined)
   })
 
   ipcMain.handle('articles:getById', (_, id: string) => {

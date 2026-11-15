@@ -729,6 +729,13 @@ export function getArticleById(id: string): Article | undefined {
   `).get(id) as Article | undefined
 }
 
+export function fillArticleThumbnail(id: string, thumbnail: string): boolean {
+  return db.prepare(`
+    UPDATE articles SET thumbnail = ?
+    WHERE id = ? AND deletedAt IS NULL AND (thumbnail IS NULL OR thumbnail = '')
+  `).run(thumbnail, id).changes > 0
+}
+
 export function cleanupOldArticles(
   days: number,
   scope: CleanupScope = 'all'

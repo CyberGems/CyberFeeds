@@ -65,6 +65,8 @@ const api = {
   purgeMultipleArticles: (ids: string[]) => ipcRenderer.invoke('articles:purgeMultiple', ids),
   emptyTrash: () => ipcRenderer.invoke('articles:emptyTrash'),
   fetchArticleContent: (id: string) => ipcRenderer.invoke('articles:fetchContent', id),
+  resolveArticleThumbnails: (ids: string[]) =>
+    ipcRenderer.invoke('articles:resolveThumbnails', ids) as Promise<{ id: string; thumbnail: string }[]>,
   getArticleById: (id: string) => ipcRenderer.invoke('articles:getById', id),
 
   // Settings

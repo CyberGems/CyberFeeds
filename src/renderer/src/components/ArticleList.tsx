@@ -641,6 +641,39 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   )
 
   const virtualItems = rowVirtualizer.getVirtualItems()
+  const firstVisibleIndex = rowVirtualizer.range?.startIndex
+  const lastVisibleIndex = rowVirtualizer.range?.endIndex
+  const thumbnailAttempts = useRef(new Set<string>())
+  const [resolvingThumbnails, setResolvingThumbnails] = useState(false)
+
+  useEffect(() => {
+    if (!settings.showArticleThumbnails || !windowFocused || isTrash || resolvingThumbnails ||
+      firstVisibleIndex === undefined || lastVisibleIndex === undefined) return
+
+    const ids = articles.slice(firstVisibleIndex, lastVisibleIndex + 1)
+      .filter((article) => !article.thumbnail && !article.deletedAt && !thumbnailAttempts.current.has(article.id))
+      .slice(0, 4)
+      .map((article) => article.id)
+    if (!ids.length) return
+
+    const timer = setTimeout(() => {
+      ids.forEach((id) => thumbnailAttempts.current.add(id))
+      setResolvingThumbnails(true)
+      void window.api.resolveArticleThumbnails(ids).then((resolved) => {
+        if (!resolved.length) return
+        const thumbnails = new Map(resolved.map(({ id, thumbnail }) => [id, thumbnail]))
+        useArticlesStore.setState((state) => ({
+          articles: state.articles.map((article) => {
+            const thumbnail = thumbnails.get(article.id)
+            return thumbnail && !article.thumbnail && !article.deletedAt ? { ...article, thumbnail } : article
+          })
+        }))
+      }).catch((error) => console.error('[Articles] Failed to resolve thumbnails:', error))
+        .finally(() => setResolvingThumbnails(false))
+    }, 220)
+    return () => clearTimeout(timer)
+  }, [articles, firstVisibleIndex, isTrash, lastVisibleIndex, resolvingThumbnails, settings.showArticleThumbnails, windowFocused])
+
   const lastVirtualIndex =
     virtualItems.length > 0 ? virtualItems[virtualItems.length - 1].index : -1
 
@@ -1935,7 +1968,7 @@ const ArticleItem = memo(
     const { t, language } = useTranslation()
     // Failed thumbnails swap the image for a fixed-height placeholder so the
     // card keeps its measured size across remounts.
-    const [thumbFailed, setThumbFailed] = useState(false)
+    const [failedThumbnail, setFailedThumbnail] = useState<string>()
 
     const handleClick = useCallback(
       (e: React.MouseEvent) => {
@@ -2053,7 +2086,7 @@ const ArticleItem = memo(
         {/* Thumbnail strip */}
         {article.thumbnail && settings.showArticleThumbnails && (
           <div className="article-thumbnail" style={{ position: 'relative' }}>
-            {thumbFailed ? (
+            {article.thumbnail === failedThumbnail ? (
               // Fixed-height placeholder: the card keeps its measured size, so
               // a failed image never reflows the virtual list.
               <div className="article-thumbnail-failed">
@@ -2064,7 +2097,7 @@ const ArticleItem = memo(
                 src={article.thumbnail}
                 alt=""
                 loading="lazy"
-                onError={() => setThumbFailed(true)}
+                onError={() => setFailedThumbnail(article.thumbnail)}
               />
             )}
             {hasVideo && (
@@ -2163,6 +2196,7 @@ const ArticleItem = memo(
   },
   (prev, next) =>
     prev.article.id === next.article.id &&
+    prev.article.thumbnail === next.article.thumbnail &&
     prev.folderName === next.folderName &&
     prev.isTrash === next.isTrash &&
     prev.article.read === next.article.read &&

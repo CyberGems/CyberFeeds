@@ -6,22 +6,26 @@ import { parentPort } from 'worker_threads'
 import { parseHTML } from 'linkedom'
 import https from 'https'
 import http from 'http'
+import { isThumbnailPageForSource } from '../thumbnail-source'
 
 interface ExtractRequest {
   reqId: string
   url: string
+  thumbnailOnly?: boolean
 }
 
 interface ExtractResult {
   reqId: string
   html?: string
+  thumbnail?: string
   error?: string
 }
 
 const TIMEOUT_MS = 12000
 const MAX_SIZE = 5 * 1024 * 1024 // 5MB
+const MAX_HEAD_SIZE = 256 * 1024
 
-function fetchUrl(url: string): Promise<string> {
+function fetchUrl(url: string, thumbnailOnly = false, redirects = 0): Promise<{ html: string; url: string }> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http
     const req = client.get(url, {
@@ -31,12 +35,18 @@ function fetchUrl(url: string): Promise<string> {
         'Accept-Language': 'en-US,en;q=0.5',
         'Accept-Encoding': 'identity'
       },
-      timeout: TIMEOUT_MS
+      timeout: TIMEOUT_MS,
+      signal: thumbnailOnly ? AbortSignal.timeout(4500) : undefined
     }, (res) => {
-      // Follow single redirect
-      if ((res.statusCode === 301 || res.statusCode === 302) && res.headers.location) {
-        fetchUrl(res.headers.location).then(resolve).catch(reject)
-        req.destroy()
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const next = URL.parse(res.headers.location, url)
+        res.destroy()
+        if (!next || !['https:', 'http:'].includes(next.protocol) || redirects >= 3 ||
+          (thumbnailOnly && !isThumbnailPageForSource(next, new URL(url)))) {
+          reject(new Error('Unsupported article redirect'))
+          return
+        }
+        fetchUrl(next.href, thumbnailOnly, redirects + 1).then(resolve, reject)
         return
       }
       if (res.statusCode && res.statusCode >= 400) {
@@ -44,19 +54,57 @@ function fetchUrl(url: string): Promise<string> {
         req.destroy()
         return
       }
+      const contentType = res.headers['content-type']
+      if (thumbnailOnly && contentType && !/^(?:text\/html|application\/xhtml\+xml)\b/i.test(contentType)) {
+        resolve({ html: '', url })
+        res.destroy()
+        return
+      }
       const chunks: Buffer[] = []
       let size = 0
+      let headTail = ''
       res.on('data', (chunk: Buffer) => {
+        if (thumbnailOnly) {
+          const headChunk = chunk.subarray(0, MAX_HEAD_SIZE - size)
+          chunks.push(headChunk)
+          size += headChunk.length
+          const boundary = headTail + headChunk.toString('utf-8')
+          if (/<\/head\s*>/i.test(boundary) || size >= MAX_HEAD_SIZE) {
+            const head = Buffer.concat(chunks, size).toString('utf-8')
+            const end = head.search(/<\/head\s*>/i)
+            resolve({ html: end < 0 ? head : head.slice(0, end), url })
+            res.destroy()
+          }
+          headTail = boundary.slice(-16)
+          return
+        }
         size += chunk.length
         if (size > MAX_SIZE) { req.destroy(); reject(new Error('Response too large')); return }
         chunks.push(chunk)
       })
-      res.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
+      res.on('end', () => resolve({ html: Buffer.concat(chunks).toString('utf-8'), url }))
       res.on('error', reject)
     })
     req.on('error', reject)
     req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')) })
   })
+}
+
+function extractThumbnailFromPage(html: string, url: string): string | undefined {
+  const { document } = parseHTML(html)
+  for (const selector of [
+    'meta[property="og:image:secure_url"]',
+    'meta[property="og:image"]',
+    'meta[name="twitter:image"], meta[property="twitter:image"]',
+    'link[rel="image_src"]'
+  ]) {
+    for (const node of document.querySelectorAll(selector)) {
+      const value = (node.getAttribute('content') ?? node.getAttribute('href'))?.trim()
+      const image = value ? URL.parse(value, url) : null
+      if (image?.protocol === 'https:' && !image.username && !image.password) return image.href
+    }
+  }
+  return undefined
 }
 
 function scoreCandidate(el: Element): number {
@@ -219,6 +267,13 @@ import {
 
 parentPort!.on('message', async (req: ExtractRequest) => {
   try {
+    if (req.thumbnailOnly) {
+      const { html, url } = await fetchUrl(req.url, true)
+      const thumbnail = extractThumbnailFromPage(html, url)
+      parentPort!.postMessage({ reqId: req.reqId, thumbnail } satisfies ExtractResult)
+      return
+    }
+
     if (isYouTubeUrl(req.url)) {
       const videoId = extractYouTubeVideoId(req.url)
       if (videoId) {
@@ -235,7 +290,7 @@ parentPort!.on('message', async (req: ExtractRequest) => {
 
         let description = ''
         try {
-          const html = await fetchUrl(`https://www.youtube.com/watch?v=${videoId}`)
+          const { html } = await fetchUrl(`https://www.youtube.com/watch?v=${videoId}`)
           const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i) ||
                             html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']*)["']/i)
           if (descMatch && descMatch[1]) {
@@ -254,8 +309,8 @@ parentPort!.on('message', async (req: ExtractRequest) => {
       }
     }
 
-    const html = await fetchUrl(req.url)
-    const extracted = extractArticle(html, req.url)
+    const { html, url } = await fetchUrl(req.url)
+    const extracted = extractArticle(html, url)
     parentPort!.postMessage({ reqId: req.reqId, html: extracted } as ExtractResult)
   } catch (err) {
     parentPort!.postMessage({ reqId: req.reqId, error: String(err) } as ExtractResult)
