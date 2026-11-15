@@ -90,6 +90,30 @@ function CardTitle({
   )
 }
 
+function SettingsTabIntro({
+  icon: Icon,
+  title,
+  description,
+  accent
+}: {
+  icon: typeof Bell
+  title: string
+  description: string
+  accent: string
+}): JSX.Element {
+  return (
+    <header className="settings-tab-intro" style={{ ['--intro-accent' as string]: accent }}>
+      <span className="settings-tab-intro-icon" aria-hidden="true">
+        <Icon size={17} strokeWidth={2.1} />
+      </span>
+      <div className="settings-tab-intro-copy">
+        <h2 className="settings-tab-intro-title">{title}</h2>
+        <p className="settings-tab-intro-description">{description}</p>
+      </div>
+    </header>
+  )
+}
+
 function applySearchHighlight(ranges: Range[], index: number): void {
   const registry = CSS.highlights
   if (!registry) return
@@ -1099,6 +1123,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     { id: 'keyboard', label: t.settings.tabs.keyboard, Icon: Keyboard },
     { id: 'backupMaintenance', label: t.settings.tabs.backupMaintenance, Icon: Database }
   ]
+  const activeNavItem = navItems.find((item) => item.id === activeTab) ?? navItems[0]
 
   const themes: Array<{ id: AppSettings['theme']; label: string }> = [
     { id: 'dark', label: t.settings.general.themes.dark },
@@ -1214,6 +1239,13 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
         </aside>
 
         <div className="settings-content" ref={contentRef}>
+          <SettingsTabIntro
+            icon={activeNavItem.Icon}
+            title={activeNavItem.label}
+            description={t.settings.tabIntros[activeTab]}
+            accent={TAB_META[activeTab].accent}
+          />
+
           {activeTab === 'general' && (
             <>
               <div className="settings-card">
@@ -1876,7 +1908,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <CardTitle icon={Star} accent={TAB_META.filters.accent}>
                   {t.settings.filters.priorityTitle}
                 </CardTitle>
-                <p className="form-hint" style={{ marginTop: 0, marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
+                <p className="settings-card-hint" style={{ margin: '0 0 14px' }}>
                   {t.settings.filters.priorityDesc}
                 </p>
 
@@ -1929,7 +1961,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                 <CardTitle icon={Ban} accent={TAB_META.filters.accent}>
                   {t.settings.filters.muteTitle}
                 </CardTitle>
-                <p className="form-hint" style={{ marginTop: 0, marginBottom: 14, fontSize: 13, lineHeight: 1.5 }}>
+                <p className="settings-card-hint" style={{ margin: '0 0 14px' }}>
                   {t.settings.filters.muteDesc}
                 </p>
 
@@ -1998,7 +2030,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             <>
               {/* Card 1: General Notifications */}
               <div className="settings-card">
-                <CardTitle icon={Bell} accent={TAB_META.notifications.accent}>{t.settings.notifications.title}</CardTitle>
                 <label className="toggle" style={{ marginBottom: 14 }}>
                   <div
                     className={`toggle-track ${local.notifications.enabled ? 'on' : ''}`}
@@ -2395,9 +2426,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
           {activeTab === 'keyboard' && (
             <div className="settings-card">
-              <CardTitle icon={Keyboard} accent={TAB_META.keyboard.accent}>{t.settings.keyboard.title}</CardTitle>
-              <p className="settings-card-hint">{t.settings.keyboard.explanation}</p>
-
               {Object.entries(local.shortcuts).map(([key, shortcut]) => (
                 <div key={key} className="shortcut-row">
                   <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
@@ -2469,14 +2497,27 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                       {t.settings.keyboard.scopeGlobal}
                     </span>
                   ) : (
-                    <Tooltip label={shortcut.global ? t.settings.keyboard.scopeGlobalHint : t.settings.keyboard.scopeAppHint} placement="bottom">
+                    <Tooltip
+                      label={!shortcut.accelerator.trim()
+                        ? t.settings.keyboard.scopeRequiresShortcut
+                        : shortcut.global
+                          ? t.settings.keyboard.scopeGlobalHint
+                          : t.settings.keyboard.scopeAppHint}
+                      placement="bottom"
+                    >
                       <label
-                        className="toggle"
+                        className={`toggle${shortcut.accelerator.trim() ? '' : ' disabled'}`}
+                        aria-disabled={!shortcut.accelerator.trim()}
                         style={{ margin: 0 }}
                       >
-                        <div
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={shortcut.global}
+                          disabled={!shortcut.accelerator.trim()}
                           className={`toggle-track ${shortcut.global ? 'on' : ''}`}
                           onClick={() => {
+                            if (!shortcut.accelerator.trim()) return
                             const cur = localRef.current.shortcuts
                             const newShortcuts = { ...cur }
                             newShortcuts[key as keyof KeyboardShortcuts] = {
@@ -2487,7 +2528,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                           }}
                         >
                           <div className="toggle-thumb" />
-                        </div>
+                        </button>
                         <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'inline-block', width: 42, textAlign: 'left' }}>
                           {shortcut.global ? t.settings.keyboard.scopeGlobal : t.settings.keyboard.scopeApp}
                         </span>
@@ -2515,13 +2556,6 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
 
           {activeTab === 'backupMaintenance' && (
             <>
-              <div className="settings-card">
-                <CardTitle icon={Database} accent={TAB_META.backupMaintenance.accent}>
-                  {t.settings.tabs.backupMaintenance}
-                </CardTitle>
-                <p className="settings-card-hint">{t.settings.backupData.explanation}</p>
-              </div>
-
               <div className="settings-card">
                 <CardTitle icon={ShieldCheck} accent={TAB_META.backupMaintenance.accent}>
                   {t.settings.autoBackup.title}

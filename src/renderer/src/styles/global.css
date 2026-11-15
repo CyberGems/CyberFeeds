@@ -217,6 +217,12 @@ a {
   box-shadow: none !important;
 }
 
+[data-theme='grayscale'] .settings-tab-intro-icon {
+  color: var(--text-secondary) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
 [data-theme='grayscale'] .settings-card-title {
   color: var(--text-muted);
 }
@@ -3008,6 +3014,45 @@ mark.reader-search-match.reader-search-active {
   overflow-y: auto;
   padding: 18px 20px 24px;
 }
+.settings-tab-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin: 0 0 14px;
+  padding: 0 2px 14px;
+  border-bottom: 1px solid var(--border-muted);
+}
+.settings-tab-intro-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 9px;
+  color: color-mix(in srgb, var(--intro-accent, var(--accent)) 72%, var(--text-primary));
+  background: color-mix(in srgb, var(--intro-accent, var(--accent)) 8%, var(--bg-1));
+  border: 1px solid color-mix(in srgb, var(--intro-accent, var(--accent)) 24%, var(--border));
+}
+.settings-tab-intro-copy {
+  min-width: 0;
+  padding-top: 1px;
+}
+.settings-tab-intro-title {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+.settings-tab-intro-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
 .settings-card {
   background: color-mix(in srgb, var(--bg-2) 55%, transparent);
   border: 1px solid var(--border-muted);
@@ -3565,11 +3610,18 @@ input[type="radio"] {
   height: 24px;
   background: #5e6672;
   border: none;
+  padding: 0;
   border-radius: 20px;
   cursor: pointer;
+  appearance: none;
+  font: inherit;
   transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
   user-select: none;
+}
+.toggle-track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .toggle-track.on,
 .custom-switch.active {
@@ -3605,6 +3657,7 @@ input[type="radio"] {
 }
 .toggle.disabled {
   opacity: 0.45;
+  cursor: not-allowed;
 }
 .toggle.disabled .toggle-track,
 .custom-switch.disabled {

@@ -298,6 +298,14 @@ export const translations = {
         keyboard: 'Keyboard',
         backupMaintenance: 'Backup & Data'
       },
+      tabIntros: {
+        general: 'Set your language and fine-tune syncing, startup, search, and reading behavior.',
+        appearance: 'Choose a theme and layout, then adjust interface scale and text sizes.',
+        filters: 'Highlight the topics you care about and mute keywords that add noise.',
+        notifications: 'Control how desktop notifications look, where they appear, and how they behave.',
+        keyboard: 'Configure shortcuts for common actions and choose whether they work globally.',
+        backupMaintenance: 'Manage backups, feed lists, maintenance, and local data.'
+      },
       search: {
         placeholder: 'Search settings',
         clear: 'Clear search',
@@ -489,7 +497,6 @@ export const translations = {
         explanation: 'Fine-tune the sidebar, article list, and reader independently.'
       },
       backupData: {
-        explanation: 'Manage backups, feed lists, maintenance, and local data.',
         backupsSection: 'Backups',
         feedListsSection: 'Feed Lists',
         opmlExplanation: 'Import or export your feeds and folders as an OPML file.',
@@ -623,8 +630,6 @@ export const translations = {
       },
       keyboard: {
         title: 'Keyboard Shortcuts',
-        explanation:
-          'Customize keyboard shortcuts for tray menu actions. Global shortcuts work even when the app is minimized.',
         actions: {
           showHide: 'Show / Hide',
           notifications: 'Notifications',
@@ -642,6 +647,7 @@ export const translations = {
         scopeApp: 'App',
         scopeGlobalHint: 'Works even when CyberFeeds is minimized',
         scopeAppHint: 'Works only while CyberFeeds is focused',
+        scopeRequiresShortcut: 'Assign a shortcut before changing its scope',
         resetToDefaults: 'Reset to Defaults',
         save: 'Save',
         validation: {
@@ -1250,6 +1256,14 @@ export const translations = {
         keyboard: 'Teclado',
         backupMaintenance: 'Respaldo y Datos'
       },
+      tabIntros: {
+        general: 'Configura el idioma y ajusta la sincronización, el inicio, la búsqueda y la lectura.',
+        appearance: 'Elige un tema y una distribución, y ajusta la escala de interfaz y el tamaño del texto.',
+        filters: 'Destaca los temas que te interesan y silencia las palabras que generan ruido.',
+        notifications: 'Configura el aspecto, la posición y el comportamiento de las notificaciones del escritorio.',
+        keyboard: 'Configura atajos para las acciones frecuentes y decide si funcionan de forma global.',
+        backupMaintenance: 'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.'
+      },
       search: {
         placeholder: 'Buscar en ajustes',
         clear: 'Limpiar búsqueda',
@@ -1445,8 +1459,6 @@ export const translations = {
         explanation: 'Ajuste por separado la barra lateral, la lista de artículos y el lector.'
       },
       backupData: {
-        explanation:
-          'Administra copias de seguridad, listas de feeds, mantenimiento y datos locales.',
         backupsSection: 'Copias de seguridad',
         feedListsSection: 'Listas de feeds',
         opmlExplanation: 'Importa o exporta tus feeds y carpetas como un archivo OPML.',
@@ -1583,8 +1595,6 @@ export const translations = {
       },
       keyboard: {
         title: 'Atajos de teclado',
-        explanation:
-          'Personaliza los atajos de teclado para las acciones del menú de la bandeja. Los atajos globales funcionan incluso cuando la aplicación está minimizada.',
         actions: {
           showHide: 'Mostrar / Ocultar',
           notifications: 'Notificaciones',
@@ -1602,6 +1612,7 @@ export const translations = {
         scopeApp: 'App',
         scopeGlobalHint: 'Funciona incluso con CyberFeeds minimizado',
         scopeAppHint: 'Solo funciona con CyberFeeds en primer plano',
+        scopeRequiresShortcut: 'Asigna un atajo antes de cambiar su alcance',
         resetToDefaults: 'Restablecer valores predeterminados',
         save: 'Guardar',
         validation: {
