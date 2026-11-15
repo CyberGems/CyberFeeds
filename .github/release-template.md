@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-A first-run welcome wizard sets up language, theme and feeds in seconds. Scroll stability is rebuilt (no more duplicated or jumping articles), failed thumbnails show a clean placeholder, and the new-articles pill now applies everything in one go.
+Search notification history by title, source or content, and bring more thumbnails into article lists across Reddit and other feeds. Searches ignore accents and case, removed Reddit posts are filtered out, and refreshed controls make settings, tabs, menus and window closing feel clearer.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,34 +17,31 @@ A first-run welcome wizard sets up language, theme and feeds in seconds. Scroll 
 
 ### ✨ Key Features & Highlights
 
-- 🧙 **Welcome Wizard**:
-  - First launch with an empty library opens a three-step setup: language, theme with live preview, and your first feeds.
-  - Add feeds from curated suggestions (CyberFeeds releases, Reddit, YouTube, BBC News, GitHub Blog), any URL, or an OPML import.
-  - Skippable anytime with Esc; the wizard re-opens only for profiles that never completed it.
+- 🔎 **Search That Finds It Again**:
+  - Search notification history by article title, feed name, or content, with a result count and a clear no-results state.
+  - Article searches and filters now match regardless of accents or letter case, and bulk actions stay in sync with the filtered results.
+  - Focusing article search opens recent searches for quick selection.
 
-- 📜 **Rock-Solid Article List**:
-  - Duplicated entries that overlapped rows and flickered the strip are gone: pagination is now deterministic and the infinite-scroll merge is deduplicated.
-  - Failed thumbnails keep a fixed-height placeholder (muted image-off icon), ending the height swings while scrolling.
-  - The new-articles pill consolidates each fetch wave into a single count and applies everything in one go; scrolling back to the top manually applies the pending articles in place.
-  - The "more below" footer indicator is now a passive status line.
+- 🖼️ **More Reliable Article Thumbnails**:
+  - Missing images can be recovered from public article metadata, including when the feed and article use different domains.
+  - Reddit gallery and feed images provide more previews, and removed Reddit submissions no longer add noise to incoming items and notifications.
+  - Saved thumbnail URLs are decoded before display, and legacy HTTP image links are upgraded to HTTPS.
 
-- 🛡️ **Self-Recovery & Logging**:
-  - A black window after crashes or power cuts is handled automatically: the renderer reloads, first paint is watched, and recovery relaunches clear the GPU caches with a capped budget before showing a clear error.
-  - Unclean shutdowns proactively clear the GPU caches on the next start.
-  - Main-process activity now persists to a rotating logs/main.log, and uncaught renderer errors show a themed reload fallback.
+- 🧭 **Clearer Navigation and Controls**:
+  - Settings dropdowns use a consistent, theme-aware picker. The More menu only highlights its first item when opened for keyboard navigation.
+  - Article tabs have more room and reveal clipped titles with a quick marquee on hover.
+  - The close button has better contrast in the gray theme, closes with Alt+F4, and the close dialog's dismissal tooltip reads “Cancel”.
+  - Opening an article clears its unread indicator immediately.
 
-- 🖱️ **Press-and-Hold Tab Scrolling**:
-  - Holding the tab strip chevrons glides the tabs continuously; quick clicks keep the previous smooth jump.
-
-- 📰 **Refreshed Feed Suggestions**:
-  - BBC News (rich, image-bearing RSS) replaces Hacker News, and a single Reddit entry remains among the starter suggestions.
+- ✂️ **Consistent Text Editing**:
+  - Editable fields share a themed, bilingual context menu with undo, redo, cut, copy, paste, select all, and delete.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La estabilidad del scroll queda reconstruida (sin artículos duplicados ni saltos), las miniaturas rotas muestran un marcador limpio y el pill de novedades aplica todo de una sola vez.
+Busca el historial de notificaciones por título, fuente o contenido y recupera más miniaturas en listas de artículos de Reddit y otros feeds. Las búsquedas ignoran tildes y mayúsculas, se filtran publicaciones eliminadas de Reddit y los controles de configuración, pestañas, menús y cierre son más claros.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -52,27 +49,24 @@ Un asistente de bienvenida configura idioma, tema y fuentes en segundos. La esta
 
 ### ✨ Novedades destacadas
 
-- 🧙 **Asistente de bienvenida**:
-  - El primer arranque con la biblioteca vacía abre una configuración de tres pasos: idioma, tema con vista previa en vivo y tus primeras fuentes.
-  - Añade feeds desde sugerencias curadas (lanzamientos de CyberFeeds, Reddit, YouTube, BBC News, Blog de GitHub), cualquier URL o una importación OPML.
-  - Omitible en cualquier momento con Esc; el asistente solo reaparece en perfiles que no lo completaron.
+- 🔎 **Búsqueda para encontrarlo después**:
+  - Busca en el historial de notificaciones por título del artículo, nombre del feed o contenido, con conteo y estado claro cuando no hay resultados.
+  - Las búsquedas y filtros de artículos encuentran coincidencias sin importar tildes o mayúsculas, y las acciones en lote siguen sincronizadas con los resultados filtrados.
+  - Al enfocar la búsqueda de artículos, se abre el historial reciente para elegir con rapidez.
 
-- 📜 **Lista de artículos sólida**:
-  - Los duplicados que solapaban filas y hacían parpadear la lista desaparecieron: la paginación ahora es determinista y el scroll infinito fusiona sin repetir.
-  - Las miniaturas rotas conservan un contenedor de altura fija (icono discreto de imagen no disponible), acabando con los saltos de altura al scrollear.
-  - El pill de novedades consolida cada tanda en una sola cifra y aplica todo de una vez; volver arriba manualmente aplica lo pendiente en el sitio.
-  - El indicador "más abajo" del pie es ahora una línea de estado pasiva.
+- 🖼️ **Miniaturas más confiables**:
+  - Las imágenes faltantes se recuperan desde los metadatos públicos del artículo, incluso si el feed y la noticia usan dominios distintos.
+  - Las imágenes de galerías y feeds de Reddit aportan más vistas previas, y las publicaciones eliminadas por Reddit ya no generan ruido en los artículos y notificaciones entrantes.
+  - Las URL guardadas de miniaturas se decodifican antes de mostrarse y los enlaces HTTP antiguos se actualizan a HTTPS.
 
-- 🛡️ **Autorrecuperación y registro**:
-  - Una ventana en negro tras fallos o cortes de luz se maneja sola: el renderer se recarga, se vigila el primer pintado y las recauchutados de recuperación limpian las cachés de GPU con presupuesto acotado antes de avisar.
-  - Los apagados sucios limpian preventivamente las cachés de GPU en el siguiente arranque.
-  - La actividad del proceso principal persiste en logs/main.log rotativo, y los errores no capturados del renderer muestran un fallback con recarga.
+- 🧭 **Controles y navegación más claros**:
+  - Los desplegables de configuración usan un selector temático uniforme. El menú More solo resalta el primer elemento cuando se abre para navegar con el teclado.
+  - Las pestañas de artículos tienen más espacio y muestran los títulos recortados con un efecto marquee rápido al pasar el cursor.
+  - El botón de cierre tiene mejor contraste en el tema Gris, cierra con Alt+F4 y el tooltip para cerrar el diálogo dice «Cancel».
+  - Al abrir un artículo, su indicador de no leído desaparece de inmediato.
 
-- 🖱️ **Desplazamiento de pestañas manteniendo el click**:
-  - Mantener pulsados los chevrons de la barra desliza las pestañas de forma continua; el click rápido conserva el salto anterior.
-
-- 📰 **Sugerencias de feeds renovadas**:
-  - BBC News (RSS completo con imágenes) sustituye a Hacker News, y queda una sola entrada de Reddit entre las sugerencias iniciales.
+- ✂️ **Edición de texto consistente**:
+  - Los campos editables comparten un menú contextual bilingüe y temático con deshacer, rehacer, cortar, copiar, pegar, seleccionar todo y eliminar.
 
 ### ⚠️ Antes de instalar
 

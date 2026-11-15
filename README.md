@@ -95,7 +95,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 ### 📰 Feed Management
 - **Universal Feed Support**: RSS, Atom, and XML with automatic discovery
 - **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app or external browser playback and CDN thumbnails
-- **Reddit Integration**: Native subreddit and user feed support with fallback chain (RSS → JSON API)
+- **Reddit Integration**: Native subreddit and user feed support with RSS/API fallback, richer post image previews, and automatic filtering of removed posts
 - **OPML Import/Export**: Migrate your feeds with folder structure preserved
 - **Welcome Wizard**: Guided first-run setup: pick language and theme with live preview, then add your first feeds from suggestions, a custom URL, or OPML
 - **Feed Preview**: Preview feed content before subscribing
@@ -111,7 +111,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Star/Unstar**: Mark articles as favorites
 - **Read/Unread Tracking**: Know what you've read at a glance
 - **Soft Delete**: Move articles to trash with 30-day auto-purge
-- **Instant Search**: Search articles with instant or Enter-to-search modes
+- **Instant Search**: Search articles with instant or Enter-to-search modes; matching ignores accents and letter case
 - **Virtualized Lists & Incremental Rendering**: Smooth scrolling for large article libraries and progressive batch loading for high-volume notification panels
 - **Multiple Layouts**: Three-panel, two-panel, one-panel, and horizontal-split views
 
@@ -120,7 +120,7 @@ Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds 
 - **Custom Notification Window**: Built-in notifier with batching, action buttons, and scroll-aware pause protection
 - **Live Article Updates**: See newly fetched articles in a floating pill while keeping your place in the list
 - **Keyword Filtering**: Only get notified about topics that matter
-- **Notification History**: Configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
+- **Notification History**: Search past alerts by title, feed, or content; configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
 - **Snooze**: Pause notifications for a configurable duration
 - **Multi-Monitor Support**: Choose which display shows notifications
 - **Sound Alerts**: Custom notification sounds
@@ -295,7 +295,7 @@ npm run format         # Formatting
 | `Alt+M` / `F11` | Maximize / restore window | Application |
 | `Alt+F` / `F3` | Find text in current article | Article Reader |
 | `Ctrl+M` | Minimize window | Application |
-| `Ctrl+W` | Close window | Application |
+| `Alt+F4` | Close window | Application |
 | `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
 | `Escape` | Close panel or search bar | Application |
 

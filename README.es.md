@@ -95,7 +95,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 ### 📰 Gestión de feeds
 - **Soporte universal de feeds**: RSS, Atom y XML con descubrimiento automático
 - **Canales de YouTube**: suscripciones nativas a canales, handles (@name), URL de vídeo y listas de reproducción, con reproducción en la app o en el navegador externo y miniaturas de CDN
-- **Integración de Reddit**: soporte nativo de subreddits y feeds de usuario con cadena de respaldo (RSS → API JSON)
+- **Integración de Reddit**: soporte nativo de subreddits y feeds de usuario con respaldo RSS/API, mejores vistas previas de imágenes y filtrado automático de publicaciones eliminadas
 - **Importación/exportación OPML**: migra tus feeds con la estructura de carpetas conservada
 - **Asistente de bienvenida**: configuración guiada de primera ejecución: elige idioma y tema con vista previa en vivo y añade tus primeras fuentes desde sugerencias, una URL propia u OPML
 - **Vista previa de feed**: previsualiza el contenido del feed antes de suscribirte
@@ -111,7 +111,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Marcar/destacar**: marca artículos como favoritos
 - **Seguimiento de leído/no leído**: sabe de un vistazo qué has leído
 - **Eliminación suave**: mueve los artículos a la papelera con purga automática a los 30 días
-- **Búsqueda instantánea**: busca artículos con modos de búsqueda instantánea o al pulsar Intro
+- **Búsqueda instantánea**: busca artículos mientras escribes o al pulsar Intro; las coincidencias ignoran tildes y mayúsculas
 - **Listas virtualizadas y renderizado incremental**: desplazamiento suave en bibliotecas grandes de artículos y carga progresiva por lotes para paneles de notificaciones de gran volumen
 - **Múltiples disposiciones**: vistas de tres paneles, dos paneles, un panel y división horizontal
 
@@ -120,7 +120,7 @@ La mayoría de los lectores RSS son envoltorios web lentos o proyectos abandonad
 - **Ventana de notificación personalizada**: notificador integrado con agrupación, botones de acción y protección de pausa al desplazarse
 - **Actualizaciones en vivo**: ve los artículos recién obtenidos en una píldora flotante sin perder tu posición en la lista
 - **Filtrado por palabras clave**: recibe notificaciones solo de los temas que te importan
-- **Historial de notificaciones**: límite de historial configurable, renderizado progresivo por lotes para más de 1.000 elementos, insignias adaptativas con el acento del tema y avisos de límite, y elementos recientes en la bandeja
+- **Historial de notificaciones**: busca avisos anteriores por título, feed o contenido; límite configurable, renderizado progresivo por lotes para más de 1.000 elementos, insignias adaptativas con el acento del tema y avisos recientes en la bandeja
 - **Pospuesto (Snooze)**: pausa las notificaciones durante un tiempo configurable
 - **Soporte multi-monitor**: elige qué pantalla muestra las notificaciones
 - **Alertas de sonido**: sonidos de notificación personalizados
@@ -295,7 +295,7 @@ npm run format         # Formato
 | `Alt+M` / `F11` | Maximizar / restaurar ventana | Aplicación |
 | `Alt+F` / `F3` | Buscar texto en el artículo actual | Lector de artículos |
 | `Ctrl+M` | Minimizar ventana | Aplicación |
-| `Ctrl+W` | Cerrar ventana | Aplicación |
+| `Alt+F4` | Cerrar ventana | Aplicación |
 | `Intro` / `Mayús+Intro` | Coincidencia siguiente / anterior | Barra de búsqueda |
 | `Escape` | Cierra el panel o la barra de búsqueda | Aplicación |
 

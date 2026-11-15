@@ -2,6 +2,32 @@
 
 All notable changes to CyberFeeds are documented here.
 
+## [1.31.0] - 2026-11-14
+
+### 🇺🇸 English
+
+- Notification history now has its own search across article titles, feed names, and content, with a result count and a clear empty state.
+- Search and filter matching now ignores accents and letter case, and bulk actions stay aligned with the filtered article results.
+- Removed Reddit submissions are filtered from incoming feed items and notifications. Reddit gallery and feed images now fill more missing thumbnails; saved image URLs are decoded before rendering.
+- Article lists can recover missing thumbnails from public article metadata, including feeds hosted on a different domain from the linked story. Legacy HTTP image links are upgraded to HTTPS.
+- Opening an article clears its unread indicator immediately. Focusing article search opens recent searches for quick selection.
+- Settings dropdowns use the app's themed picker style. The More menu no longer highlights its first item on mouse open, while keyboard opening keeps keyboard navigation ready.
+- Article tabs have more room and reveal clipped titles with a quick hover marquee.
+- The close button has better contrast in the gray theme, uses Alt+F4, and the close dialog's dismissal tooltip says “Cancel”.
+- Editable fields share a themed, bilingual context menu with undo, redo, cut, copy, paste, select all, and delete.
+
+### 🇪🇸 Español
+
+- El historial de notificaciones ahora tiene su propio buscador por título, nombre del feed y contenido, con conteo de resultados y un estado vacío claro.
+- Las búsquedas y los filtros ignoran tildes y mayúsculas, y las acciones en lote se mantienen sincronizadas con los artículos filtrados.
+- Las publicaciones eliminadas por Reddit se filtran de los nuevos artículos y notificaciones. Las imágenes de galerías y feeds de Reddit completan más miniaturas; las URL guardadas se decodifican antes de mostrarse.
+- Las listas pueden recuperar miniaturas faltantes desde los metadatos públicos del artículo, incluso si el feed y la noticia usan dominios distintos. Los enlaces de imagen HTTP antiguos se actualizan a HTTPS.
+- Al abrir un artículo, su indicador de no leído desaparece de inmediato. Al enfocar la búsqueda de artículos, se abre el historial reciente para elegir con rapidez.
+- Los desplegables de configuración usan el estilo temático de la app. El menú More ya no resalta su primer elemento al abrirse con el ratón, pero conserva la navegación por teclado al abrirse con atajo.
+- Las pestañas de artículos tienen más espacio y muestran títulos recortados con un efecto marquee rápido al pasar el cursor.
+- El botón de cierre tiene mejor contraste en el tema Gris, usa Alt+F4 y el tooltip para cerrar el diálogo dice «Cancel».
+- Los campos editables comparten un menú contextual bilingüe y temático con deshacer, rehacer, cortar, copiar, pegar, seleccionar todo y eliminar.
+
 ## [1.30.0] - 2026-11-03
 
 ### 🇺🇸 English
