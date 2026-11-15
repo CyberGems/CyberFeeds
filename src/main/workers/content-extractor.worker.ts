@@ -6,7 +6,7 @@ import { parentPort } from 'worker_threads'
 import { parseHTML } from 'linkedom'
 import https from 'https'
 import http from 'http'
-import { isThumbnailPageForSource } from '../thumbnail-source'
+import { isPublicThumbnailPage, lookupThumbnailHost } from '../thumbnail-source'
 
 interface ExtractRequest {
   reqId: string
@@ -27,6 +27,10 @@ const MAX_HEAD_SIZE = 256 * 1024
 
 function fetchUrl(url: string, thumbnailOnly = false, redirects = 0): Promise<{ html: string; url: string }> {
   return new Promise((resolve, reject) => {
+    if (thumbnailOnly && !isPublicThumbnailPage(new URL(url))) {
+      reject(new Error('Unsupported thumbnail page URL'))
+      return
+    }
     const client = url.startsWith('https') ? https : http
     const req = client.get(url, {
       headers: {
@@ -36,13 +40,13 @@ function fetchUrl(url: string, thumbnailOnly = false, redirects = 0): Promise<{ 
         'Accept-Encoding': 'identity'
       },
       timeout: TIMEOUT_MS,
-      signal: thumbnailOnly ? AbortSignal.timeout(4500) : undefined
+      ...(thumbnailOnly ? { signal: AbortSignal.timeout(4500), agent: false, lookup: lookupThumbnailHost } : {})
     }, (res) => {
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         const next = URL.parse(res.headers.location, url)
         res.destroy()
         if (!next || !['https:', 'http:'].includes(next.protocol) || redirects >= 3 ||
-          (thumbnailOnly && !isThumbnailPageForSource(next, new URL(url)))) {
+          (thumbnailOnly && !isPublicThumbnailPage(next))) {
           reject(new Error('Unsupported article redirect'))
           return
         }

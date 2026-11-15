@@ -26,7 +26,7 @@ import {
   buildYouTubeArticleContent
 } from '../shared/youtube'
 import { robustParse } from './feed-parse'
-import { isThumbnailPageForSource } from './thumbnail-source'
+import { isPublicThumbnailPage } from './thumbnail-source'
 import type { Feed, Folder } from './types'
 
 /**
@@ -176,9 +176,7 @@ async function resolveArticleThumbnail(id: string): Promise<{ id: string; thumbn
   if (article.thumbnail) return { id, thumbnail: article.thumbnail }
 
   const url = URL.parse(article.link)
-  const feed = db.getFeedById(article.feedId)
-  const feedUrl = feed ? URL.parse(feed.url) : null
-  if (!url || !isThumbnailPageForSource(url, feedUrl)) return
+  if (!url || !isPublicThumbnailPage(url)) return
 
   const { thumbnail } = await extractContent(url.href, true)
   if (thumbnail && db.fillArticleThumbnail(id, thumbnail)) return { id, thumbnail }
