@@ -66,7 +66,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
   const { unreadCounts, feeds } = useFeedsStore()
   const [maximized, setMaximized] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [menuKeyboardIndex, setMenuKeyboardIndex] = useState(0)
+  const [menuKeyboardIndex, setMenuKeyboardIndex] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
 
@@ -201,8 +201,8 @@ const TopBar = memo(function TopBar(): JSX.Element {
     const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement)
     const baseIndex = currentIndex < 0 ? menuKeyboardIndex : currentIndex
     let nextIndex: number | null = null
-    if (key === 'ArrowDown') nextIndex = (baseIndex + 1) % items.length
-    if (key === 'ArrowUp') nextIndex = (baseIndex - 1 + items.length) % items.length
+    if (key === 'ArrowDown') nextIndex = baseIndex === null ? 0 : baseIndex + 1
+    if (key === 'ArrowUp') nextIndex = baseIndex === null ? items.length - 1 : baseIndex - 1
     if (key === 'Home') nextIndex = 0
     if (key === 'End') nextIndex = items.length - 1
 
@@ -216,9 +216,8 @@ const TopBar = memo(function TopBar(): JSX.Element {
   }, [menuOpen, setTopbarMenuOpen])
 
   useLayoutEffect(() => {
-    if (!menuOpen) return
-    focusMenuItem(0)
-  }, [focusMenuItem, menuOpen])
+    if (menuOpen && menuKeyboardIndex !== null) getMenuItems()[menuKeyboardIndex]?.focus()
+  }, [getMenuItems, menuKeyboardIndex, menuOpen])
 
   useEffect(() => {
     window.api.isMaximized().then(setMaximized)
@@ -258,7 +257,7 @@ const TopBar = memo(function TopBar(): JSX.Element {
         return
       }
 
-      if (e.key === 'Enter' || e.key === ' ') {
+      if (menuKeyboardIndex !== null && (e.key === 'Enter' || e.key === ' ')) {
         const item = getMenuItems()[menuKeyboardIndex]
         if (!item) return
         e.preventDefault()
@@ -442,13 +441,14 @@ const TopBar = memo(function TopBar(): JSX.Element {
           <button
             ref={menuButtonRef}
             className={`btn btn-ghost btn-icon no-drag ${menuOpen ? 'active' : ''}`}
-            onClick={() => {
+            onClick={(e) => {
               const nextOpen = !menuOpen
               setTopbarMenuOpen(nextOpen)
-              setMenuKeyboardIndex(0)
+              setMenuKeyboardIndex(e.detail === 0 ? 0 : null)
               setMenuOpen(nextOpen)
             }}
-            aria-haspopup="true"
+            aria-label={t.topBar.more}
+            aria-haspopup="menu"
             aria-expanded={menuOpen}
           >
             <MoreHorizontal size={15} />
@@ -460,7 +460,6 @@ const TopBar = memo(function TopBar(): JSX.Element {
             <button
               className={`topbar-menu-item donate${menuKeyboardIndex === 0 ? ' keyboard-active' : ''}`}
               role="menuitem"
-              autoFocus
               onClick={() => {
                 setMenuOpen(false)
                 window.api.openExternal(DONATE_URL)

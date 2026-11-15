@@ -567,6 +567,7 @@ export default function App(): JSX.Element {
       }
 
       if (e.key === 'Escape') {
+        if (useUIStore.getState().topbarMenuOpen) return
         if (e.target instanceof Element && e.target.closest('.form-select:open')) return
         if (activePanel) {
           if (activePanel === 'settings') {
