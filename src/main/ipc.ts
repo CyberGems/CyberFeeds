@@ -14,6 +14,7 @@ import { rebuildTrayMenu, rebuildGlobalShortcuts, refreshTrayTooltip } from './t
 import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
 import { translations } from '../shared/translations'
 import { DEFAULT_SETTINGS } from '../shared/types'
+import { textEditCommands, type TextEditCommand } from '../shared/text-edit'
 import { isRedditSourceUrl, normalizeFeedUrl } from '../shared/reddit'
 import {
   isYouTubeUrl,
@@ -1014,19 +1015,11 @@ export function registerIpc(): void {
     return undefined
   }
 
-  ipcMain.handle('showInputContextMenu', () => {
-    const lang = db.getSettings().language || 'en'
-    const t = translations[lang].mainProcess.webviewCtx
-    const template: MenuItemConstructorOptions[] = [
-      { role: 'cut', label: t.cut, icon: getMenuIcon('cut') },
-      { role: 'copy', label: t.copy, icon: getMenuIcon('copy') },
-      { role: 'paste', label: t.paste, icon: getMenuIcon('paste') },
-      { role: 'delete', label: t.delete, icon: getMenuIcon('delete') },
-      { type: 'separator' },
-      { role: 'selectAll', label: t.selectAll, icon: getMenuIcon('select-all') }
-    ]
-    const menu = Menu.buildFromTemplate(template)
-    menu.popup()
+  ipcMain.handle('textEdit:hasClipboardText', () => clipboard.readText().length > 0)
+  ipcMain.on('textEdit:command', (event, command: TextEditCommand) => {
+    if (command !== 'undo' && command !== 'redo' && textEditCommands.includes(command)) {
+      event.sender[command]()
+    }
   })
 
   ipcMain.handle('showReadOnlyContextMenu', (event, linkUrl?: string, selectedText?: string, imageUrl?: string, titleText?: string) => {

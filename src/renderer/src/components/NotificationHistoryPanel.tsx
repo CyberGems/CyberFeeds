@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo, useCallback, useRef, memo } from 'react'
-import { X, Bell, Trash2, ExternalLink, Check, Eye, CheckCheck } from 'lucide-react'
+import { X, Bell, Trash2, ExternalLink, Check, Eye, CheckCheck, Search } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useTabsStore } from '../store/tabs.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useArticlesStore } from '../store/articles.store'
 import type { NotificationHistoryItem } from '../types'
 import { getThumbnailUrl } from '@shared/thumbnail-url'
+import { normalizeSearchText } from '@shared/search-text'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 
@@ -207,6 +208,9 @@ export default function NotificationHistoryPanel(): JSX.Element {
   const { markRead } = useArticlesStore()
   const [history, setHistory] = useState<NotificationHistoryItem[]>([])
   const [lastCheckedTime, setLastCheckedTime] = useState(0)
+  const [search, setSearch] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
   const { t, language } = useTranslation()
 
   const handleSelectArticle = useCallback((id: string) => {
@@ -233,22 +237,11 @@ export default function NotificationHistoryPanel(): JSX.Element {
     prevLenRef.current = history.length
   }, [history.length])
 
-  // IntersectionObserver to progressively load more items
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    if (!sentinel) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((prev) => prev + RENDER_BATCH)
-        }
-      },
-      { rootMargin: '200px' }
-    )
-    observer.observe(sentinel)
-    return () => observer.disconnect()
-  }, [history.length > 0]) // re-attach when items appear/disappear
+  const updateSearch = (value: string): void => {
+    setSearch(value)
+    setVisibleCount(RENDER_BATCH)
+    if (bodyRef.current) bodyRef.current.scrollTop = 0
+  }
 
   // ── Load initial data ───────────────────────────────────────────────────
   useEffect(() => {
@@ -342,12 +335,36 @@ export default function NotificationHistoryPanel(): JSX.Element {
   const historyLimit = settings.notifications?.historyLimit ?? 1000
   const isLimitReached = historyLimit > 0 && history.length >= historyLimit
 
+  const query = normalizeSearchText(search.trim())
+  const { matchingNew, matchingSeen } = useMemo(() => {
+    if (!query) return { matchingNew: newNotifications, matchingSeen: seenNotifications }
+    const terms = query.split(/\s+/)
+    const matches = (item: NotificationHistoryItem): boolean => {
+      const text = normalizeSearchText([item.title, item.feedName, item.body].join(' '))
+      return terms.every((term) => text.includes(term))
+    }
+    return {
+      matchingNew: newNotifications.filter(matches),
+      matchingSeen: seenNotifications.filter(matches)
+    }
+  }, [query, newNotifications, seenNotifications])
+
   // ── Compute the visible slice across new + seen ─────────────────────────
-  const visibleNew = newNotifications.slice(0, visibleCount)
-  const remainingSlots = Math.max(0, visibleCount - newNotifications.length)
-  const visibleSeen = remainingSlots > 0 ? seenNotifications.slice(0, remainingSlots) : []
-  const totalItems = newNotifications.length + seenNotifications.length
+  const visibleNew = matchingNew.slice(0, visibleCount)
+  const remainingSlots = Math.max(0, visibleCount - matchingNew.length)
+  const visibleSeen = matchingSeen.slice(0, remainingSlots)
+  const totalItems = matchingNew.length + matchingSeen.length
   const hasMore = visibleCount < totalItems
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!hasMore || !sentinel) return
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) setVisibleCount((count) => count + RENDER_BATCH)
+    }, { root: bodyRef.current, rootMargin: '200px' })
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, query])
 
   // Stable callback refs for NotifCard
   const openBehavior = settings.notifications.openBehavior
@@ -415,7 +432,42 @@ export default function NotificationHistoryPanel(): JSX.Element {
           <X size={15} />
         </button>
       </div>
-      <div className="panel-body">
+      <div className="notification-history-search">
+        <Search size={14} aria-hidden="true" />
+        <input
+          ref={searchRef}
+          className="search-input"
+          role="searchbox"
+          data-notification-search
+          value={search}
+          onChange={(event) => updateSearch(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape' && search) updateSearch('')
+          }}
+          aria-label={t.notificationHistory.search}
+          placeholder={t.notificationHistory.search}
+          aria-controls="notification-history-results"
+        />
+        {search && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon"
+            aria-label={t.articleViewer.clearSearch}
+            onClick={() => {
+              updateSearch('')
+              searchRef.current?.focus()
+            }}
+          >
+            <X size={13} />
+          </button>
+        )}
+        <span className="notification-history-result-count" role="status">
+          {query && (totalItems === 1
+            ? t.notificationHistory.oneResult
+            : t.notificationHistory.results.replace('{count}', totalItems.toLocaleString(language)))}
+        </span>
+      </div>
+      <div className="panel-body" id="notification-history-results" ref={bodyRef}>
         {isLimitReached && (
           <div
             style={{
@@ -438,9 +490,9 @@ export default function NotificationHistoryPanel(): JSX.Element {
             </span>
           </div>
         )}
-        {history.length === 0 ? (
+        {totalItems === 0 ? (
           <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>
-            {t.notificationHistory.empty}
+            {query ? t.notificationHistory.noResults : t.notificationHistory.empty}
           </div>
         ) : (
           <>

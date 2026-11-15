@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webFrame } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { NotificationHistoryItem } from '../shared/types'
+import type { TextEditCommand } from '../shared/text-edit'
 
 type NotificationBatchPayload = {
   items: NotificationHistoryItem[]
@@ -133,7 +134,8 @@ const api = {
     ipcRenderer.invoke('autoBackup:restore', filePath) as Promise<{ ok: boolean; error?: string }>,
   deleteAutoBackup: (filePath: string) =>
     ipcRenderer.invoke('autoBackup:delete', filePath) as Promise<{ ok: boolean; error?: string }>,
-  showInputContextMenu: () => ipcRenderer.invoke('showInputContextMenu'),
+  hasClipboardText: (): Promise<boolean> => ipcRenderer.invoke('textEdit:hasClipboardText'),
+  runTextEdit: (command: TextEditCommand) => ipcRenderer.send('textEdit:command', command),
   showReadOnlyContextMenu: (
     linkUrl?: string,
     selectedText?: string,

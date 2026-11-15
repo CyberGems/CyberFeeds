@@ -2468,6 +2468,26 @@ mark.reader-search-match.reader-search-active {
   overflow-y: auto;
   padding: 16px;
 }
+.notification-history-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-muted);
+  color: var(--text-secondary);
+}
+.notification-history-search > svg {
+  flex-shrink: 0;
+}
+.notification-history-search .search-input {
+  min-width: 0;
+  flex: 1;
+}
+.notification-history-result-count:not(:empty) {
+  font-size: 11px;
+  white-space: nowrap;
+}
 .panel-section {
   margin-bottom: 24px;
 }
@@ -4516,6 +4536,28 @@ input[type="radio"] {
 }
 .ctx-item:hover svg {
   color: var(--accent);
+}
+.text-context-menu {
+  z-index: 21000;
+  box-shadow: var(--shadow-md);
+}
+.text-context-menu .ctx-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: start;
+}
+.text-context-menu .ctx-item:enabled:hover,
+.text-context-menu .ctx-item.is-active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+.text-context-menu .ctx-item:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+.text-context-menu .ctx-item:disabled svg {
+  color: inherit;
 }
 .ctx-item.danger svg {
   color: var(--red);

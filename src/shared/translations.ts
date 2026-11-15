@@ -848,6 +848,10 @@ export const translations = {
       clearAll: 'Clear all',
       markAllSeen: 'Mark all as seen',
       empty: 'No notifications',
+      search: 'Search notifications',
+      oneResult: '1 result',
+      results: '{count} results',
+      noResults: 'No notifications match your search.',
       alreadySeen: 'Already Seen',
       limitReached: 'Limit reached',
       limitNotice:
@@ -1804,6 +1808,10 @@ export const translations = {
       clearAll: 'Limpiar todo',
       markAllSeen: 'Marcar todas como vistas',
       empty: 'Sin notificaciones',
+      search: 'Buscar notificaciones',
+      oneResult: '1 resultado',
+      results: '{count} resultados',
+      noResults: 'Ninguna notificación coincide con tu búsqueda.',
       alreadySeen: 'Ya vistas',
       limitReached: 'Límite alcanzado',
       limitNotice:

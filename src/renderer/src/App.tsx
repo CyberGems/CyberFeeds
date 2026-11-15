@@ -27,6 +27,7 @@ import DoctorPanel from './components/DoctorPanel'
 import CloseDialog from './components/CloseDialog'
 import OnboardingWizard from './components/OnboardingWizard'
 import Tooltip from './components/Tooltip'
+import TextContextMenu from './components/TextContextMenu'
 import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
 import { CleanupBanner } from './components/CleanupBanner'
 import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
@@ -442,28 +443,6 @@ export default function App(): JSX.Element {
     return () => unsub?.()
   }, [])
 
-  // Native text context menu for editable fields (modals, settings, search, etc.)
-  useEffect(() => {
-    const isEditableTextField = (target: EventTarget | null): boolean => {
-      if (!(target instanceof Element)) return false
-      const el = target.closest('input, textarea') as HTMLInputElement | HTMLTextAreaElement | null
-      if (!el || el.disabled || el.readOnly) return false
-      if (el instanceof HTMLTextAreaElement) return true
-      const type = (el.type || 'text').toLowerCase()
-      return ['text', 'search', 'url', 'email', 'password', 'tel', 'number'].includes(type)
-    }
-
-    const onContextMenu = (e: MouseEvent): void => {
-      if (!isEditableTextField(e.target)) return
-      e.preventDefault()
-      e.stopPropagation()
-      window.api.showInputContextMenu()
-    }
-
-    document.addEventListener('contextmenu', onContextMenu, true)
-    return () => document.removeEventListener('contextmenu', onContextMenu, true)
-  }, [])
-
   // Keyboard shortcuts
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
@@ -528,14 +507,16 @@ export default function App(): JSX.Element {
       }
 
       if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
-        if (activePanel) return
+        if (activePanel && activePanel !== 'history') return
         e.preventDefault()
         e.stopPropagation()
-        const searchInput = document.querySelector<HTMLInputElement>('input[data-article-search="true"]')
+        const searchInput = document.querySelector<HTMLInputElement>(
+          activePanel === 'history' ? '[data-notification-search]' : 'input[data-article-search="true"]'
+        )
         if (searchInput) {
           searchInput.focus()
           searchInput.select()
-          window.dispatchEvent(new Event('cyberfeeds:open-search-history'))
+          if (!activePanel) window.dispatchEvent(new Event('cyberfeeds:open-search-history'))
         }
         return
       }
@@ -571,8 +552,9 @@ export default function App(): JSX.Element {
       }
 
       if (e.key === 'Escape') {
-        if (useUIStore.getState().topbarMenuOpen) return
+        if (useUIStore.getState().topbarMenuOpen || document.querySelector('[data-text-context-menu]')) return
         if (e.target instanceof Element && e.target.closest('.form-select:open, [data-article-search-area]')) return
+        if (e.target instanceof HTMLInputElement && e.target.hasAttribute('data-notification-search') && e.target.value) return
         if (activePanel) {
           if (activePanel === 'settings') {
             // Offer the Escape to the settings search first: while it has a
@@ -743,6 +725,7 @@ export default function App(): JSX.Element {
       )}
       {/* Close Window Confirmation Dialog */}
       <CloseDialog isOpen={showCloseDialog} onClose={() => setShowCloseDialog(false)} />
+      <TextContextMenu />
     </div>
   )
 }
