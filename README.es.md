@@ -16,7 +16,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Licencia-GPL--3.0-1F2428.svg?style=flat-square&color=334155" alt="Licencia" />&nbsp;
   <img src="https://img.shields.io/badge/Plataforma-Windows_10%2F11-1F2428.svg?style=flat-square&color=334155" alt="Plataforma" />&nbsp;
-  <img src="https://img.shields.io/badge/Electron-34-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=334155" alt="Electron" />&nbsp;
+  <img src="https://img.shields.io/badge/Electron-42-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=334155" alt="Electron" />&nbsp;
   <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentaci%C3%B3n-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=334155" alt="Wiki" /></a>&nbsp;
   <a href="https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/Notas_de_la_versi%C3%B3n-475569?style=flat-square" alt="Notas de la versión" /></a>
 </p>
@@ -205,7 +205,7 @@ Consulta [¿Cómo se usa CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wi
 ## 🛠️ Stack tecnológico y arquitectura
 
 - **Plataforma:** Windows (objetivo principal), macOS, Linux
-- **Framework:** Electron 34 + React 19 + TypeScript
+- **Framework:** Electron 42 + React 19 + TypeScript
 - **Build:** electron-vite 5 (Vite 6)
 - **Estado:** Zustand 5
 - **Base de datos:** better-sqlite3 (modo WAL)
