@@ -404,6 +404,12 @@ function buildVideoClause(prefix: string = ''): { sql: string; params: string[] 
   }
 }
 
+function literalLikeTerm(text: string): string {
+  return `%${text.replace(/[\\%_]/g, '\\$&')}%`
+}
+
+const LIKE_LITERAL = "LIKE ? ESCAPE '\\'"
+
 function buildSearchClause(search: string): { sql: string; params: string[] } {
   const trimmed = search.trim()
   if (!trimmed) return { sql: '', params: [] }
@@ -422,8 +428,8 @@ function buildSearchClause(search: string): { sql: string; params: string[] } {
   const params: string[] = []
 
   for (const token of tokens) {
-    clauses.push('(a.title LIKE ? OR a.snippet LIKE ? OR a.content LIKE ? OR a.author LIKE ? OR f.title LIKE ?)')
-    const term = `%${token}%`
+    clauses.push(`(a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL} OR a.content ${LIKE_LITERAL} OR a.author ${LIKE_LITERAL} OR f.title ${LIKE_LITERAL})`)
+    const term = literalLikeTerm(token)
     params.push(term, term, term, term, term)
   }
 
@@ -433,90 +439,9 @@ function buildSearchClause(search: string): { sql: string; params: string[] } {
   }
 }
 
-export function getArticles(query: ArticleQuery = {}): Article[] {
-  const {
-    feedId,
-    unreadOnly,
-    readOnly,
-    starredOnly,
-    trashOnly,
-    search,
-    timeRange,
-    hasVideo,
-    priorityKeywords,
-    muteKeywords,
-    limit = 100,
-    offset = 0
-  } = query
-  let sql = `
-    SELECT a.*, f.title as feedTitle, f.icon as feedIcon
-    FROM articles a
-    LEFT JOIN feeds f ON a.feedId = f.id
-    WHERE 1=1
-  `
-  const params: (string | number)[] = []
+const ARTICLE_FILTER_SOURCE = 'FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1'
 
-  sql += trashOnly ? ' AND a.deletedAt IS NOT NULL' : ' AND a.deletedAt IS NULL'
-  if (feedId) { sql += ' AND a.feedId = ?'; params.push(feedId) }
-  if (unreadOnly) { sql += ' AND a.read = 0' }
-  if (readOnly) { sql += ' AND a.read = 1' }
-  if (starredOnly) { sql += ' AND a.starred = 1' }
-  if (search) {
-    const searchClause = buildSearchClause(search)
-    sql += searchClause.sql
-    params.push(...searchClause.params)
-  }
-
-  if (timeRange === 'today') {
-    const startOfToday = new Date()
-    startOfToday.setHours(0, 0, 0, 0)
-    sql += ' AND a.pubDate >= ?'
-    params.push(startOfToday.getTime())
-  } else if (timeRange === '24h') {
-    sql += ' AND a.pubDate >= ?'
-    params.push(Date.now() - 86400000)
-  } else if (timeRange === 'week') {
-    sql += ' AND a.pubDate >= ?'
-    params.push(Date.now() - 7 * 86400000)
-  }
-
-  if (hasVideo) {
-    sql += ' AND a.hasVideo = 1'
-  }
-
-  if (priorityKeywords && priorityKeywords.length > 0) {
-    const validPriority = priorityKeywords.map((k) => k.trim()).filter(Boolean)
-    if (validPriority.length > 0) {
-      const orClauses = validPriority.map(() => '(a.title LIKE ? OR a.snippet LIKE ?)').join(' OR ')
-      sql += ` AND (${orClauses})`
-      for (const kw of validPriority) {
-        const term = `%${kw}%`
-        params.push(term, term)
-      }
-    }
-  }
-
-  if (muteKeywords && muteKeywords.length > 0) {
-    const validMute = muteKeywords.map((k) => k.trim()).filter(Boolean)
-    if (validMute.length > 0) {
-      for (const kw of validMute) {
-        sql += ' AND NOT (a.title LIKE ? OR a.snippet LIKE ?)'
-        const term = `%${kw}%`
-        params.push(term, term)
-      }
-    }
-  }
-
-  // The id tiebreaker keeps pagination deterministic when articles share a
-  // pubDate: without it, LIMIT/OFFSET pages can repeat or skip rows across
-  // queries and the article list renders duplicated entries.
-  sql += ' ORDER BY a.pubDate DESC, a.id DESC LIMIT ? OFFSET ?'
-  params.push(limit, offset)
-
-  return db.prepare(sql).all(...params) as Article[]
-}
-
-export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = {}): number {
+function buildArticleFilters(query: ArticleQuery): { sql: string; params: (string | number)[] } {
   const {
     feedId,
     unreadOnly,
@@ -529,8 +454,9 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
     priorityKeywords,
     muteKeywords
   } = query
-  let sql = 'SELECT COUNT(*) as c FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1'
+  let sql = ''
   const params: (string | number)[] = []
+
   sql += trashOnly ? ' AND a.deletedAt IS NOT NULL' : ' AND a.deletedAt IS NULL'
   if (feedId) { sql += ' AND a.feedId = ?'; params.push(feedId) }
   if (unreadOnly) { sql += ' AND a.read = 0' }
@@ -562,10 +488,10 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
   if (priorityKeywords && priorityKeywords.length > 0) {
     const validPriority = priorityKeywords.map((k) => k.trim()).filter(Boolean)
     if (validPriority.length > 0) {
-      const orClauses = validPriority.map(() => '(a.title LIKE ? OR a.snippet LIKE ?)').join(' OR ')
+      const orClauses = validPriority.map(() => `(a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL})`).join(' OR ')
       sql += ` AND (${orClauses})`
       for (const kw of validPriority) {
-        const term = `%${kw}%`
+        const term = literalLikeTerm(kw)
         params.push(term, term)
       }
     }
@@ -575,14 +501,30 @@ export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = 
     const validMute = muteKeywords.map((k) => k.trim()).filter(Boolean)
     if (validMute.length > 0) {
       for (const kw of validMute) {
-        sql += ' AND NOT (a.title LIKE ? OR a.snippet LIKE ?)'
-        const term = `%${kw}%`
+        sql += ` AND NOT (a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL})`
+        const term = literalLikeTerm(kw)
         params.push(term, term)
       }
     }
   }
 
-  return ((db.prepare(sql).get(...params) as { c: number }).c)
+  return { sql, params }
+}
+
+export function getArticles(query: ArticleQuery = {}): Article[] {
+  const { limit = 100, offset = 0 } = query
+  const filters = buildArticleFilters(query)
+  // The id tiebreaker keeps pagination deterministic when articles share a pubDate.
+  const sql = `SELECT a.*, f.title as feedTitle, f.icon as feedIcon
+    ${ARTICLE_FILTER_SOURCE}${filters.sql}
+    ORDER BY a.pubDate DESC, a.id DESC LIMIT ? OFFSET ?`
+  return db.prepare(sql).all(...filters.params, limit, offset) as Article[]
+}
+
+export function getArticleCount(query: Omit<ArticleQuery, 'limit' | 'offset'> = {}): number {
+  const filters = buildArticleFilters(query)
+  const sql = `SELECT COUNT(*) as c ${ARTICLE_FILTER_SOURCE}${filters.sql}`
+  return (db.prepare(sql).get(...filters.params) as { c: number }).c
 }
 
 export interface FeedArticleCounts {
@@ -725,11 +667,11 @@ export function markAllRead(feedId?: string): void {
   }
 }
 
-export function markAllFilteredRead(starredOnly = false): void {
-  const sql = starredOnly
-    ? 'UPDATE articles SET read = 1 WHERE deletedAt IS NULL AND starred = 1'
-    : 'UPDATE articles SET read = 1 WHERE deletedAt IS NULL'
-  db.prepare(sql).run()
+export function markAllFilteredRead(query: ArticleQuery | boolean = false): void {
+  const filters = buildArticleFilters(typeof query === 'boolean' ? { starredOnly: query } : query)
+  const sql = `UPDATE articles SET read = 1
+    WHERE id IN (SELECT a.id ${ARTICLE_FILTER_SOURCE}${filters.sql})`
+  db.prepare(sql).run(...filters.params)
 }
 
 export function deleteAllActiveArticles(starredOnly = false): void {
@@ -740,25 +682,10 @@ export function deleteAllActiveArticles(starredOnly = false): void {
 }
 
 export function deleteAllFilteredArticles(query: ArticleQuery = {}): void {
-  const { feedId, unreadOnly, readOnly, starredOnly, trashOnly, search } = query
-  let sql = 'UPDATE articles SET deletedAt = ? WHERE 1=1'
-  const params: (string | number)[] = [Date.now()]
-
-  sql += trashOnly ? ' AND deletedAt IS NOT NULL' : ' AND deletedAt IS NULL'
-  if (feedId) {
-    sql += ' AND feedId = ?'
-    params.push(feedId)
-  }
-  if (unreadOnly) sql += ' AND read = 0'
-  if (readOnly) sql += ' AND read = 1'
-  if (starredOnly) sql += ' AND starred = 1'
-  if (search) {
-    const searchClause = buildSearchClause(search)
-    sql += ` AND id IN (SELECT a.id FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1 ${searchClause.sql})`
-    params.push(...searchClause.params)
-  }
-
-  db.prepare(sql).run(...params)
+  const filters = buildArticleFilters(query)
+  const sql = `UPDATE articles SET deletedAt = ?
+    WHERE id IN (SELECT a.id ${ARTICLE_FILTER_SOURCE}${filters.sql})`
+  db.prepare(sql).run(Date.now(), ...filters.params)
 }
 
 export function unstarAllArticles(): void {

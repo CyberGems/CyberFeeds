@@ -222,6 +222,8 @@ export default function App(): JSX.Element {
     settings.theme
   ])
 
+  const { filters } = settings
+
   // React to feed/filter changes
   useEffect(() => {
     const query: ArticleQuery = { limit: 60, offset: 0 }
@@ -245,7 +247,7 @@ export default function App(): JSX.Element {
       } else if (quickFilter === 'video') {
         query.hasVideo = true
       } else if (quickFilter === 'priority') {
-        const pKw = settings.filters?.priorityKeywords ?? []
+        const pKw = filters?.priorityKeywords ?? []
         if (pKw.length > 0) {
           query.priorityKeywords = pKw
         } else {
@@ -253,14 +255,14 @@ export default function App(): JSX.Element {
         }
       }
 
-      if (settings.filters?.muteAction === 'hide' && (settings.filters?.muteKeywords ?? []).length > 0) {
-        query.muteKeywords = settings.filters.muteKeywords
+      if (filters?.muteAction === 'hide' && filters.muteKeywords?.length > 0) {
+        query.muteKeywords = filters.muteKeywords
       }
     }
 
     if (search) query.search = search
     load(query)
-  }, [selectedFeedId, unreadOnly, readOnly, search, quickFilter, settings.filters?.muteAction, (settings.filters?.muteKeywords ?? []).join(','), (settings.filters?.priorityKeywords ?? []).join(',')])
+  }, [selectedFeedId, unreadOnly, readOnly, search, quickFilter, filters, load])
 
   // Listen for new articles from main process
   useEffect(() => {
@@ -287,6 +289,7 @@ export default function App(): JSX.Element {
         // List is active: check if new articles arrived for the current query
         try {
           const newTotal = await window.api.getArticleCount(currentQuery)
+          if (useArticlesStore.getState().currentQuery !== currentQuery) return
           if (newTotal > totalCount) {
             useArticlesStore.getState().setIncomingCount(newTotal - totalCount)
           }

@@ -48,8 +48,8 @@ const api = {
   getTodayArticles: () => ipcRenderer.invoke('articles:getToday'),
   markRead: (id: string, read: boolean) => ipcRenderer.invoke('articles:markRead', id, read),
   markAllRead: (feedId?: string) => ipcRenderer.invoke('articles:markAllRead', feedId),
-  markAllFilteredRead: (starredOnly?: boolean) =>
-    ipcRenderer.invoke('articles:markAllFilteredRead', starredOnly),
+  markAllFilteredRead: (query?: object | boolean) =>
+    ipcRenderer.invoke('articles:markAllFilteredRead', query),
   deleteAllActiveArticles: (starredOnly?: boolean) =>
     ipcRenderer.invoke('articles:deleteAllActive', starredOnly),
   deleteAllFilteredArticles: (query?: object) =>

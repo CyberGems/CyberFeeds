@@ -463,8 +463,8 @@ export function registerIpc(): void {
     return { ok: true }
   })
 
-  ipcMain.handle('articles:markAllFilteredRead', (_, starredOnly?: boolean) => {
-    db.markAllFilteredRead(Boolean(starredOnly))
+  ipcMain.handle('articles:markAllFilteredRead', (_, query?: db.ArticleQuery | boolean) => {
+    db.markAllFilteredRead(query)
     rebuildTrayMenu()
     return { ok: true }
   })

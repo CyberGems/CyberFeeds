@@ -648,12 +648,11 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     if (
       lastVirtualIndex >= 0 &&
       lastVirtualIndex >= articles.length - 10 &&
-      !loadingMore &&
       totalCount > articles.length
     ) {
       loadMore()
     }
-  }, [lastVirtualIndex, articles.length, loadingMore, totalCount, loadMore])
+  }, [lastVirtualIndex, articles.length, totalCount, loadMore])
 
   const commitSearchHistory = useCallback(
     (query: string) => {
@@ -1837,10 +1836,8 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
               {!isTrash && <div
                 className="ctx-item"
                 onClick={() => {
-                  const unreadIds = articles.filter((a) => !a.read).map((a) => a.id)
-                  if (unreadIds.length > 0) {
-                    useArticlesStore.getState().markMultipleRead(unreadIds, true)
-                  }
+                  const { currentQuery, markAllFilteredRead } = useArticlesStore.getState()
+                  void markAllFilteredRead(currentQuery)
                   setCtx(null)
                 }}
               >
@@ -1863,6 +1860,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
               <div
                 className="ctx-item danger"
                 onClick={async () => {
+                  const { currentQuery } = useArticlesStore.getState()
                   const confirmed = await confirm({
                     title: isTrash ? t.articleList.dialogs.emptyTrashTitle : t.articleList.dialogs.deleteAllTitle,
                     message: isTrash ? t.articleList.dialogs.emptyTrashMsg : t.articleList.dialogs.deleteAllMsg,
@@ -1875,7 +1873,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                       await emptyTrash()
                       selectArticle(null)
                     } else {
-                      await deleteAllFilteredArticles()
+                      await deleteAllFilteredArticles(currentQuery)
                       selectArticle(null)
                     }
                   }

@@ -16,7 +16,7 @@ interface ArticlesState {
   applyIncomingArticles: () => Promise<void>
   markRead: (id: string, read: boolean) => Promise<void>
   markAllRead: (feedId?: string) => Promise<void>
-  markAllFilteredRead: (starredOnly?: boolean) => Promise<void>
+  markAllFilteredRead: (query?: ArticleQuery | boolean) => Promise<void>
   markMultipleRead: (ids: string[], read: boolean) => Promise<void>
   starArticle: (id: string, starred: boolean) => Promise<void>
   deleteArticle: (id: string) => Promise<void>
@@ -83,7 +83,7 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       return
     }
     const requestId = ++latestLoadRequest
-    set({ loading: true, currentQuery: query, articles: [], totalCount: 0, incomingCount: 0 })
+    set({ loading: true, loadingMore: false, currentQuery: query, articles: [], totalCount: 0, incomingCount: 0 })
     const q = { ...query, limit: PAGE_SIZE, offset: 0 }
     try {
       const [articles, totalCount] = await withTimeout(
@@ -105,15 +105,22 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
     const { articles, totalCount, loadingMore, currentQuery } = get()
     if (loadingMore || articles.length >= totalCount) return
     set({ loadingMore: true })
-    const more = await window.api.getArticles({ ...currentQuery, limit: PAGE_SIZE, offset: articles.length })
-    // A refresh can replace the dataset while the page is in flight (polling
-    // fetches land at any moment). Appending against a moved base would add
-    // duplicate entries, which corrupts the virtual list, so filter by id.
-    set(s => {
-      const known = new Set(s.articles.map(a => a.id))
-      const fresh = more.filter(a => !known.has(a.id))
-      return { articles: fresh.length > 0 ? [...s.articles, ...fresh] : s.articles, loadingMore: false }
-    })
+    try {
+      const more = await withTimeout(
+        window.api.getArticles({ ...currentQuery, limit: PAGE_SIZE, offset: articles.length }),
+        ARTICLE_LOAD_TIMEOUT_MS
+      )
+      const current = get()
+      // An older page has the wrong offset after a refresh or filter change.
+      if (current.currentQuery !== currentQuery || current.articles !== articles) return
+      const known = new Set(articles.map((article) => article.id))
+      const fresh = more.filter((article) => !known.has(article.id))
+      if (fresh.length > 0) set({ articles: [...articles, ...fresh] })
+    } catch (error) {
+      console.error('[Articles] Failed to load more articles:', error)
+    } finally {
+      if (get().currentQuery === currentQuery) set({ loadingMore: false })
+    }
   },
 
   markRead: async (id, read) => {
@@ -132,8 +139,8 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
     useFeedsStore.getState().refreshUnreadCounts()
   },
 
-  markAllFilteredRead: async (starredOnly = false) => {
-    await window.api.markAllFilteredRead(starredOnly)
+  markAllFilteredRead: async (query = false) => {
+    await window.api.markAllFilteredRead(query)
     await get().refresh()
     useFeedsStore.getState().refreshUnreadCounts()
   },
@@ -259,7 +266,7 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       window.api.getArticles(q),
       window.api.getArticleCount(currentQuery)
     ])
-    set({ articles, totalCount, incomingCount: 0 })
+    if (get().currentQuery === currentQuery) set({ articles, totalCount, incomingCount: 0 })
   },
 
   setIncomingCount: (incomingCount) => set({ incomingCount }),
@@ -279,7 +286,7 @@ export const useArticlesStore = create<ArticlesState>((set, get) => ({
       window.api.getArticles({ ...currentQuery, limit, offset: 0 }),
       window.api.getArticleCount(currentQuery)
     ])
-    set({ articles, totalCount })
+    if (get().currentQuery === currentQuery) set({ articles, totalCount })
   }
 }))
 
