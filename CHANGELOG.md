@@ -2,6 +2,24 @@
 
 All notable changes to CyberFeeds are documented here.
 
+## [1.32.0] - 2026-11-15
+
+### 🇺🇸 English
+
+- Notifications now follow the selected dark, grayscale, or light theme, and their transparent surface recovers after the PC wakes from sleep. The cleanup banner also adapts to the active theme.
+- A titlebar update indicator opens the updater when a new version is available.
+- The open-tabs menu now matches the selected theme. Mouse-wheel scrolling is smooth, and tab hover marquees and tooltips stay stable while the list moves.
+- Settings now use consistent introductory helpers across all sections, calmer icon and selection colors, and an animated saved-state divider. Global shortcut scope is disabled until an action has a shortcut.
+- The installer sidebar now follows the suite's shared style and features the app icon.
+
+### 🇪🇸 Español
+
+- Las notificaciones ahora siguen el tema oscuro, Gris o Claro, y su fondo transparente se recupera al volver de la suspensión del PC. El banner de limpieza también se adapta al tema activo.
+- Un indicador en la barra superior abre el actualizador cuando hay una nueva versión disponible.
+- El menú de pestañas abiertas ahora sigue el tema elegido. La rueda desplaza la lista suavemente y los marquee y tooltips permanecen estables mientras se mueve.
+- La configuración ahora usa ayudas introductorias uniformes, colores más sobrios para iconos y selección, y un separador animado para el estado guardado. El ámbito global de un atajo se desactiva hasta que la acción tenga una combinación asignada.
+- La barra lateral del instalador ahora sigue el estilo común de la suite e incluye el icono destacado de la app.
+
 ## [1.31.0] - 2026-11-14
 
 ### 🇺🇸 English

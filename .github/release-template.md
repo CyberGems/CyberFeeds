@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-Search notification history by title, source or content, and bring more thumbnails into article lists across Reddit and other feeds. Searches ignore accents and case, removed Reddit posts are filtered out, and refreshed controls make settings, tabs, menus and window closing feel clearer.
+Notifications now follow the selected app theme and restore their transparent surface after the PC wakes. A titlebar update indicator, smoother theme-aware tab navigation, and a calmer settings experience with consistent introductions and clearer shortcut controls make daily reading more comfortable.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,31 +17,26 @@ Search notification history by title, source or content, and bring more thumbnai
 
 ### ✨ Key Features & Highlights
 
-- 🔎 **Search That Finds It Again**:
-  - Search notification history by article title, feed name, or content, with a result count and a clear no-results state.
-  - Article searches and filters now match regardless of accents or letter case, and bulk actions stay in sync with the filtered results.
-  - Focusing article search opens recent searches for quick selection.
+- 🎨 **Notifications That Match Your Theme**:
+  - Notification cards follow the selected dark, grayscale, or light theme, and their transparent surface recovers after the PC wakes from sleep.
+  - The cleanup banner adapts to the active theme.
 
-- 🖼️ **More Reliable Article Thumbnails**:
-  - Missing images can be recovered from public article metadata, including when the feed and article use different domains.
-  - Reddit gallery and feed images provide more previews, and removed Reddit submissions no longer add noise to incoming items and notifications.
-  - Saved thumbnail URLs are decoded before display, and legacy HTTP image links are upgraded to HTTPS.
+- 🔄 **Updates Within Reach**:
+  - A titlebar indicator appears when an update is available and opens the updater.
 
-- 🧭 **Clearer Navigation and Controls**:
-  - Settings dropdowns use a consistent, theme-aware picker. The More menu only highlights its first item when opened for keyboard navigation.
-  - Article tabs have more room and reveal clipped titles with a quick marquee on hover.
-  - The close button has better contrast in the gray theme, closes with Alt+F4, and the close dialog's dismissal tooltip reads “Cancel”.
-  - Opening an article clears its unread indicator immediately.
+- 🧭 **Smoother Tabs and Clearer Settings**:
+  - The open-tabs menu follows the selected theme, and mouse-wheel navigation scrolls smoothly without restarting hover marquees or refreshing tooltips.
+  - Settings sections share concise introductions, use calmer icon and selection colors, and animate the saved-state divider. Global shortcut scope stays disabled until a shortcut is assigned.
 
-- ✂️ **Consistent Text Editing**:
-  - Editable fields share a themed, bilingual context menu with undo, redo, cut, copy, paste, select all, and delete.
+- 🪟 **A Suite-Consistent Installer**:
+  - The installer sidebar now uses the shared suite style and features the app icon.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Busca el historial de notificaciones por título, fuente o contenido y recupera más miniaturas en listas de artículos de Reddit y otros feeds. Las búsquedas ignoran tildes y mayúsculas, se filtran publicaciones eliminadas de Reddit y los controles de configuración, pestañas, menús y cierre son más claros.
+Las notificaciones siguen el tema elegido y recuperan su transparencia al volver de suspensión. Un indicador de actualización en la barra superior, una navegación por pestañas más fluida y una configuración más clara, con ayudas uniformes y controles de atajos más claros, hacen más cómoda la lectura diaria.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -49,24 +44,19 @@ Busca el historial de notificaciones por título, fuente o contenido y recupera 
 
 ### ✨ Novedades destacadas
 
-- 🔎 **Búsqueda para encontrarlo después**:
-  - Busca en el historial de notificaciones por título del artículo, nombre del feed o contenido, con conteo y estado claro cuando no hay resultados.
-  - Las búsquedas y filtros de artículos encuentran coincidencias sin importar tildes o mayúsculas, y las acciones en lote siguen sincronizadas con los resultados filtrados.
-  - Al enfocar la búsqueda de artículos, se abre el historial reciente para elegir con rapidez.
+- 🎨 **Notificaciones que siguen tu tema**:
+  - Las tarjetas siguen el tema oscuro, Gris o Claro, y su fondo transparente se recupera al volver de la suspensión del PC.
+  - El banner de limpieza se adapta al tema activo.
 
-- 🖼️ **Miniaturas más confiables**:
-  - Las imágenes faltantes se recuperan desde los metadatos públicos del artículo, incluso si el feed y la noticia usan dominios distintos.
-  - Las imágenes de galerías y feeds de Reddit aportan más vistas previas, y las publicaciones eliminadas por Reddit ya no generan ruido en los artículos y notificaciones entrantes.
-  - Las URL guardadas de miniaturas se decodifican antes de mostrarse y los enlaces HTTP antiguos se actualizan a HTTPS.
+- 🔄 **Actualizaciones a mano**:
+  - Un indicador en la barra superior aparece cuando hay una actualización disponible y abre el actualizador.
 
-- 🧭 **Controles y navegación más claros**:
-  - Los desplegables de configuración usan un selector temático uniforme. El menú More solo resalta el primer elemento cuando se abre para navegar con el teclado.
-  - Las pestañas de artículos tienen más espacio y muestran los títulos recortados con un efecto marquee rápido al pasar el cursor.
-  - El botón de cierre tiene mejor contraste en el tema Gris, cierra con Alt+F4 y el tooltip para cerrar el diálogo dice «Cancel».
-  - Al abrir un artículo, su indicador de no leído desaparece de inmediato.
+- 🧭 **Pestañas más fluidas y configuración más clara**:
+  - El menú de pestañas abiertas sigue el tema elegido y la rueda lo desplaza suavemente, sin reiniciar los marquee ni refrescar los tooltips.
+  - Las secciones de configuración comparten ayudas concisas, usan colores más sobrios para iconos y selección, y animan el separador de guardado. El ámbito global permanece desactivado hasta asignar un atajo.
 
-- ✂️ **Edición de texto consistente**:
-  - Los campos editables comparten un menú contextual bilingüe y temático con deshacer, rehacer, cortar, copiar, pegar, seleccionar todo y eliminar.
+- 🪟 **Un instalador acorde con la suite**:
+  - La barra lateral del instalador ahora usa el estilo común e incluye el icono destacado de la app.
 
 ### ⚠️ Antes de instalar
 
