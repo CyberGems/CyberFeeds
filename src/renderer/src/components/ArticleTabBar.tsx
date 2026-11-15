@@ -225,8 +225,10 @@ export const ArticleTabBar = memo(function ArticleTabBar(): JSX.Element | null {
 
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>): void => {
     if (!hasOverflow || !e.deltaY) return
-    pauseTabHover(e.currentTarget)
-    e.currentTarget.scrollLeft += e.deltaY
+    const strip = e.currentTarget
+    const currentScrollLeft = strip.scrollLeft
+    strip.scrollLeft = currentScrollLeft + e.deltaY
+    if (strip.scrollLeft !== currentScrollLeft) pauseTabHover(strip)
   }, [hasOverflow, pauseTabHover])
 
   const handleTabPointerEnter = useCallback((e: React.PointerEvent<HTMLDivElement>): void => {

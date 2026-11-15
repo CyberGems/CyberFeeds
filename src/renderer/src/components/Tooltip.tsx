@@ -112,6 +112,13 @@ export default function Tooltip({ label, placement = 'bottom', children }: Toolt
   useEffect(() => {
     if (!anchor) return
     const hide = (event: Event): void => {
+      if (
+        event.type === 'wheel' &&
+        event.target instanceof Element &&
+        event.target.closest('[data-scroll-hover]')
+      ) {
+        return
+      }
       setAnchor(null)
       const strip = anchor.closest('[data-scroll-hover]')
       if (!delayTimer.current && event.target instanceof Node && strip?.contains(event.target)) {
