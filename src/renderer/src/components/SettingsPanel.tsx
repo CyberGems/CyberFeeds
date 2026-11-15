@@ -2089,8 +2089,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
               <div className="settings-card">
                 <CardTitle icon={Monitor} accent={TAB_META.notifications.accent}>{t.settings.notifications.displayAndPositionTitle}</CardTitle>
                 <div className="form-group">
-                  <label className="form-label" htmlFor="settings-notification-monitor" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Monitor size={12} />
+                  <label className="form-label" htmlFor="settings-notification-monitor">
                     {t.settings.notifications.displayMonitor}
                   </label>
                   <select

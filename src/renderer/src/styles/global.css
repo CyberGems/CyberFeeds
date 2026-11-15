@@ -2870,14 +2870,14 @@ mark.reader-search-match.reader-search-active {
   border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 34%, var(--border));
 }
 .settings-nav-btn.active {
-  color: var(--accent);
-  background: var(--accent-subtle);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  color: color-mix(in srgb, var(--nav-accent, var(--accent)) 86%, var(--text-primary));
+  background: color-mix(in srgb, var(--nav-accent, var(--accent)) 9%, var(--bg-1));
+  border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 30%, var(--border));
 }
 .settings-nav-btn.active .settings-nav-ico {
-  background: color-mix(in srgb, var(--accent) 11%, var(--bg-1));
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: color-mix(in srgb, var(--nav-accent, var(--accent)) 8%, var(--bg-1));
+  color: color-mix(in srgb, var(--nav-accent, var(--accent)) 72%, var(--text-primary));
+  border-color: color-mix(in srgb, var(--nav-accent, var(--accent)) 24%, var(--border));
   box-shadow: none;
 }
 .settings-nav-footer {
