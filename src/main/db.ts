@@ -3,6 +3,7 @@ import { app } from 'electron'
 import path from 'path'
 import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState, CleanupScope, KeyboardShortcuts } from './types'
 import { DEFAULT_SETTINGS } from './types'
+import { normalizeSearchText } from '../shared/search-text'
 import { articleHasVideo } from '../shared/youtube'
 
 let db: Database.Database
@@ -12,6 +13,7 @@ export const TRASH_RETENTION_DAYS = 30
 export function initDb(): void {
   const dbPath = path.join(app.getPath('userData'), 'cybersfeeds.db')
   db = new Database(dbPath)
+  db.function('search_text', { deterministic: true }, normalizeSearchText)
   db.pragma('journal_mode = WAL')
   db.pragma('synchronous = NORMAL')
   db.pragma('cache_size = -32000') // 32MB cache
@@ -404,11 +406,10 @@ function buildVideoClause(prefix: string = ''): { sql: string; params: string[] 
   }
 }
 
-function literalLikeTerm(text: string): string {
-  return `%${text.replace(/[\\%_]/g, '\\$&')}%`
-}
-
-const LIKE_LITERAL = "LIKE ? ESCAPE '\\'"
+const KEYWORD_MATCH = '(instr(search_text(a.title), ?) > 0 OR instr(search_text(a.snippet), ?) > 0)'
+const SEARCH_MATCH = `(${['a.title', 'a.snippet', 'a.content', 'a.author', 'f.title']
+  .map((column) => `instr(search_text(${column}), ?) > 0`)
+  .join(' OR ')})`
 
 function buildSearchClause(search: string): { sql: string; params: string[] } {
   const trimmed = search.trim()
@@ -428,8 +429,8 @@ function buildSearchClause(search: string): { sql: string; params: string[] } {
   const params: string[] = []
 
   for (const token of tokens) {
-    clauses.push(`(a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL} OR a.content ${LIKE_LITERAL} OR a.author ${LIKE_LITERAL} OR f.title ${LIKE_LITERAL})`)
-    const term = literalLikeTerm(token)
+    clauses.push(SEARCH_MATCH)
+    const term = normalizeSearchText(token)
     params.push(term, term, term, term, term)
   }
 
@@ -488,10 +489,10 @@ function buildArticleFilters(query: ArticleQuery): { sql: string; params: (strin
   if (priorityKeywords && priorityKeywords.length > 0) {
     const validPriority = priorityKeywords.map((k) => k.trim()).filter(Boolean)
     if (validPriority.length > 0) {
-      const orClauses = validPriority.map(() => `(a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL})`).join(' OR ')
+      const orClauses = validPriority.map(() => KEYWORD_MATCH).join(' OR ')
       sql += ` AND (${orClauses})`
       for (const kw of validPriority) {
-        const term = literalLikeTerm(kw)
+        const term = normalizeSearchText(kw)
         params.push(term, term)
       }
     }
@@ -501,8 +502,8 @@ function buildArticleFilters(query: ArticleQuery): { sql: string; params: (strin
     const validMute = muteKeywords.map((k) => k.trim()).filter(Boolean)
     if (validMute.length > 0) {
       for (const kw of validMute) {
-        sql += ` AND NOT (a.title ${LIKE_LITERAL} OR a.snippet ${LIKE_LITERAL})`
-        const term = literalLikeTerm(kw)
+        sql += ` AND NOT ${KEYWORD_MATCH}`
+        const term = normalizeSearchText(kw)
         params.push(term, term)
       }
     }
@@ -565,7 +566,7 @@ export function getUnreadCountByFeed(): FeedArticleCounts {
 export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>[]): Omit<Article, 'feedTitle' | 'feedIcon'>[] {
   const currentSettings = getSettings()
   const muteKeywords = (currentSettings.filters?.muteKeywords ?? [])
-    .map((k) => k.toLowerCase().trim())
+    .map((k) => normalizeSearchText(k.trim()))
     .filter(Boolean)
   const isAutoReadMute = currentSettings.filters?.muteAction === 'autoRead' && muteKeywords.length > 0
 
@@ -577,14 +578,12 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
   db.transaction(() => {
     for (const a of articles) {
       try {
-        const shouldAutoRead =
-          isAutoReadMute &&
-          muteKeywords.some(
-            (kw) =>
-              (a.title && a.title.toLowerCase().includes(kw)) ||
-              (a.snippet && a.snippet.toLowerCase().includes(kw))
-          )
-        const initialRead = shouldAutoRead ? 1 : 0
+        let initialRead = 0
+        if (isAutoReadMute) {
+          const title = normalizeSearchText(a.title)
+          const snippet = normalizeSearchText(a.snippet)
+          initialRead = muteKeywords.some((kw) => title.includes(kw) || snippet.includes(kw)) ? 1 : 0
+        }
         const hasVid = articleHasVideo(a) ? 1 : 0
         const result = stmt.run(
           a.id,

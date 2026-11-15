@@ -25,6 +25,7 @@ import {
 import { useTranslation } from '../hooks/useTranslation'
 import { useFeedsStore } from '../store/feeds.store'
 import { useArticlesStore } from '../store/articles.store'
+import { normalizeSearchText } from '@shared/search-text'
 import { FeedFavicon } from './ArticleList'
 import {
   INTERFACE_SCALE_MAX,
@@ -744,7 +745,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     const val = newPriorityInput.trim()
     if (!val) return
     const current = local.filters?.priorityKeywords ?? []
-    if (current.some((k) => k.toLowerCase() === val.toLowerCase())) {
+    if (current.some((k) => normalizeSearchText(k) === normalizeSearchText(val))) {
       setNewPriorityInput('')
       return
     }
@@ -764,7 +765,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
     const val = newMuteInput.trim()
     if (!val) return
     const current = local.filters?.muteKeywords ?? []
-    if (current.some((k) => k.toLowerCase() === val.toLowerCase())) {
+    if (current.some((k) => normalizeSearchText(k) === normalizeSearchText(val))) {
       setNewMuteInput('')
       return
     }

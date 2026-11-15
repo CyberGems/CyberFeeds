@@ -43,6 +43,7 @@ import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 import { copyArticleImage, featuredThumbImg } from '../lib/copyImage'
 import { articleHasVideo } from '@shared/youtube'
+import { normalizeSearchText } from '@shared/search-text'
 
 function formatDate(ts: number, t: any): string {
   const d = new Date(ts)
@@ -2025,11 +2026,11 @@ const ArticleItem = memo(
     const priorityKeywords = settings.filters?.priorityKeywords ?? []
     const isPriority = React.useMemo(() => {
       if (priorityKeywords.length === 0) return false
-      const titleLower = (article.title || '').toLowerCase()
-      const snippetLower = (article.snippet || '').toLowerCase()
+      const title = normalizeSearchText(article.title)
+      const snippet = normalizeSearchText(article.snippet)
       return priorityKeywords.some((kw) => {
-        const k = kw.trim().toLowerCase()
-        return k && (titleLower.includes(k) || snippetLower.includes(k))
+        const k = normalizeSearchText(kw.trim())
+        return k && (title.includes(k) || snippet.includes(k))
       })
     }, [priorityKeywords, article.title, article.snippet])
 
