@@ -3,6 +3,7 @@ import { X, ExternalLink, ChevronDown, Bell, BellOff, Clock, Check, Eye, Setting
 import type { NotificationDisplayMode, NotificationHistoryItem, NotificationSettings } from '@shared/types'
 import { translations } from '@shared/translations'
 import { getReceivedAt } from '@shared/notification-time'
+import { decodeThumbnailEntities } from '@shared/thumbnail-url'
 import Tooltip from '../src/components/Tooltip'
 
 const SNOOZE_LABELS: Record<number, string> = {
@@ -845,7 +846,7 @@ export default function NotifierApp(): JSX.Element {
             {!isCompact && item.thumbnail && state.settings?.showThumbnails && (
               <div className="notif-thumbnail">
                 <img
-                  src={item.thumbnail}
+                  src={decodeThumbnailEntities(item.thumbnail)}
                   alt=""
                   loading="lazy"
                   onError={(e) => {

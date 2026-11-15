@@ -5,7 +5,7 @@ import { useTabsStore } from '../store/tabs.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useArticlesStore } from '../store/articles.store'
 import type { NotificationHistoryItem } from '../types'
-import { getThumbnailUrl } from '../utils/thumbnail-url'
+import { getThumbnailUrl } from '@shared/thumbnail-url'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 

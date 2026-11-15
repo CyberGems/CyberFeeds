@@ -1,11 +1,12 @@
 import { parseHTML } from 'linkedom'
+import { decodeThumbnailEntities } from '../shared/thumbnail-url'
 
 type FeedImage = { $?: { url?: string } }
 type RedditMediaImage = { u?: string }
 
 export function redditImageUrl(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
-  const cleaned = value.trim().replace(/&amp;/gi, '&')
+  const cleaned = decodeThumbnailEntities(value)
   if (!/^(?:https?:)?\/\//i.test(cleaned)) return undefined
   const url = URL.parse(cleaned, 'https://www.reddit.com')
   if (!url || !['https:', 'http:'].includes(url.protocol) || url.username || url.password) return undefined

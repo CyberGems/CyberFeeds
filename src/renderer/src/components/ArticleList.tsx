@@ -44,7 +44,7 @@ import Tooltip from './Tooltip'
 import { copyArticleImage, featuredThumbImg } from '../lib/copyImage'
 import { articleHasVideo } from '@shared/youtube'
 import { normalizeSearchText } from '@shared/search-text'
-import { getThumbnailUrl } from '../utils/thumbnail-url'
+import { getThumbnailUrl } from '@shared/thumbnail-url'
 
 function formatDate(ts: number, t: any): string {
   const d = new Date(ts)
@@ -1798,7 +1798,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                       className="ctx-item"
                       onClick={() => {
                         const articleId = article.id
-                        const url = article.thumbnail
+                        const url = article.thumbnail && getThumbnailUrl(article.thumbnail)
                         setCtx(null)
                         void copyArticleImage({ img: featuredThumbImg(articleId), url })
                       }}

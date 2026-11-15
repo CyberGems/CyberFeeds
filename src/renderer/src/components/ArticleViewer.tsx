@@ -12,7 +12,7 @@ import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
 import { copyArticleImage } from '../lib/copyImage'
-import { getThumbnailUrl } from '../utils/thumbnail-url'
+import { getThumbnailUrl } from '@shared/thumbnail-url'
 
 function formatFullDate(ts: number, lang: string): string {
   return new Date(ts).toLocaleString(lang === 'es' ? 'es-ES' : 'en-US', {
