@@ -532,6 +532,7 @@ export default function App(): JSX.Element {
         if (searchInput) {
           searchInput.focus()
           searchInput.select()
+          window.dispatchEvent(new Event('cyberfeeds:open-search-history'))
         }
         return
       }
@@ -568,7 +569,7 @@ export default function App(): JSX.Element {
 
       if (e.key === 'Escape') {
         if (useUIStore.getState().topbarMenuOpen) return
-        if (e.target instanceof Element && e.target.closest('.form-select:open')) return
+        if (e.target instanceof Element && e.target.closest('.form-select:open, [data-article-search-area]')) return
         if (activePanel) {
           if (activePanel === 'settings') {
             // Offer the Escape to the settings search first: while it has a

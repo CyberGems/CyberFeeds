@@ -263,6 +263,8 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   const [importingOpml, setImportingOpml] = useState(false)
   const [opmlMessage, setOpmlMessage] = useState('')
   const parentRef = useRef<HTMLDivElement>(null)
+  const searchAreaRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const searchRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const historyTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const prevSelectedId = useRef<string | null>(null)
@@ -270,8 +272,17 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
 
   // Keep local search input synchronized when store's search resets (e.g. on feed switch)
   useEffect(() => {
-    setSearchInput(search)
+    setSearchInput((value) => value.trim() === search ? value : search)
   }, [search])
+
+  useEffect(() => {
+    setSearchInput(useUIStore.getState().search)
+    setHistoryOpen(false)
+    return () => {
+      clearTimeout(searchRef.current)
+      clearTimeout(historyTimerRef.current)
+    }
+  }, [selectedFeedId])
 
   // Auto-remove articles that no longer match the active read-state filter
   // when moving to the next article.
@@ -649,11 +660,11 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       if (historyTimerRef.current) clearTimeout(historyTimerRef.current)
       const trimmed = query.trim()
       if (!trimmed) return
-      const current = settings.recentSearches || []
+      const current = useSettingsStore.getState().settings.recentSearches || []
       const updated = recordRecentSearch(current, trimmed)
       update({ recentSearches: updated })
     },
-    [settings.recentSearches, update]
+    [update]
   )
 
   const scheduleSearchHistory = useCallback(
@@ -673,7 +684,9 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value
       setSearchInput(val)
+      setHistoryOpen(false)
       clearTimeout(searchRef.current)
+      clearTimeout(historyTimerRef.current)
       if (settings.instantSearch !== false) {
         searchRef.current = setTimeout(() => {
           setSearch(val.trim())
@@ -687,15 +700,32 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     [setSearch, settings.instantSearch, scheduleSearchHistory]
   )
 
+  const openSearchHistory = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('cyberfeeds:close-context-menus', { detail: 'articleList' }))
+    setCtx(null)
+    setHistoryOpen(true)
+  }, [])
+
+  useEffect(() => {
+    window.addEventListener('cyberfeeds:open-search-history', openSearchHistory)
+    return () => window.removeEventListener('cyberfeeds:open-search-history', openSearchHistory)
+  }, [openSearchHistory])
+
+  const submitSearch = useCallback((query: string) => {
+    clearTimeout(searchRef.current)
+    const term = query.trim()
+    setSearchInput(term)
+    setSearch(term)
+    commitSearchHistory(term)
+    setHistoryOpen(false)
+  }, [setSearch, commitSearchHistory])
+
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter') {
         e.preventDefault()
         e.stopPropagation()
-        clearTimeout(searchRef.current)
-        setSearch(searchInput.trim())
-        commitSearchHistory(searchInput)
-        setHistoryOpen(false)
+        submitSearch(searchInput)
       } else if (e.key === 'Escape') {
         e.preventDefault()
         e.stopPropagation()
@@ -708,14 +738,16 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         setSearchInput('')
         setSearch('')
         e.currentTarget.blur()
-      } else if (e.key === 'ArrowDown' && !historyOpen) {
-        if ((settings.recentSearches || []).length > 0) {
-          e.preventDefault()
-          setHistoryOpen(true)
+      } else if (e.key === 'ArrowDown' && (historyOpen || settings.recentSearches?.length)) {
+        e.preventDefault()
+        if (historyOpen) {
+          searchAreaRef.current?.querySelector<HTMLButtonElement>('[data-recent-search]')?.focus()
+        } else {
+          openSearchHistory()
         }
       }
     },
-    [searchInput, setSearch, commitSearchHistory, historyOpen, settings.recentSearches]
+    [searchInput, setSearch, submitSearch, historyOpen, settings.recentSearches, openSearchHistory]
   )
 
   const handleClearSearch = useCallback(() => {
@@ -727,9 +759,9 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
   }, [setSearch])
 
   useEffect(() => {
-    const handleUp = () => {
+    const handleUp = (e: MouseEvent) => {
       setCtx(null)
-      setHistoryOpen(false)
+      if (e.target instanceof Node && !searchAreaRef.current?.contains(e.target)) setHistoryOpen(false)
     }
     const handleOtherMenu = (e: Event): void => {
       if ((e as CustomEvent<string>).detail !== 'articleList') {
@@ -762,7 +794,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
     }
 
     const onKeyDown = (e: KeyboardEvent): void => {
-      if (e.ctrlKey || e.altKey || e.metaKey) return
+      if (e.defaultPrevented || e.ctrlKey || e.altKey || e.metaKey) return
       if (useUIStore.getState().activePanel) return
       if (useUIStore.getState().topbarMenuOpen) return
       if (confirmState.isOpen) return
@@ -774,6 +806,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
         }
         return
       }
+      if (e.target instanceof Node && searchAreaRef.current?.contains(e.target)) return
 
       if (e.key === 'Delete') {
         if (e.repeat) return
@@ -937,7 +970,29 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
           gap: 10
         }}
       >
-        <div style={{ position: 'relative', flex: 1 }}>
+        <div
+          ref={searchAreaRef}
+          data-article-search-area
+          style={{ position: 'relative', flex: 1 }}
+          onBlur={(e) => {
+            if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget)) setHistoryOpen(false)
+          }}
+          onKeyDown={(e) => {
+            if (!historyOpen) return
+            if (e.key === 'Escape') {
+              e.preventDefault()
+              searchInputRef.current?.focus()
+              setHistoryOpen(false)
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              const choices = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[data-recent-search]'))
+              const index = choices.findIndex((choice) => choice === e.target)
+              if (index < 0) return
+              e.preventDefault()
+              if (e.key === 'ArrowUp' && index === 0) searchInputRef.current?.focus()
+              else choices[index + (e.key === 'ArrowDown' ? 1 : -1)]?.focus()
+            }
+          }}
+        >
           <Tooltip
             label={settings.instantSearch ? t.articleList.searchTooltipInstant : t.articleList.searchTooltipEnter}
             placement="bottom"
@@ -954,15 +1009,13 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                 cursor: 'pointer',
                 zIndex: 2
               }}
-              onClick={() => {
-                clearTimeout(searchRef.current)
-                setSearch(searchInput.trim())
-              }}
+              onClick={() => submitSearch(searchInput)}
             >
               <Search size={13} />
             </div>
           </Tooltip>
           <input
+            ref={searchInputRef}
             className="search-input"
             data-article-search="true"
             style={{
@@ -976,6 +1029,10 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                 : t.articleList.searchPlaceholder
             }
             value={searchInput}
+            onFocus={openSearchHistory}
+            onClick={() => {
+              if (!historyOpen) openSearchHistory()
+            }}
             onChange={handleSearch}
             onKeyDown={handleSearchKeyDown}
           />
@@ -1010,7 +1067,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                   justifyContent: 'center',
                   borderRadius: '50%'
                 }}
-                aria-label="Clear search"
+                aria-label={t.articleViewer.clearSearch}
               >
                 <X size={12} />
               </button>
@@ -1042,6 +1099,8 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                   borderRadius: 4
                 }}
                 aria-label={t.articleList.searchHistory}
+                aria-expanded={historyOpen}
+                aria-controls={historyOpen ? 'article-search-history' : undefined}
               >
                 <History size={13} />
               </button>
@@ -1050,6 +1109,7 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
 
           {historyOpen && (
             <div
+              id="article-search-history"
               className="ctx-menu search-history-dropdown"
               style={{
                 position: 'absolute',
@@ -1079,21 +1139,24 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
               >
                 <span>{t.articleList.recentSearches}</span>
                 {(settings.recentSearches || []).length > 0 && (
-                  <span
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
                     style={{
-                      cursor: 'pointer',
+                      padding: 0,
                       color: 'var(--text-muted)',
                       fontSize: 10,
                       fontWeight: 500,
                       textTransform: 'none'
                     }}
                     onClick={() => {
+                      clearTimeout(historyTimerRef.current)
+                      searchInputRef.current?.focus()
                       update({ recentSearches: [] })
                     }}
-                    title={t.articleList.clearSearchHistory}
                   >
                     {t.articleList.clearSearchHistory}
-                  </span>
+                  </button>
                 )}
               </div>
 
@@ -1121,29 +1184,32 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                       padding: '0 8px',
                       minHeight: 28
                     }}
-                    onClick={() => {
-                      setSearchInput(query)
-                      setSearch(query)
-                      commitSearchHistory(query)
-                      setHistoryOpen(false)
-                    }}
                   >
-                    <div
+                    <button
+                      type="button"
+                      data-recent-search
+                      className="btn btn-ghost"
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        padding: 0,
+                        color: 'inherit',
+                        minWidth: 0,
                         gap: 8,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
                         flex: 1
                       }}
+                      onClick={() => {
+                        searchInputRef.current?.focus()
+                        submitSearch(query)
+                      }}
                     >
                       <History size={12} style={{ flexShrink: 0 }} />
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {query}
                       </span>
-                    </div>
+                    </button>
                     <button
                       type="button"
                       className="btn btn-ghost"
