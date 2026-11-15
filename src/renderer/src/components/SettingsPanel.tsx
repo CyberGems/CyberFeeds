@@ -51,15 +51,14 @@ interface AppVersionInfo {
 type ActiveTab = 'general' | 'appearance' | 'filters' | 'notifications' | 'keyboard' | 'backupMaintenance'
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
-/* CyberClock-inspired icon tiles: each settings tab owns an accent color
-   used by the nav tile and the section titles inside its cards. */
-const TAB_META: Record<ActiveTab, { accent: string; soft: string }> = {
-  general: { accent: '#58a6ff', soft: 'rgba(88,166,255,0.14)' },
-  appearance: { accent: '#a371f7', soft: 'rgba(163,113,247,0.14)' },
-  filters: { accent: '#f778ba', soft: 'rgba(247,120,186,0.14)' },
-  notifications: { accent: '#3fb950', soft: 'rgba(63,185,80,0.14)' },
-  keyboard: { accent: '#39c5cf', soft: 'rgba(57,197,207,0.14)' },
-  backupMaintenance: { accent: '#d29922', soft: 'rgba(210,153,34,0.14)' }
+/* Settings sections keep their own hue as a restrained icon accent. */
+const TAB_META: Record<ActiveTab, { accent: string }> = {
+  general: { accent: '#58a6ff' },
+  appearance: { accent: '#a371f7' },
+  filters: { accent: '#f778ba' },
+  notifications: { accent: '#3fb950' },
+  keyboard: { accent: '#39c5cf' },
+  backupMaintenance: { accent: '#d29922' }
 }
 
 function CardTitle({
@@ -1190,7 +1189,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                   type="button"
                   className={`settings-nav-btn${activeTab === item.id ? ' active' : ''}`}
                   onClick={() => setActiveTab(item.id)}
-                  style={{ ['--nav-accent' as string]: TAB_META[item.id].accent, ['--nav-soft' as string]: TAB_META[item.id].soft }}
+                  style={{ ['--nav-accent' as string]: TAB_META[item.id].accent }}
                 >
                   <span className="settings-nav-ico" aria-hidden="true">
                     <item.Icon size={14} strokeWidth={2.1} />
