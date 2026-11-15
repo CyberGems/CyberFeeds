@@ -457,7 +457,6 @@ body {
 }
 
 .topbar-update-button:is(:hover, :focus-visible) {
-  animation: none;
   background: var(--accent-glow, var(--accent-subtle));
 }
 
@@ -468,22 +467,6 @@ body {
 .topbar-update-button:focus-visible {
   outline: 1px solid var(--accent);
   outline-offset: 2px;
-}
-
-@keyframes topbar-update-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 var(--accent-subtle);
-  }
-  50% {
-    box-shadow: 0 0 0 3px var(--accent-subtle);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .topbar-update-button {
-    animation: topbar-update-pulse 3.5s ease-in-out infinite;
-  }
 }
 
 .topbar-drag {
