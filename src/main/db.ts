@@ -626,6 +626,7 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
           hasVid
         )
         if (result.changes > 0) inserted.push(a)
+        else if (a.thumbnail && isRedditSourceUrl(a.link)) fillArticleThumbnail(a.id, a.thumbnail)
       } catch (err: any) {
         if (err.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
           console.warn(`[DB] Skipping article ${a.id}: feed ${a.feedId} no longer exists`)

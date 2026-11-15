@@ -14,7 +14,7 @@ import { rebuildTrayMenu, rebuildGlobalShortcuts, refreshTrayTooltip } from './t
 import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
 import { translations } from '../shared/translations'
 import { DEFAULT_SETTINGS } from '../shared/types'
-import { normalizeFeedUrl } from '../shared/reddit'
+import { isRedditSourceUrl, normalizeFeedUrl } from '../shared/reddit'
 import {
   isYouTubeUrl,
   resolveYouTubeFeedUrl,
@@ -27,6 +27,7 @@ import {
 } from '../shared/youtube'
 import { robustParse } from './feed-parse'
 import { isPublicThumbnailPage } from './thumbnail-source'
+import { redditMarkupThumbnail } from './reddit-thumbnails'
 import type { Feed, Folder } from './types'
 
 /**
@@ -176,6 +177,8 @@ async function resolveArticleThumbnail(id: string): Promise<{ id: string; thumbn
   if (article.thumbnail) return { id, thumbnail: article.thumbnail }
 
   const url = URL.parse(article.link)
+  const existingImage = isRedditSourceUrl(article.link) ? redditMarkupThumbnail(article.content) : undefined
+  if (existingImage && db.fillArticleThumbnail(id, existingImage)) return { id, thumbnail: existingImage }
   if (!url || !isPublicThumbnailPage(url)) return
 
   const { thumbnail } = await extractContent(url.href, true)
@@ -242,7 +245,7 @@ export function registerIpc(): void {
           let content = item['content:encoded'] || item.content?.['#text'] || item.content || item.description || ''
           let snippet = item.contentSnippet || item.snippet || ''
 
-          let thumbnail: string | undefined
+          let thumbnail: string | undefined = item.thumbnail
           let link = item.link || ''
           const isYt = Boolean(ytGuid || isYouTubeUrl(link) || isYouTubeUrl(feedUrl))
 

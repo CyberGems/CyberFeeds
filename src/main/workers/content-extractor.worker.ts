@@ -7,6 +7,8 @@ import { parseHTML } from 'linkedom'
 import https from 'https'
 import http from 'http'
 import { isPublicThumbnailPage, lookupThumbnailHost } from '../thumbnail-source'
+import { isRedditSourceUrl } from '../../shared/reddit'
+import { redditImageUrl } from '../reddit-thumbnails'
 
 interface ExtractRequest {
   reqId: string
@@ -105,6 +107,11 @@ function extractThumbnailFromPage(html: string, url: string): string | undefined
     for (const node of document.querySelectorAll(selector)) {
       const value = (node.getAttribute('content') ?? node.getAttribute('href'))?.trim()
       const image = value ? URL.parse(value, url) : null
+      if (isRedditSourceUrl(url)) {
+        const redditImage = redditImageUrl(image?.href)
+        if (redditImage) return redditImage
+        continue
+      }
       if (image?.protocol === 'https:' && !image.username && !image.password) return image.href
     }
   }

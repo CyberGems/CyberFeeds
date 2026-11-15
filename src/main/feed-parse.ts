@@ -1,6 +1,7 @@
 import RssParser from 'rss-parser'
 import { XMLParser } from 'fast-xml-parser'
 import * as db from './db'
+import { redditFeedThumbnail, redditListingThumbnail } from './reddit-thumbnails'
 import {
   FEED_USER_AGENT,
   fetchWithRetry,
@@ -33,6 +34,7 @@ const rssParser = new RssParser({
       ['media:group', 'mediaGroup'],
       ['media:description', 'mediaDescription'],
       ['media:community', 'mediaCommunity'],
+      ['media:thumbnail', 'redditThumbnails', { keepArray: true }],
       ['yt:videoId', 'ytVideoId'],
       ['yt:channelId', 'ytChannelId']
     ]
@@ -58,6 +60,7 @@ function mapRedditListing(data: any, targetTitle: string, targetLink: string): a
       pubDate,
       isoDate: pubDate,
       guid: d.permalink || d.id || permalink,
+      thumbnail: redditListingThumbnail(d),
       creator: d.author || undefined
     }
   })
@@ -104,6 +107,7 @@ async function parseRedditFeed(url: string): Promise<any> {
           !hasRedditRemovalMarker(item.title, item.contentSnippet)
         ).map((item: any) => ({
           ...item,
+          thumbnail: redditFeedThumbnail(item),
           link: (item.link || '')
             .replace('https://old.reddit.com/', 'https://www.reddit.com/')
             .replace('http://old.reddit.com/', 'https://www.reddit.com/')

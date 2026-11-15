@@ -6,6 +6,7 @@ import { parentPort, workerData } from 'worker_threads'
 import RssParser from 'rss-parser'
 import crypto from 'crypto'
 import { XMLParser } from 'fast-xml-parser'
+import { redditFeedThumbnail, redditListingThumbnail } from '../reddit-thumbnails'
 import {
   FEED_USER_AGENT,
   fetchWithRetry,
@@ -68,6 +69,7 @@ const parser = new RssParser({
       ['media:group', 'mediaGroup'],
       ['media:description', 'mediaDescription'],
       ['media:community', 'mediaCommunity'],
+      ['media:thumbnail', 'redditThumbnails', { keepArray: true }],
       ['yt:videoId', 'ytVideoId'],
       ['yt:channelId', 'ytChannelId']
     ]
@@ -216,14 +218,7 @@ async function fetchRedditJson(feedId: string, jsonUrl: string): Promise<FeedRes
     const id = makeId(feedId, guid)
     const pubDate = d.created ? Math.floor(d.created * 1000) : lastFetched
 
-    // Get thumbnail from preview images (highest res)
-    let thumbnail: string | undefined
-    if (d.preview?.images?.[0]?.sources?.[0]) {
-      const src = d.preview.images[0].sources[0]
-      thumbnail = src.url
-    } else if (d.thumbnail && d.thumbnail !== 'self' && d.thumbnail !== 'default' && d.thumbnail !== 'image' && !d.thumbnail.includes('default_removal') && !d.thumbnail.includes('default_gallery')) {
-      thumbnail = d.thumbnail
-    }
+    const thumbnail = redditListingThumbnail(d)
 
     // Build content from selftext + link
     const content = d.selftext_html || d.selftext || (d.url ? `<a href="${d.url}">${d.url}</a>` : '')
@@ -268,7 +263,7 @@ async function fetchRedditWithFallbacks(feedId: string, url: string): Promise<Fe
         const rawContent = item['content:encoded'] || item.content || item.contentSnippet || ''
         const rawSnippet = item.contentSnippet || cleanHtml(rawContent)
         const pubDate = item.pubDate ? new Date(item.pubDate).getTime() : lastFetched
-        const thumbnail = extractThumbnail(item)
+        const thumbnail = redditFeedThumbnail(item)
         return {
           id,
           feedId,
@@ -301,7 +296,7 @@ async function fetchRedditWithFallbacks(feedId: string, url: string): Promise<Fe
 async function fetchFeed(feedId: string, url: string): Promise<FeedResult> {
   const lastFetched = Date.now()
   try {
-    // Reddit special handling — JSON API first, then RSS host fallbacks
+    // Reddit tries Atom first, followed by JSON.
     const redditResult = await fetchRedditWithFallbacks(feedId, url)
     if (redditResult) return redditResult
 
