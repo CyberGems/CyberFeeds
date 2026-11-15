@@ -1201,7 +1201,10 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             })}
           </div>
           <div className="settings-nav-footer">
-            <div className={`settings-save-status${statusVisible ? ' is-visible' : ''} ${statusClass}`.trim()}>
+            <div
+              aria-live="polite"
+              className={`settings-save-status${statusVisible ? ' is-visible' : ''} ${statusClass}`.trim()}
+            >
               {statusVisible && <span className="settings-save-dot" />}
               {statusText}
             </div>

@@ -2884,8 +2884,8 @@ mark.reader-search-match.reader-search-active {
 .settings-nav-footer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 12px;
+  gap: 0;
+  padding-top: 10px;
   margin-top: 8px;
   border-top: 1px solid var(--border-muted);
 }
@@ -2894,18 +2894,28 @@ mark.reader-search-match.reader-search-active {
   align-items: center;
   justify-content: center;
   gap: 7px;
-  min-height: 18px;
+  min-height: 0;
+  max-height: 0;
   padding: 0 4px;
+  overflow: hidden;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-muted);
   opacity: 0;
-  transition: opacity 0.2s;
+  transform: translateY(3px);
+  transition:
+    max-height 0.28s ease,
+    padding-bottom 0.28s ease,
+    opacity 0.2s ease,
+    transform 0.28s ease;
 }
 .settings-save-status.is-visible {
+  max-height: 20px;
+  padding-bottom: 8px;
   opacity: 1;
+  transform: translateY(0);
 }
 .settings-save-status.is-saved {
   color: var(--accent);
@@ -2920,6 +2930,12 @@ mark.reader-search-match.reader-search-active {
   background: currentColor;
   box-shadow: 0 0 8px currentColor;
   flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-save-status {
+    transition: none;
+    transform: none;
+  }
 }
 .settings-nav-close {
   width: 100%;
