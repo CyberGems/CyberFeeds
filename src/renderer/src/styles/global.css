@@ -411,6 +411,21 @@ body {
 }
 
 /* ─── Topbar ────────────────────────────────────────────────────────────── */
+.cleanup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 18px;
+  background: var(--bg-1);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: 50;
+  position: relative;
+  transition: all 0.2s ease;
+  animation: fadeIn 0.2s ease-out;
+}
+
 .topbar {
   height: var(--topbar-h);
   display: flex;

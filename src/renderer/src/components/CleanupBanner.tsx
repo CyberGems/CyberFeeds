@@ -36,20 +36,7 @@ export const CleanupBanner: React.FC<CleanupBannerProps> = ({ notice, onDismiss 
     <div
       role="status"
       aria-live="polite"
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '9px 18px',
-        background: 'rgba(22, 27, 34, 0.94)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(88, 166, 255, 0.28)',
-        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.25)',
-        zIndex: 50,
-        position: 'relative',
-        transition: 'all 0.2s ease',
-        animation: 'fadeIn 0.2s ease-out'
-      }}
+      className="cleanup-banner"
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
         <div
@@ -57,7 +44,7 @@ export const CleanupBanner: React.FC<CleanupBannerProps> = ({ notice, onDismiss 
             width: 26,
             height: 26,
             borderRadius: '50%',
-            background: hasDeleted ? 'rgba(63, 185, 80, 0.16)' : 'rgba(88, 166, 255, 0.16)',
+            background: hasDeleted ? 'var(--green-subtle)' : 'var(--accent-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -130,7 +117,7 @@ export const CleanupBanner: React.FC<CleanupBannerProps> = ({ notice, onDismiss 
               transition: 'background 0.15s ease, color 0.15s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+              e.currentTarget.style.background = 'var(--bg-2)'
               e.currentTarget.style.color = 'var(--text-primary)'
             }}
             onMouseLeave={(e) => {
