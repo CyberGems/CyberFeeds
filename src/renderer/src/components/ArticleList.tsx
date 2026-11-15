@@ -822,9 +822,6 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
       const next = list[index]
       if (!next) return
       useUIStore.getState().selectArticle(next.id)
-      if (!isTrash && !next.deletedAt && !next.read) {
-        void markRead(next.id, true)
-      }
     }
 
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -1836,7 +1833,6 @@ const ArticleList = memo(function ArticleList(): JSX.Element {
                             },
                             true
                           )
-                          if (!article.read) markRead(article.id, true)
                           setCtx(null)
                         }}
                       >
@@ -2016,7 +2012,6 @@ const ArticleItem = memo(
         } else {
           onSelect(article.id)
         }
-        if (!isTrash && !article.deletedAt && !article.read) markRead(article.id, true)
       },
       [article, isTrash, markRead, onSelect, selected, settings.openArticlesInTabs]
     )

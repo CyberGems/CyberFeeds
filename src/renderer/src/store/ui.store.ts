@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useArticlesStore } from './articles.store'
 
 export type Panel = 'settings' | 'inbox' | 'history' | 'addFeed' | 'editFeed' | 'addFolder' | 'editFolder' | 'about' | 'doctor' | null
 export type QuickFilter = 'all' | 'unread' | 'today' | 'priority' | 'video'
@@ -46,7 +47,7 @@ interface UIState {
   dismissCleanupNotice: () => void
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   selectedFeedId: null,
   selectedArticleId: null,
   activePanel: null,
@@ -87,7 +88,17 @@ export const useUIStore = create<UIState>((set) => ({
       readOnly:
         id === 'trash' || id === 'starred' ? false : (options?.readOnly ?? false)
     })),
-  selectArticle: (id) => set({ selectedArticleId: id }),
+  selectArticle: (id) => {
+    const { selectedArticleId, selectedFeedId } = get()
+    if (id === selectedArticleId) return
+    set({ selectedArticleId: id })
+    if (id && selectedFeedId !== 'trash') {
+      const { articles, markRead } = useArticlesStore.getState()
+      if (!articles.find((article) => article.id === id)?.read) {
+        void markRead(id, true).catch((error) => console.error('[Articles] Failed to mark selected article as read:', error))
+      }
+    }
+  },
   openPanel: (panel, id) => set(() => ({
     activePanel: panel,
     settingsFocusField: null,

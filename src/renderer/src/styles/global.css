@@ -1235,7 +1235,6 @@ body {
 }
 .article-item.active {
   background: var(--accent-subtle);
-  border-left: 2px solid var(--accent);
 }
 .article-item.context-active {
   background: var(--bg-1);
@@ -1336,10 +1335,6 @@ body {
    different from the header status LED (a glowing dot). */
 .article-item:not(.read) {
   box-shadow: inset 3px 0 0 0 var(--accent);
-}
-.article-item:not(.read).active {
-  /* Active already shows the accent border-left; avoid a doubled stripe */
-  box-shadow: none;
 }
 .article-feed-icon {
   width: 12px;
