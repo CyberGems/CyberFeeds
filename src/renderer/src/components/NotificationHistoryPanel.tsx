@@ -5,6 +5,7 @@ import { useTabsStore } from '../store/tabs.store'
 import { useSettingsStore } from '../store/settings.store'
 import { useArticlesStore } from '../store/articles.store'
 import type { NotificationHistoryItem } from '../types'
+import { getThumbnailUrl } from '../utils/thumbnail-url'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
 
@@ -81,7 +82,7 @@ const NotifCard = memo(function NotifCard({
       {item.thumbnail && showThumbnails && (
         <div className="notif-thumbnail">
           <img
-            src={item.thumbnail}
+            src={getThumbnailUrl(item.thumbnail)}
             alt=""
             loading="lazy"
             onError={(e) => {

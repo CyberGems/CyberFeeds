@@ -12,6 +12,7 @@ import type { Article } from '../types'
 import { useTranslation } from '../hooks/useTranslation'
 import { isYouTubeUrl, extractYouTubeVideoId, getYouTubeThumbnailUrl } from '@shared/youtube'
 import { copyArticleImage } from '../lib/copyImage'
+import { getThumbnailUrl } from '../utils/thumbnail-url'
 
 function formatFullDate(ts: number, lang: string): string {
   return new Date(ts).toLocaleString(lang === 'es' ? 'es-ES' : 'en-US', {
@@ -963,13 +964,14 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
   }, [article])
 
   const isReddit = Boolean(article && (article.link?.includes('reddit.com') || (article as any).feedUrl?.includes('reddit.com')))
-  const ytThumbnail = ytVideoId ? (article?.thumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
+  const articleThumbnail = article?.thumbnail ? getThumbnailUrl(article.thumbnail) : undefined
+  const ytThumbnail = ytVideoId ? (articleThumbnail || getYouTubeThumbnailUrl(ytVideoId)) : null
   const rawHtml = article ? (fullHtml || article.content || `<p>${article.snippet}</p>`) : ''
   const transformedHtml = transformDynamicEmbeds(rawHtml)
   const cleanedHtml = ytVideoId
     ? transformedHtml.replace(/<div\s+class=["']yt-player-container["'][\s\S]*?<\/div>/gi, '')
     : transformedHtml
-  const effectiveThumb = article ? (ytThumbnail || article.thumbnail) : null
+  const effectiveThumb = article ? (ytThumbnail || articleThumbnail) : null
   const bodyHtml = effectiveThumb && article
     ? removeDuplicateFeaturedImage(cleanedHtml, effectiveThumb, article.link)
     : cleanedHtml
@@ -1579,7 +1581,7 @@ const ArticleViewer = memo(function ArticleViewer(): JSX.Element {
                 }}
               >
                 <img
-                  src={article.thumbnail}
+                  src={articleThumbnail}
                   alt={article.title}
                   style={{
                     width: '100%',

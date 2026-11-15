@@ -44,6 +44,7 @@ import Tooltip from './Tooltip'
 import { copyArticleImage, featuredThumbImg } from '../lib/copyImage'
 import { articleHasVideo } from '@shared/youtube'
 import { normalizeSearchText } from '@shared/search-text'
+import { getThumbnailUrl } from '../utils/thumbnail-url'
 
 function formatDate(ts: number, t: any): string {
   const d = new Date(ts)
@@ -2094,7 +2095,7 @@ const ArticleItem = memo(
               </div>
             ) : (
               <img
-                src={article.thumbnail}
+                src={getThumbnailUrl(article.thumbnail)}
                 alt=""
                 loading="lazy"
                 onError={() => setFailedThumbnail(article.thumbnail)}
