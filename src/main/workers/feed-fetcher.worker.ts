@@ -10,6 +10,8 @@ import {
   FEED_USER_AGENT,
   fetchWithRetry,
   parseRedditFeedUrl,
+  hasRedditRemovalMarker,
+  isRemovedRedditListingItem,
   redditJsonApiUrl,
   redditRssFallbackUrls
 } from '../../shared/reddit'
@@ -207,7 +209,7 @@ async function fetchRedditJson(feedId: string, jsonUrl: string): Promise<FeedRes
   const data = await resp.json()
   const posts = data.data?.children || []
 
-  const articles: ParsedArticle[] = posts.map((post: any) => {
+  const articles: ParsedArticle[] = posts.filter((post: any) => post?.data && !isRemovedRedditListingItem(post.data)).map((post: any) => {
     const d = post.data
     const rawGuid = d.name || (d.id ? `t3_${d.id}` : '') || d.permalink || d.url
     const guid = getRedditGuid(rawGuid) || rawGuid
@@ -256,7 +258,10 @@ async function fetchRedditWithFallbacks(feedId: string, url: string): Promise<Fe
       if (!text || text.trim().toLowerCase().startsWith('<!doctype html')) continue
       const feed = await parser.parseString(text)
       const lastFetched = Date.now()
-      const articles: ParsedArticle[] = (feed.items || []).slice(0, 100).map((item: any) => {
+      const items = (feed.items || []).slice(0, 100)
+      const articles: ParsedArticle[] = items.filter((item: any) =>
+        !hasRedditRemovalMarker(item.title, item.contentSnippet || cleanHtml(item['content:encoded'] || item.content || ''))
+      ).map((item: any) => {
         const rawGuid = item.guid || item.id || item.link || item.title || String(Math.random())
         const guid = getRedditGuid(rawGuid) || rawGuid
         const id = makeId(feedId, guid)
@@ -277,7 +282,7 @@ async function fetchRedditWithFallbacks(feedId: string, url: string): Promise<Fe
           thumbnail
         }
       })
-      if (articles.length > 0) return { feedId, articles, lastFetched }
+      if (items.length > 0) return { feedId, articles, lastFetched }
     } catch (err) {
       console.warn(`[Worker] Reddit RSS fallback failed for ${rssUrl}:`, err)
     }

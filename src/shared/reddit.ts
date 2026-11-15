@@ -23,6 +23,35 @@ function ensureUrl(raw: string): URL | null {
   }
 }
 
+export function isRedditSourceUrl(raw: string | null | undefined): boolean {
+  const url = raw ? ensureUrl(raw) : null
+  return !!url && (url.protocol === 'https:' || url.protocol === 'http:') &&
+    (/(^|\.)reddit\.com$/i.test(url.hostname) || url.hostname === 'redd.it')
+}
+
+const REDDIT_REMOVAL_MARKER = /^\[\s*(?:deleted|removed(?: by (?:(?:a )?moderators?|reddit(?: on account of violating the content policy\.?)?))?)\s*\]/i
+const REDDIT_FEED_FOOTER = /^(?:submitted by\s+\/?u\/[\w-]+\s*)?(?:\[link\]\s*)?(?:\[comments\])?$/i
+
+export function hasRedditRemovalMarker(title: string | null | undefined, body: string | null | undefined): boolean {
+  const heading = title?.trim() ?? ''
+  if (heading.match(REDDIT_REMOVAL_MARKER)?.[0] === heading) return true
+
+  const text = body?.trim() ?? ''
+  const marker = text.match(REDDIT_REMOVAL_MARKER)?.[0]
+  return !!marker && REDDIT_FEED_FOOTER.test(text.slice(marker.length).trim())
+}
+
+export function isRemovedRedditListingItem(item: {
+  title?: string
+  selftext?: string
+  removed?: boolean
+  removed_by_category?: string | null
+}): boolean {
+  const category = item.removed_by_category
+  return item.removed === true || (typeof category === 'string' && category.trim() !== '') ||
+    hasRedditRemovalMarker(item.title, item.selftext)
+}
+
 /**
  * Detect Reddit feed-ish URLs:
  * /r/sub, /r/sub/, /r/sub/.rss, /r/sub.rss, /r/sub/hot/.rss, .json, users, etc.

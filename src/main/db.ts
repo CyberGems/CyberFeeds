@@ -3,6 +3,7 @@ import { app } from 'electron'
 import path from 'path'
 import type { Folder, Feed, Article, AppSettings, NotificationHistoryItem, WindowState, CleanupScope, KeyboardShortcuts } from './types'
 import { DEFAULT_SETTINGS } from './types'
+import { hasRedditRemovalMarker, isRedditSourceUrl } from '../shared/reddit'
 import { normalizeSearchText } from '../shared/search-text'
 import { articleHasVideo } from '../shared/youtube'
 
@@ -20,7 +21,33 @@ export function initDb(): void {
   db.pragma('foreign_keys = ON')
   createSchema()
   migrate()
+  createVisibilityViews()
   purgeOldTrash(TRASH_RETENTION_DAYS)
+}
+
+function createVisibilityViews(): void {
+  db.function('reddit_removal_marker', { deterministic: true }, (title: string | null, body: string | null) =>
+    Number(hasRedditRemovalMarker(title, body)))
+  db.function('reddit_source', { deterministic: true }, (url: string | null) =>
+    Number(isRedditSourceUrl(url)))
+
+  // Hide placeholders stored by older versions while retaining the underlying rows.
+  // Check feed provenance only when the article or notification has a removal marker.
+  db.exec(`
+    CREATE TEMP VIEW visible_articles AS
+    SELECT a.* FROM articles a
+    WHERE CASE WHEN reddit_removal_marker(a.title, a.snippet)
+      THEN NOT (reddit_source(a.link) OR reddit_source((SELECT f.url FROM feeds f WHERE f.id = a.feedId)))
+      ELSE 1 END;
+
+    CREATE TEMP VIEW visible_notification_history AS
+    SELECT nh.* FROM notification_history nh
+    WHERE CASE WHEN reddit_removal_marker(nh.title, nh.body)
+      THEN NOT (reddit_source(nh.link) OR reddit_source((
+        SELECT f.url FROM articles a JOIN feeds f ON f.id = a.feedId WHERE a.id = nh.articleId
+      )))
+      ELSE 1 END;
+  `)
 }
 
 function migrate(): void {
@@ -440,7 +467,7 @@ function buildSearchClause(search: string): { sql: string; params: string[] } {
   }
 }
 
-const ARTICLE_FILTER_SOURCE = 'FROM articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1'
+const ARTICLE_FILTER_SOURCE = 'FROM visible_articles a LEFT JOIN feeds f ON a.feedId = f.id WHERE 1=1'
 
 function buildArticleFilters(query: ArticleQuery): { sql: string; params: (string | number)[] } {
   const {
@@ -539,28 +566,25 @@ export function getUnreadCountByFeed(): FeedArticleCounts {
   const rows = db.prepare(`
     SELECT feedId,
            COUNT(*) as total,
+           SUM(CASE WHEN starred = 1 THEN 1 ELSE 0 END) as starred,
            SUM(CASE WHEN read = 0 THEN 1 ELSE 0 END) as unread
-    FROM articles
+    FROM visible_articles
     WHERE deletedAt IS NULL
     GROUP BY feedId
-  `).all() as { feedId: string; total: number; unread: number }[]
+  `).all() as { feedId: string; total: number; starred: number; unread: number }[]
 
   const unread: Record<string, number> = {}
   const total: Record<string, number> = {}
+  let starred = 0
+  let all = 0
   for (const row of rows) {
     unread[row.feedId] = row.unread
     total[row.feedId] = row.total
+    starred += row.starred
+    all += row.total
   }
 
-  const starredRow = db.prepare('SELECT COUNT(*) as c FROM articles WHERE starred=1 AND deletedAt IS NULL').get() as { c: number }
-  const allRow = db.prepare('SELECT COUNT(*) as c FROM articles WHERE deletedAt IS NULL').get() as { c: number }
-
-  return {
-    unread,
-    total,
-    starred: starredRow.c,
-    all: allRow.c
-  }
+  return { unread, total, starred, all }
 }
 
 export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>[]): Omit<Article, 'feedTitle' | 'feedIcon'>[] {
@@ -578,6 +602,8 @@ export function insertArticles(articles: Omit<Article, 'feedTitle' | 'feedIcon'>
   db.transaction(() => {
     for (const a of articles) {
       try {
+        if (hasRedditRemovalMarker(a.title, a.snippet) &&
+          (isRedditSourceUrl(a.link) || isRedditSourceUrl(getFeedById(a.feedId)?.url))) continue
         let initialRead = 0
         if (isAutoReadMute) {
           const title = normalizeSearchText(a.title)
@@ -655,7 +681,7 @@ export function emptyTrash(): void {
 }
 
 export function getTrashCount(): number {
-  return (db.prepare('SELECT COUNT(*) as c FROM articles WHERE deletedAt IS NOT NULL').get() as { c: number }).c
+  return (db.prepare('SELECT COUNT(*) as c FROM visible_articles WHERE deletedAt IS NOT NULL').get() as { c: number }).c
 }
 
 export function markAllRead(feedId?: string): void {
@@ -698,7 +724,7 @@ export function starArticle(id: string, starred: boolean): void {
 export function getArticleById(id: string): Article | undefined {
   return db.prepare(`
     SELECT a.*, f.title as feedTitle, f.icon as feedIcon
-    FROM articles a LEFT JOIN feeds f ON a.feedId = f.id
+    FROM visible_articles a LEFT JOIN feeds f ON a.feedId = f.id
     WHERE a.id = ?
   `).get(id) as Article | undefined
 }
@@ -742,7 +768,7 @@ export function getTodayArticles(): Article[] {
   startOfDay.setHours(0, 0, 0, 0)
   return db.prepare(`
     SELECT a.*, f.title as feedTitle, f.icon as feedIcon
-    FROM articles a LEFT JOIN feeds f ON a.feedId = f.id
+    FROM visible_articles a LEFT JOIN feeds f ON a.feedId = f.id
     WHERE a.deletedAt IS NULL AND a.pubDate >= ?
     ORDER BY a.pubDate DESC
   `).all(startOfDay.getTime()) as Article[]
@@ -755,23 +781,23 @@ export function getNotificationHistory(limit?: number): NotificationHistoryItem[
     typeof limit === 'number' ? limit : (getSettings().notifications?.historyLimit ?? 1000)
   if (effectiveLimit === 0) {
     return db
-      .prepare('SELECT * FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC')
+      .prepare('SELECT * FROM visible_notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC')
       .all() as NotificationHistoryItem[]
   }
   return db
-    .prepare('SELECT * FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC LIMIT ?')
+    .prepare('SELECT * FROM visible_notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC LIMIT ?')
     .all(effectiveLimit) as NotificationHistoryItem[]
 }
 
 export function getNotificationHistoryTotalCount(): number {
-  const row = db.prepare('SELECT COUNT(*) as c FROM notification_history').get() as { c: number }
+  const row = db.prepare('SELECT COUNT(*) as c FROM visible_notification_history').get() as { c: number }
   return row ? row.c : 0
 }
 
 export function getRecentNotifications(limit = 15): (NotificationHistoryItem & { feedId?: string })[] {
   return db.prepare(`
     SELECT nh.*, COALESCE(a.feedId, '') as feedId, COALESCE(nh.icon, f.icon, '') as icon
-    FROM notification_history nh
+    FROM visible_notification_history nh
     LEFT JOIN articles a ON nh.articleId = a.id
     LEFT JOIN feeds f ON a.feedId = f.id
     ORDER BY COALESCE(nh.receivedAt, nh.createdAt) DESC
@@ -781,8 +807,7 @@ export function getRecentNotifications(limit = 15): (NotificationHistoryItem & {
 
 export function pruneNotificationHistory(limit: number): void {
   if (limit <= 0) return
-  const totalRow = db.prepare('SELECT COUNT(*) as c FROM notification_history').get() as { c: number }
-  const total = totalRow ? totalRow.c : 0
+  const total = getNotificationHistoryTotalCount()
   if (total > limit) {
     const excess = total - limit
     const lastChecked = getNotificationsLastChecked()
@@ -790,7 +815,7 @@ export function pruneNotificationHistory(limit: number): void {
     const deletedSeen = db.prepare(`
       DELETE FROM notification_history
       WHERE id IN (
-        SELECT id FROM notification_history
+        SELECT id FROM visible_notification_history
         WHERE COALESCE(receivedAt, createdAt) <= ?
         ORDER BY COALESCE(receivedAt, createdAt) ASC
         LIMIT ?
@@ -801,10 +826,10 @@ export function pruneNotificationHistory(limit: number): void {
     if (remainingExcess > 0) {
       // If there were not enough seen notifications, prune oldest overall to respect the hard limit
       db.prepare(`
-        DELETE FROM notification_history WHERE id NOT IN (
-          SELECT id FROM notification_history ORDER BY COALESCE(receivedAt, createdAt) DESC LIMIT ?
+        DELETE FROM notification_history WHERE id IN (
+          SELECT id FROM visible_notification_history ORDER BY COALESCE(receivedAt, createdAt) ASC LIMIT ?
         )
-      `).run(limit)
+      `).run(remainingExcess)
     }
   }
 }
@@ -920,7 +945,7 @@ export function setNotificationsLastChecked(ts: number): void {
 export function getUnseenNotificationCount(): number {
   const lastChecked = getNotificationsLastChecked()
   const row = db
-    .prepare('SELECT COUNT(*) as c FROM notification_history WHERE COALESCE(receivedAt, createdAt) > ?')
+    .prepare('SELECT COUNT(*) as c FROM visible_notification_history WHERE COALESCE(receivedAt, createdAt) > ?')
     .get(lastChecked) as { c: number }
   return row ? row.c : 0
 }

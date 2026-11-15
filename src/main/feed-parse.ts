@@ -6,6 +6,8 @@ import {
   fetchWithRetry,
   formatHttpFeedError,
   parseRedditFeedUrl,
+  hasRedditRemovalMarker,
+  isRemovedRedditListingItem,
   redditCanonicalRssUrl,
   redditJsonApiUrl,
   redditRssFallbackUrls
@@ -43,7 +45,7 @@ function uiLang(): 'en' | 'es' {
 
 function mapRedditListing(data: any, targetTitle: string, targetLink: string): any {
   const posts = data?.data?.children || []
-  const items = posts.map((post: any) => {
+  const items = posts.filter((post: any) => post?.data && !isRemovedRedditListingItem(post.data)).map((post: any) => {
     const d = post.data || {}
     const permalink = d.permalink ? `https://www.reddit.com${d.permalink}` : (d.url || '')
     const content = d.selftext_html || d.selftext || (d.url ? `<a href="${d.url}">${d.url}</a>` : '')
@@ -98,7 +100,9 @@ async function parseRedditFeed(url: string): Promise<any> {
       }
       const feed = await rssParser.parseString(text)
       if (feed?.items?.length) {
-        const sanitizedItems = feed.items.map((item: any) => ({
+        const sanitizedItems = feed.items.filter((item: any) =>
+          !hasRedditRemovalMarker(item.title, item.contentSnippet)
+        ).map((item: any) => ({
           ...item,
           link: (item.link || '')
             .replace('https://old.reddit.com/', 'https://www.reddit.com/')
@@ -129,7 +133,7 @@ async function parseRedditFeed(url: string): Promise<any> {
     if (resp.ok) {
       const data = await resp.json()
       const mapped = mapRedditListing(data, title, link)
-      if (mapped.items.length > 0) return mapped
+      if (data?.data?.children?.length) return mapped
       errors.push(`${jsonUrl} → no items`)
     } else {
       if (resp.status === 429 || resp.status === 503) rateLimited = true
