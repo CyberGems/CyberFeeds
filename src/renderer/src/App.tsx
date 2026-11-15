@@ -106,6 +106,10 @@ export default function App(): JSX.Element {
   const dismissSettings = useOverlayDismiss(handleCloseSettings)
 
   const [updateStatus, setUpdateStatus] = useState<ActiveUpdateStatus | null>(null)
+  const [updateNoticeStatus, setUpdateNoticeStatus] = useState<ActiveUpdateStatus | null>(null)
+  const handleShowUpdate = useCallback(() => {
+    if (updateNoticeStatus) setUpdateStatus(updateNoticeStatus)
+  }, [updateNoticeStatus])
   const [isPortable, setIsPortable] = useState(false)
   const [showCloseDialog, setShowCloseDialog] = useState(false)
 
@@ -168,13 +172,18 @@ export default function App(): JSX.Element {
       if (s.state === 'available') {
         const skipped = localStorage.getItem('cyberfeeds_skipped_update_version')
         if (skipped === s.version) {
+          setUpdateStatus(null)
+          setUpdateNoticeStatus(null)
           return
         }
+        setUpdateNoticeStatus(s)
         setUpdateStatus(s)
       } else if (s.state === 'downloading' || s.state === 'downloaded') {
+        setUpdateNoticeStatus(s)
         setUpdateStatus(s)
       } else {
         setUpdateStatus(null)
+        setUpdateNoticeStatus(null)
       }
     })
     return () => {
@@ -635,7 +644,10 @@ export default function App(): JSX.Element {
           onClose={() => setOnboardingPreview(false)}
         />
       )}
-      <TopBar />
+      <TopBar
+        updateVersion={updateNoticeStatus?.version}
+        onShowUpdate={handleShowUpdate}
+      />
       {cleanupNotice && (
         <CleanupBanner notice={cleanupNotice} onDismiss={dismissCleanupNotice} />
       )}
@@ -707,6 +719,7 @@ export default function App(): JSX.Element {
               /* ignore */
             }
             setUpdateStatus(null)
+            setUpdateNoticeStatus(null)
           }}
           onDownload={async () => {
             const currentVer = updateStatus.version
@@ -715,7 +728,13 @@ export default function App(): JSX.Element {
             } catch {
               /* ignore */
             }
-            setUpdateStatus({ state: 'downloading', version: currentVer, percent: 0 })
+            const downloadingStatus: ActiveUpdateStatus = {
+              state: 'downloading',
+              version: currentVer,
+              percent: 0
+            }
+            setUpdateNoticeStatus(downloadingStatus)
+            setUpdateStatus(downloadingStatus)
             await window.api.downloadUpdate()
           }}
           onInstall={() => {

@@ -437,6 +437,55 @@ body {
   -webkit-app-region: drag;
   flex-shrink: 0;
 }
+
+.topbar-update-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-right: 4px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.topbar-update-button:is(:hover, :focus-visible) {
+  animation: none;
+  background: var(--accent-glow, var(--accent-subtle));
+}
+
+.topbar-update-button:active {
+  transform: scale(0.95);
+}
+
+.topbar-update-button:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@keyframes topbar-update-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-subtle);
+  }
+  50% {
+    box-shadow: 0 0 0 3px var(--accent-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .topbar-update-button {
+    animation: topbar-update-pulse 3.5s ease-in-out infinite;
+  }
+}
+
 .topbar-drag {
   -webkit-app-region: drag;
   flex: 1;

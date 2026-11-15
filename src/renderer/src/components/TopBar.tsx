@@ -10,6 +10,7 @@ import {
   X,
   LayoutTemplate,
   MoreHorizontal,
+  ArrowDown,
   Heart,
   RefreshCw,
   Pause,
@@ -42,6 +43,11 @@ const FAQ_URL = 'https://github.com/CyberGems/CyberFeeds/wiki/FAQ'
 const CHANGELOG_URL = 'https://github.com/CyberGems/CyberFeeds/releases'
 const HOMEPAGE_URL = 'https://cybergems.org'
 
+interface TopBarProps {
+  updateVersion?: string | null
+  onShowUpdate?: () => void
+}
+
 function withShortcut(label: string, shortcut: string): ReactNode {
   return (
     <>
@@ -51,7 +57,7 @@ function withShortcut(label: string, shortcut: string): ReactNode {
   )
 }
 
-const TopBar = memo(function TopBar(): JSX.Element {
+const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps): JSX.Element {
   const {
     openPanel,
     setLayout,
@@ -365,6 +371,9 @@ const TopBar = memo(function TopBar(): JSX.Element {
     settings.closeChoiceRemembered && settings.minimizeToTray
       ? t.topBar.minimizeToTray
       : t.topBar.close
+  const updateLabel = updateVersion
+    ? `${t.about.statuses.available.replace(/[.!?…]+$/, '')}: v${updateVersion}`
+    : ''
 
   return (
     <div className="topbar">
@@ -570,6 +579,19 @@ const TopBar = memo(function TopBar(): JSX.Element {
           </div>
         )}
       </div>
+
+      {updateVersion && onShowUpdate && (
+        <Tooltip label={updateLabel} placement="bottom">
+          <button
+            type="button"
+            className="topbar-update-button no-drag"
+            aria-label={updateLabel}
+            onClick={onShowUpdate}
+          >
+            <ArrowDown size={14} strokeWidth={2.4} aria-hidden="true" />
+          </button>
+        </Tooltip>
+      )}
 
       <div className="divider" style={{ width: 1, height: 18, margin: '0 4px' }} />
 
