@@ -1,4 +1,4 @@
-import { BrowserWindow, screen, ipcMain, shell, app } from 'electron'
+import { BrowserWindow, screen, ipcMain, shell, app, powerMonitor } from 'electron'
 import type { Display } from 'electron'
 import path from 'path'
 import url from 'url'
@@ -58,6 +58,11 @@ function maxHeightPercent(s: NotificationSettings): number {
 
 export function initNotifier(s: NotificationSettings): void {
   settings = s
+  if (!notifierPowerEventsRegistered) {
+    notifierPowerEventsRegistered = true
+    powerMonitor.on('suspend', handleNotifierSuspend)
+    powerMonitor.on('resume', handleNotifierResume)
+  }
   try {
     if (settings.displayId !== -1 && settings.displayBounds) {
       const displays = screen.getAllDisplays()
@@ -253,6 +258,59 @@ function reassertNotifierPosition(win: BrowserWindow, cardCount: number, s: Noti
 }
 
 let notifierReady: Promise<void> | null = null
+let notifierWasVisibleBeforeSuspend = false
+let notifierResumeTimer: ReturnType<typeof setTimeout> | null = null
+let notifierPowerEventsRegistered = false
+
+function handleNotifierSuspend(): void {
+  const win = notifierWindow
+  if (!win || win.isDestroyed() || !win.isVisible() || displayStack.length === 0) return
+
+  notifierWasVisibleBeforeSuspend = true
+  isHovering = false
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+    hideTimer = null
+  }
+
+  try {
+    win.setIgnoreMouseEvents(true, { forward: true })
+  } catch {
+    /* ignore */
+  }
+  win.hide()
+}
+
+function handleNotifierResume(): void {
+  if (!notifierWasVisibleBeforeSuspend) return
+  notifierWasVisibleBeforeSuspend = false
+
+  if (notifierResumeTimer) clearTimeout(notifierResumeTimer)
+  notifierResumeTimer = setTimeout(() => {
+    notifierResumeTimer = null
+    const win = notifierWindow
+    if (!win || win.isDestroyed() || displayStack.length === 0) return
+
+    // Windows can lose the alpha channel of transparent HWNDs across sleep.
+    // Reassert transparency, then show the retained stack after it has repainted.
+    try {
+      win.setBackgroundColor('#00000000')
+      win.setOpacity(0)
+    } catch {
+      /* ignore */
+    }
+
+    void pushToWindow(settings).finally(() => {
+      if (!win.isDestroyed()) {
+        try {
+          win.setOpacity(1)
+        } catch {
+          /* ignore */
+        }
+      }
+    })
+  }, 500)
+}
 
 function createNotifierWindow(s: NotificationSettings): BrowserWindow {
   const initW = contentWidth(s) + SCROLLBAR_W
@@ -265,6 +323,8 @@ function createNotifierWindow(s: NotificationSettings): BrowserWindow {
     height: initH,
     frame: false,
     transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: false,
     resizable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
