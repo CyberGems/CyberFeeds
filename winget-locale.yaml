@@ -1,0 +1,22 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.defaultLocale.1.6.0.schema.json
+PackageIdentifier: CyberGems.CyberFeeds
+PackageVersion: {{VERSION}}
+PackageLocale: en-US
+Publisher: CyberGems
+PackageName: CyberFeeds
+PackageUrl: https://cybergems.org/apps/cyberfeeds/
+License: GPL-3.0-or-later
+LicenseUrl: https://github.com/CyberGems/CyberFeeds/blob/main/LICENSE
+Copyright: Copyright (C) 2026 CyberGems
+ShortDescription: Private feed reader for websites, YouTube and Reddit
+Description: CyberFeeds brings updates from the websites, YouTube channels and Reddit communities you follow into one desktop app. Add RSS or Atom feeds, or import your subscriptions from an OPML file. Catch up in a focused reader, find articles later with search, and choose which new posts deserve a notification. Folders, favorites and read states help you stay organized, while scheduled backups to a folder you choose and a local SQLite database keep your library on your PC without an account. Built with Electron.
+Tags:
+- rss
+- feed-reader
+- atom
+- news
+- productivity
+Moniker: cyberfeeds
+ReleaseNotesUrl: https://github.com/CyberGems/CyberFeeds/releases/tag/{{TAG}}
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

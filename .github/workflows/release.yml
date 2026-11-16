@@ -107,6 +107,26 @@ jobs:
           $notes = $template.Replace("{{VERSION}}", "${{ github.ref_name }}").Replace("{{RAW_VERSION}}", $rawVersion).Replace("{{INSTALLER_HASH}}", $installerHash).Replace("{{PORTABLE_HASH}}", $portableHash)
           [System.IO.File]::WriteAllText("release_notes.md", $notes, [System.Text.Encoding]::UTF8)
 
+          $tag = "${{ github.ref_name }}"
+          # winget versions carry no 'v' prefix (1.32.0, not v1.32.0); URLs keep the tag's.
+          $manifestFiles = @{
+              "winget-version.yaml"   = "CyberGems.CyberFeeds.yaml"
+              "winget-locale.yaml"    = "CyberGems.CyberFeeds.locale.en-US.yaml"
+              "winget-installer.yaml" = "CyberGems.CyberFeeds.installer.yaml"
+          }
+          New-Item -ItemType Directory -Path winget-pkg -Force | Out-Null
+          foreach ($entry in $manifestFiles.GetEnumerator()) {
+              $manifestTemplate = [System.IO.File]::ReadAllText($entry.Key, [System.Text.Encoding]::UTF8)
+              $manifest = $manifestTemplate.Replace("{{VERSION}}", $rawVersion).Replace("{{TAG}}", $tag).Replace("{{INSTALLER_HASH}}", $installerHash)
+              [System.IO.File]::WriteAllText("winget-pkg/$($entry.Value)", $manifest, [System.Text.Encoding]::UTF8)
+          }
+          Write-Host "Generated winget manifests for $tag with installer hash: $installerHash"
+
+      - name: Validate winget manifests
+        shell: pwsh
+        run: |
+          winget validate winget-pkg
+
       - name: Upload Release Assets
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
@@ -121,5 +141,8 @@ jobs:
             dist/*.exe
             dist/*.blockmap
             dist/latest.yml
+            winget-pkg/CyberGems.CyberFeeds.yaml
+            winget-pkg/CyberGems.CyberFeeds.locale.en-US.yaml
+            winget-pkg/CyberGems.CyberFeeds.installer.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
