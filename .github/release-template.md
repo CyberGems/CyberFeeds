@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-Notifications now follow the selected app theme and restore their transparent surface after the PC wakes. A titlebar update indicator, smoother theme-aware tab navigation, and a calmer settings experience with consistent introductions and clearer shortcut controls make daily reading more comfortable.
+Every release now ships validated winget manifests for the Windows Package Manager, with an automated submission workflow that keeps the catalog up to date. This maintenance release carries no application changes; dependencies and documentation stay current.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,26 +17,16 @@ Notifications now follow the selected app theme and restore their transparent su
 
 ### ✨ Key Features & Highlights
 
-- 🎨 **Notifications That Match Your Theme**:
-  - Notification cards follow the selected dark, grayscale, or light theme, and their transparent surface recovers after the PC wakes from sleep.
-  - The cleanup banner adapts to the active theme.
+- 📦 **Windows Package Manager ready**: Every release ships validated winget manifests alongside the installer and portable archive, and an automated workflow submits them once the submission pipeline is armed.
 
-- 🔄 **Updates Within Reach**:
-  - A titlebar indicator appears when an update is available and opens the updater.
-
-- 🧭 **Smoother Tabs and Clearer Settings**:
-  - The open-tabs menu follows the selected theme, and mouse-wheel navigation scrolls smoothly without restarting hover marquees or refreshing tooltips.
-  - Settings sections share concise introductions, use calmer icon and selection colors, and animate the saved-state divider. Global shortcut scope stays disabled until a shortcut is assigned.
-
-- 🪟 **A Suite-Consistent Installer**:
-  - The installer sidebar now uses the shared suite style and features the app icon.
+- 🧰 **Maintenance only**: No application changes in this release; it packages the winget submission kit and current documentation.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Las notificaciones siguen el tema elegido y recuperan su transparencia al volver de suspensión. Un indicador de actualización en la barra superior, una navegación por pestañas más fluida y una configuración más clara, con ayudas uniformes y controles de atajos más claros, hacen más cómoda la lectura diaria.
+Cada release publica ahora manifiestos winget validados para el Windows Package Manager, con un flujo de envío automatizado que mantiene el catálogo al día. Esta versión de mantenimiento no cambia la aplicación; las dependencias y la documentación siguen al día.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -44,19 +34,9 @@ Las notificaciones siguen el tema elegido y recuperan su transparencia al volver
 
 ### ✨ Novedades destacadas
 
-- 🎨 **Notificaciones que siguen tu tema**:
-  - Las tarjetas siguen el tema oscuro, Gris o Claro, y su fondo transparente se recupera al volver de la suspensión del PC.
-  - El banner de limpieza se adapta al tema activo.
+- 📦 **Listo para el Windows Package Manager**: Cada release publica manifiestos winget validados junto al instalador y el archivo portable, y un workflow automatizado los envía cuando el pipeline se arme.
 
-- 🔄 **Actualizaciones a mano**:
-  - Un indicador en la barra superior aparece cuando hay una actualización disponible y abre el actualizador.
-
-- 🧭 **Pestañas más fluidas y configuración más clara**:
-  - El menú de pestañas abiertas sigue el tema elegido y la rueda lo desplaza suavemente, sin reiniciar los marquee ni refrescar los tooltips.
-  - Las secciones de configuración comparten ayudas concisas, usan colores más sobrios para iconos y selección, y animan el separador de guardado. El ámbito global permanece desactivado hasta asignar un atajo.
-
-- 🪟 **Un instalador acorde con la suite**:
-  - La barra lateral del instalador ahora usa el estilo común e incluye el icono destacado de la app.
+- 🧰 **Solo mantenimiento**: Sin cambios en la aplicación en esta versión; incorpora el kit de envío winget y la documentación al día.
 
 ### ⚠️ Antes de instalar
 

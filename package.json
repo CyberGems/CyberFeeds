@@ -1,7 +1,7 @@
 {
   "name": "cyberfeeds",
   "productName": "CyberFeeds",
-  "version": "1.32.0",
+  "version": "1.32.1",
   "description": "Follow websites, YouTube and Reddit in one calm, private reading space.",
   "main": "./out/main/index.js",
   "author": "CyberGems",

@@ -2,6 +2,16 @@
 
 All notable changes to CyberFeeds are documented here.
 
+## [1.32.1] - 2026-11-16
+
+### 🇺🇸 English
+
+- Ship winget manifests with every release and automate Windows Package Manager submissions.
+
+### 🇪🇸 Español
+
+- Publica manifiestos winget con cada release y automatiza los envíos al Windows Package Manager.
+
 ## [1.32.0] - 2026-11-15
 
 ### 🇺🇸 English
