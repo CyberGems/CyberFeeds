@@ -231,6 +231,8 @@ export interface TrayMenuSnapshot {
   language: 'es' | 'en'
   theme: string
   showSuitePromo: boolean
+  flyoutSide?: 'left' | 'right'
+  verticalAlign?: 'bottom' | 'top'
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {

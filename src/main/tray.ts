@@ -19,9 +19,19 @@ let currentScaleFactor = 0
 let cachedIdleImage: Electron.NativeImage | null = null
 const cachedFrames: Electron.NativeImage[] = []
 
+const TRAY_MENU_CARD_WIDTH = 268
+const TRAY_MENU_FLYOUT_WIDTH = 268
+const TRAY_MENU_FLYOUT_GAP = 8
+const TRAY_MENU_FLYOUT_SPAN = TRAY_MENU_FLYOUT_GAP + TRAY_MENU_FLYOUT_WIDTH
+const TRAY_MENU_SHADOW_PAD = 12
+const TRAY_MENU_WINDOW_WIDTH =
+  TRAY_MENU_CARD_WIDTH + TRAY_MENU_FLYOUT_SPAN + 2 * TRAY_MENU_SHADOW_PAD
+
 let trayWindow: BrowserWindow | null = null
-let currentTraySize = { width: 292, height: 380 }
+let currentTraySize = { width: TRAY_MENU_WINDOW_WIDTH, height: 440 }
 let ipcRegistered = false
+let trayMenuFlyoutSide: 'left' | 'right' = 'left'
+let trayMenuVerticalAlign: 'bottom' | 'top' = 'bottom'
 
 function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
   const resourcesDir = path.join(__dirname, '../../resources')
@@ -204,7 +214,9 @@ function getTrayMenuSnapshot(): TrayMenuSnapshot {
     isPolling: activeActivities.has('polling'),
     language: settings.language === 'es' ? 'es' : 'en',
     theme: settings.theme || 'dark',
-    showSuitePromo: settings.showSuitePromo !== false
+    showSuitePromo: settings.showSuitePromo !== false,
+    flyoutSide: trayMenuFlyoutSide,
+    verticalAlign: trayMenuVerticalAlign
   }
 }
 
@@ -270,7 +282,7 @@ function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: num
 
 function calculateTrayMenuGeometry(
   iconBounds: any,
-  windowW: number,
+  _windowW: number,
   windowH: number
 ): { x: number; y: number; width: number; height: number } {
   let b: { x: number; y: number; width: number; height: number }
@@ -303,40 +315,64 @@ function calculateTrayMenuGeometry(
   const work = display.workArea || display.bounds
 
   const gap = 4
-  const shadowPad = 12
-  const cardW = windowW - 2 * shadowPad
+  const shadowPad = TRAY_MENU_SHADOW_PAD
+  const cardW = TRAY_MENU_CARD_WIDTH
+  const mainWindowW = cardW + 2 * shadowPad
+  const windowW = TRAY_MENU_WINDOW_WIDTH
   const cardH = windowH - 2 * shadowPad
 
   let cardX: number, cardY: number
+  let verticalAlign: 'bottom' | 'top' = 'bottom'
   const dLeft = cx - work.x
-  const dRight = (work.x + work.width) - cx
+  const dRight = work.x + work.width - cx
   const dTop = cy - work.y
-  const dBottom = (work.y + work.height) - cy
+  const dBottom = work.y + work.height - cy
 
   if (dBottom <= dLeft && dBottom <= dRight && dBottom <= dTop) {
-    // Taskbar at bottom
     cardX = cx - cardW / 2
     cardY = (b.height > 0 ? b.y - cardH : work.y + work.height - cardH) - gap
+    verticalAlign = 'bottom'
   } else if (dTop <= dLeft && dTop <= dRight) {
-    // Taskbar at top
     cardX = cx - cardW / 2
     cardY = (b.height > 0 ? b.y + b.height : work.y) + gap
+    verticalAlign = 'top'
   } else if (dLeft <= dRight) {
-    // Taskbar at left
     cardX = (b.width > 0 ? b.x + b.width : work.x) + gap
     cardY = cy - cardH / 2
+    verticalAlign = 'bottom'
   } else {
-    // Taskbar at right
     cardX = (b.width > 0 ? b.x - cardW : work.x + work.width - cardW) - gap
     cardY = cy - cardH / 2
+    verticalAlign = 'bottom'
   }
 
-  let windowX = cardX - shadowPad
-  let windowY = cardY - shadowPad
+  const mainWindowX = Math.min(
+    Math.max(cardX - shadowPad, work.x + 2),
+    work.x + work.width - mainWindowW - 2
+  )
+  const spaceLeft = mainWindowX - (work.x + 2)
+  const spaceRight = work.x + work.width - 2 - (mainWindowX + mainWindowW)
+  const preferLeft = cx >= work.x + work.width / 2
+  const flyoutSide: 'left' | 'right' = preferLeft
+    ? spaceLeft >= TRAY_MENU_FLYOUT_SPAN || spaceLeft >= spaceRight
+      ? 'left'
+      : 'right'
+    : spaceRight >= TRAY_MENU_FLYOUT_SPAN || spaceRight >= spaceLeft
+      ? 'right'
+      : 'left'
 
-  windowX = Math.min(Math.max(windowX, work.x + 2), work.x + work.width - windowW - 2)
-  const screenBottom = (display.bounds ? display.bounds.y + display.bounds.height : work.y + work.height) - 2
-  windowY = Math.min(Math.max(windowY, work.y + 2), screenBottom - windowH)
+  const rawWindowX =
+    flyoutSide === 'left' ? mainWindowX - TRAY_MENU_FLYOUT_SPAN : mainWindowX
+  const windowX = Math.min(
+    Math.max(rawWindowX, work.x + 2),
+    work.x + work.width - windowW - 2
+  )
+  const screenBottom =
+    (display.bounds ? display.bounds.y + display.bounds.height : work.y + work.height) - 2
+  const windowY = Math.min(Math.max(cardY - shadowPad, work.y + 2), screenBottom - windowH)
+
+  trayMenuFlyoutSide = flyoutSide
+  trayMenuVerticalAlign = verticalAlign
 
   return {
     x: Math.round(windowX),
@@ -656,7 +692,7 @@ function registerTrayIpc(): void {
 
   ipcMain.handle('tray:reportSize', (_event, size: { width: number; height: number }) => {
     if (!size || typeof size.width !== 'number' || typeof size.height !== 'number') return
-    const newWidth = Math.max(260, Math.min(450, Math.round(size.width)))
+    const newWidth = TRAY_MENU_WINDOW_WIDTH
     const newHeight = Math.max(200, Math.min(800, Math.round(size.height)))
 
     const sizeChanged =
