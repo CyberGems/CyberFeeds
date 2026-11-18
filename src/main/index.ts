@@ -508,11 +508,26 @@ function createMainWindow(): BrowserWindow {
     }, 50)
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'))
-  }
+  // ready-to-show only fires when the first paint lands, and the reveal
+  // fallback is scheduled from it. A paint that never lands (a stale GPU
+  // cache of another build of the app is enough) would leave the window
+  // invisible forever, so once the load settles the reveal is forced after
+  // a grace period. revealWindow keeps a --hidden autostart hidden on
+  // purpose.
+  const load = is.dev && process.env['ELECTRON_RENDERER_URL']
+    ? win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    : win.loadFile(path.join(__dirname, '../renderer/index.html'))
+  load.then(() => {
+    setTimeout(() => {
+      if (!win.isDestroyed() && !win.isVisible()) {
+        console.warn('[Recovery] the window never reported its first paint; revealing it anyway')
+        revealWindow()
+      }
+    }, 3000)
+  })
+    .catch((error) => {
+      console.error('[Recovery] the main window failed to load:', error)
+    })
 
   return win
 }
