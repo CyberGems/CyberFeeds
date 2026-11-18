@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-System tray submenus now open as side-by-side flyout panels matching dark, grayscale, and light themes. The tray and notifier windows gain sandbox isolation, web security, URL and path validation, and reliable main-window reveal if first paint never fires.
+Fixes the system tray menu and notification popup failing to open in sandboxed Electron windows by removing an external preload dependency blocked under sandbox isolation, and triggers immediate tray measurement on reopen.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,15 +17,15 @@ System tray submenus now open as side-by-side flyout panels matching dark, grays
 
 ### ✨ Key Features & Highlights
 
-- 🪟 **Side-by-side tray flyout panels**: `Help` and `More from CyberGems` open beside the main tray card on hover or click, support Left/Right arrow navigation and `Escape`, adapt to every theme, and orient automatically to any screen edge.
-- 🛡️ **Stronger window sandboxing**: Tray and notifier windows run sandboxed with web security, CSP headers, and navigation locks; external links and settings paths are checked; startup errors report clearly; and the main window shows reliably without stalling on first paint.
+- 🪟 **Reliable sandboxed tray and notifications**: Removed the external `@electron-toolkit/preload` import from the preload bundle so sandboxed tray menu and toast notification windows load `window.api` cleanly on launch.
+- ⚡ **Instant tray sizing on reopen**: Triggered an immediate size measurement when `tray:show` fires so reopening the tray menu renders at full dimensions right away instead of waiting for the fallback reveal timer.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Los submenús de la bandeja ahora se abren como paneles flyout laterales adaptados a los temas oscuro, escala de grises y claro. Bandeja y notificaciones suman aislamiento sandbox, seguridad web, validación de enlaces y rutas, y apertura fiable de la ventana principal aunque falle el primer pintado.
+Corrige el fallo que impedía abrir el menú de la bandeja y las notificaciones emergentes en ventanas con sandbox al eliminar una dependencia externa del preload bloqueada por el aislamiento, y dispara medición inmediata al reabrir la bandeja.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -33,8 +33,8 @@ Los submenús de la bandeja ahora se abren como paneles flyout laterales adaptad
 
 ### ✨ Novedades destacadas
 
-- 🪟 **Paneles flyout laterales en la bandeja**: `Ayuda` y `Más de CyberGems` se abren junto a la tarjeta principal al pasar el cursor o hacer clic, admiten navegación con flechas y `Escape`, respetan los tres temas y se orientan según el borde del monitor.
-- 🛡️ **Mayor aislamiento y fiabilidad**: Las ventanas de bandeja y avisos se ejecutan en sandbox con seguridad web, CSP y bloqueo de navegación; se validan URLs y rutas de ajustes; los errores de arranque se muestran al usuario y la ventana principal se revela aunque falte el evento inicial de pintado.
+- 🪟 **Bandeja y notificaciones fiables en sandbox**: Se eliminó la importación externa `@electron-toolkit/preload` del preload compilado para que las ventanas sandboxeadas de la bandeja y las notificaciones carguen `window.api` correctamente desde el inicio.
+- ⚡ **Medición inmediata al reabrir la bandeja**: Se dispara una medición de tamaño inmediata al recibir `tray:show` para mostrar el menú al instante en aperturas repetidas sin esperar el temporizador de respaldo.
 
 ### ℹ️ Antes de instalar
 

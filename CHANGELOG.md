@@ -2,6 +2,18 @@
 
 All notable changes to CyberFeeds are documented here.
 
+## [1.32.3] - 2026-11-18
+
+### 🇺🇸 English
+
+- Fix the system tray menu and notification popup failing to open in sandboxed windows by removing the externalized `@electron-toolkit/preload` import from the preload bundle so `window.api` loads cleanly.
+- Trigger an immediate tray size measurement when `tray:show` fires so reopening the tray menu renders immediately without waiting for the fallback reveal timer.
+
+### 🇪🇸 Español
+
+- Corrige el fallo que impedía abrir el menú de la bandeja y las notificaciones emergentes en ventanas con sandbox al eliminar la importación externa de `@electron-toolkit/preload` del preload compilado para que `window.api` cargue correctamente.
+- Dispara una medición inmediata del tamaño de la bandeja al recibir `tray:show` para que al reabrir el menú se muestre al instante sin esperar al temporizador de respaldo.
+
 ## [1.32.2] - 2026-11-18
 
 ### 🇺🇸 English
