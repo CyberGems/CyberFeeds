@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-Every release now ships validated winget manifests for the Windows Package Manager, with an automated submission workflow that keeps the catalog up to date. This maintenance release carries no application changes; dependencies and documentation stay current.
+System tray submenus now open as side-by-side flyout panels matching dark, grayscale, and light themes. The tray and notifier windows gain sandbox isolation, web security, URL and path validation, and reliable main-window reveal if first paint never fires.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,16 +17,15 @@ Every release now ships validated winget manifests for the Windows Package Manag
 
 ### ✨ Key Features & Highlights
 
-- 📦 **Windows Package Manager ready**: Every release ships validated winget manifests alongside the installer and portable archive, and an automated workflow submits them once the submission pipeline is armed.
-
-- 🧰 **Maintenance only**: No application changes in this release; it packages the winget submission kit and current documentation.
+- 🪟 **Side-by-side tray flyout panels**: `Help` and `More from CyberGems` open beside the main tray card on hover or click, support Left/Right arrow navigation and `Escape`, adapt to every theme, and orient automatically to any screen edge.
+- 🛡️ **Stronger window sandboxing**: Tray and notifier windows run sandboxed with web security, CSP headers, and navigation locks; external links and settings paths are checked; startup errors report clearly; and the main window shows reliably without stalling on first paint.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Cada release publica ahora manifiestos winget validados para el Windows Package Manager, con un flujo de envío automatizado que mantiene el catálogo al día. Esta versión de mantenimiento no cambia la aplicación; las dependencias y la documentación siguen al día.
+Los submenús de la bandeja ahora se abren como paneles flyout laterales adaptados a los temas oscuro, escala de grises y claro. Bandeja y notificaciones suman aislamiento sandbox, seguridad web, validación de enlaces y rutas, y apertura fiable de la ventana principal aunque falle el primer pintado.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -34,9 +33,8 @@ Cada release publica ahora manifiestos winget validados para el Windows Package 
 
 ### ✨ Novedades destacadas
 
-- 📦 **Listo para el Windows Package Manager**: Cada release publica manifiestos winget validados junto al instalador y el archivo portable, y un workflow automatizado los envía cuando el pipeline se arme.
-
-- 🧰 **Solo mantenimiento**: Sin cambios en la aplicación en esta versión; incorpora el kit de envío winget y la documentación al día.
+- 🪟 **Paneles flyout laterales en la bandeja**: `Ayuda` y `Más de CyberGems` se abren junto a la tarjeta principal al pasar el cursor o hacer clic, admiten navegación con flechas y `Escape`, respetan los tres temas y se orientan según el borde del monitor.
+- 🛡️ **Mayor aislamiento y fiabilidad**: Las ventanas de bandeja y avisos se ejecutan en sandbox con seguridad web, CSP y bloqueo de navegación; se validan URLs y rutas de ajustes; los errores de arranque se muestran al usuario y la ventana principal se revela aunque falte el evento inicial de pintado.
 
 ### ℹ️ Antes de instalar
 

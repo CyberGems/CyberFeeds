@@ -2,6 +2,20 @@
 
 All notable changes to CyberFeeds are documented here.
 
+## [1.32.2] - 2026-11-18
+
+### 🇺🇸 English
+
+- Convert the tray submenus (`Help` and `More from CyberGems`) into side-by-side flyout panels with dwell hover, click toggling, keyboard arrow navigation, dark/grayscale/light theme styling, and automatic monitor-edge placement.
+- Sandbox the tray and notifier windows with web security, content security policies, and navigation locking, validate external URLs and saved settings paths, clamp snooze durations, and report startup failures cleanly.
+- Reveal the main window reliably even if its initial first-paint event never lands.
+
+### 🇪🇸 Español
+
+- Convierte los submenús de la bandeja (`Ayuda` y `Más de CyberGems`) en paneles flyout laterales con retardo al pasar el cursor, alternancia por clic, navegación con flechas del teclado, adaptación a los tres temas y colocación automática según los bordes del monitor.
+- Aísla en sandbox las ventanas de bandeja y notificaciones con seguridad web, política CSP y bloqueo de navegación, valida URLs externas y rutas guardadas en ajustes, acota los tiempos de aplazamiento e informa fallos de arranque con claridad.
+- Muestra la ventana principal de forma fiable incluso si no llega su evento inicial de primer pintado.
+
 ## [1.32.1] - 2026-11-16
 
 ### 🇺🇸 English
