@@ -281,6 +281,7 @@ export function TrayMenu(): React.JSX.Element {
       }
       cancelFlyoutTimers()
       setActiveFlyout(null)
+      window.requestAnimationFrame(() => reportSize())
     })
     return () => {
       active = false
