@@ -13,7 +13,7 @@ import { setAutoUpdate } from './updater'
 import { rebuildTrayMenu, rebuildGlobalShortcuts, refreshTrayTooltip } from './tray'
 import { performAutoBackup, listAutoBackups, restoreAutoBackup, deleteAutoBackup, getResolvedBackupDirectory, rescheduleAutoBackup } from './auto-backup'
 import { translations } from '../shared/translations'
-import { DEFAULT_SETTINGS } from '../shared/types'
+import { DEFAULT_SETTINGS, type AppSettings } from '../shared/types'
 import { textEditCommands, type TextEditCommand } from '../shared/text-edit'
 import { isRedditSourceUrl, normalizeFeedUrl } from '../shared/reddit'
 import {
@@ -105,7 +105,48 @@ export function setAutoStart(autoStart: boolean, startMinimized: boolean): void 
   } catch { /* ignore */ }
 }
 
+// The settings payload crosses the sandbox, and a few of its fields reach
+// real capabilities: customBrowserPath is executed, customPath and soundFile
+// are paths the main process writes or reads. Those fields are checked here,
+// and every side effect of the save takes its values from the sanitized
+// object, never from the raw payload.
+const MAX_SETTINGS_PATH_LENGTH = 4096
+
+function isSafeSettingsPath(value: unknown): boolean {
+  return value === '' || (typeof value === 'string' && value.length <= MAX_SETTINGS_PATH_LENGTH && path.isAbsolute(value))
+}
+
+function sanitizeIncomingSettings(settings: unknown): AppSettings | null {
+  if (!settings || typeof settings !== 'object') return null
+  const merged = { ...DEFAULT_SETTINGS, ...(settings as Partial<AppSettings>) } as AppSettings
+  if (!isSafeSettingsPath(merged.customBrowserPath)) merged.customBrowserPath = DEFAULT_SETTINGS.customBrowserPath
+  if (merged.notifications && !isSafeSettingsPath(merged.notifications.soundFile ?? '')) {
+    merged.notifications = { ...merged.notifications, soundFile: DEFAULT_SETTINGS.notifications.soundFile }
+  }
+  if (merged.autoBackup) {
+    if (!isSafeSettingsPath(merged.autoBackup.customPath ?? '')) {
+      merged.autoBackup = { ...merged.autoBackup, customPath: DEFAULT_SETTINGS.autoBackup.customPath }
+    }
+  }
+  const interval = merged.pollingInterval
+  merged.pollingInterval =
+    typeof interval === 'number' && Number.isFinite(interval)
+      ? Math.min(1440, Math.max(1, Math.floor(interval)))
+      : DEFAULT_SETTINGS.pollingInterval
+  return merged
+}
+
 export function openInConfiguredBrowser(url: string): void {
+  // The url crosses the sandbox, so only web and mail links reach the
+  // system browser or the configured one: any other scheme (file:, custom
+  // handlers) is dropped here, for every caller at once.
+  if (typeof url !== 'string') return
+  try {
+    const parsed = new URL(url)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:' && parsed.protocol !== 'mailto:') return
+  } catch {
+    return
+  }
   let targetUrl = url
   if (typeof targetUrl === 'string' && targetUrl.includes('old.reddit.com/')) {
     targetUrl = targetUrl.replace('https://old.reddit.com/', 'https://www.reddit.com/')
@@ -586,35 +627,37 @@ export function registerIpc(): void {
 
   ipcMain.handle('settings:save', (_, settings) => {
     const current = db.getSettings()
+    const incoming = sanitizeIncomingSettings(settings)
+    if (!incoming) return { ok: false }
 
     // Normalize payload to avoid structured-clone issues and ensure full shape.
     // This prevents Electron IPC conversion failures on complex objects.
-    const normalized = { ...DEFAULT_SETTINGS, ...settings }
+    const normalized = incoming
     db.saveSettings(normalized)
 
-    updateNotifierSettings(settings.notifications)
+    updateNotifierSettings(normalized.notifications)
     updateNotifierTheme(normalized.theme)
-    if (settings.pollingInterval !== current.pollingInterval) {
-      polling.restartPolling(settings.pollingInterval)
+    if (normalized.pollingInterval !== current.pollingInterval) {
+      polling.restartPolling(normalized.pollingInterval)
     }
 
     // Auto-start
-    setAutoStart(settings.autoStart, settings.startMinimized)
+    setAutoStart(normalized.autoStart, normalized.startMinimized)
 
     // Auto-update toggle
-    setAutoUpdate(settings.autoUpdate)
+    setAutoUpdate(normalized.autoUpdate)
 
     // Rebuild tray menu and global shortcuts
     rebuildTrayMenu()
     refreshTrayTooltip()
-    if (settings.shortcuts !== current.shortcuts) {
+    if (normalized.shortcuts !== current.shortcuts) {
       rebuildGlobalShortcuts()
     }
 
     if (
-      settings.autoBackup?.frequency !== current.autoBackup?.frequency ||
-      settings.autoBackup?.enabled !== current.autoBackup?.enabled ||
-      settings.autoBackup?.customPath !== current.autoBackup?.customPath
+      normalized.autoBackup?.frequency !== current.autoBackup?.frequency ||
+      normalized.autoBackup?.enabled !== current.autoBackup?.enabled ||
+      normalized.autoBackup?.customPath !== current.autoBackup?.customPath
     ) {
       rescheduleAutoBackup()
     }

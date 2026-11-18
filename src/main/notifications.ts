@@ -340,10 +340,31 @@ function createNotifierWindow(s: NotificationSettings): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
-      webSecurity: false,
       backgroundThrottling: false
     }
+  })
+
+  // The notifier shows remote feed content, so it is the window where the
+  // web lockdown matters most: it never navigates and never opens windows
+  // (links leave through IPC), and its preload only bridges IPC, so it runs
+  // sandboxed with web security on.
+  const openWebLink = (target: string): void => {
+    try {
+      const parsed = new URL(target)
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        void shell.openExternal(parsed.toString())
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    openWebLink(url)
+    return { action: 'deny' }
+  })
+  win.webContents.on('will-navigate', (event, url) => {
+    event.preventDefault()
+    openWebLink(url)
   })
 
   // Initially ignore mouse events while hidden to prevent any transparent
@@ -355,11 +376,12 @@ function createNotifierWindow(s: NotificationSettings): BrowserWindow {
     win.webContents.once('did-finish-load', () => resolve())
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/notifier/index.html`)
-  } else {
-    win.loadFile(path.join(__dirname, '../renderer/notifier/index.html'))
-  }
+  const load = is.dev && process.env['ELECTRON_RENDERER_URL']
+    ? win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/notifier/index.html`)
+    : win.loadFile(path.join(__dirname, '../renderer/notifier/index.html'))
+  load.catch((error) => {
+    console.error('[Recovery] the notifier window failed to load:', error)
+  })
 
   win.on('closed', () => {
     notifierWindow = null
@@ -1066,8 +1088,14 @@ export function registerNotifierIpc(): void {
   })
 
   ipcMain.on('notifier:snooze', (_, minutes: number) => {
+    // The minutes cross the sandbox and become a timestamp: clamp them to a
+    // day so a malformed payload cannot park the notifier in the far future.
+    const amount = typeof minutes === 'number' && Number.isFinite(minutes)
+      ? Math.min(1440, Math.max(1, Math.floor(minutes)))
+      : 0
+    if (!amount) return
     cancelPendingBatch()
-    settings = { ...settings, snoozedUntil: Date.now() + minutes * 60_000 }
+    settings = { ...settings, snoozedUntil: Date.now() + amount * 60_000 }
     db.saveSettings({ ...db.getSettings(), notifications: settings })
     hideNotifierWindow()
   })

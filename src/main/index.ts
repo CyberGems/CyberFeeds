@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen, ipcMain, session } from 'electron'
+import { app, BrowserWindow, screen, ipcMain, session, dialog } from 'electron'
 import path from 'path'
 import fs from 'fs'
 import { is } from '@electron-toolkit/utils'
@@ -682,6 +682,15 @@ app.whenReady().then(() => {
 
   screen.on('display-added', recheckDisplay)
   screen.on('display-metrics-changed', recheckDisplay)
+}).catch((error) => {
+  // A startup failure used to be an unhandled rejection: no window, no
+  // message, a process that looked like a double click that did nothing.
+  // The cause is told to the user, in both languages, because the settings
+  // that carry the language may not be readable at this point.
+  console.error('[Main] startup failed:', error)
+  const text = error instanceof Error ? error.stack || error.message : String(error)
+  dialog.showErrorBox('CyberFeeds', `CyberFeeds no pudo iniciarse / CyberFeeds could not start:\n\n${text.slice(0, 600)}`)
+  app.exit(1)
 })
 
 app.on('before-quit', () => {

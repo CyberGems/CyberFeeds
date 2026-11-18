@@ -1,4 +1,4 @@
-import { Tray, app, BrowserWindow, nativeImage, globalShortcut, screen, ipcMain } from 'electron'
+import { Tray, app, BrowserWindow, nativeImage, globalShortcut, screen, ipcMain, shell } from 'electron'
 import path from 'path'
 import { is } from '@electron-toolkit/utils'
 import { pollFeeds } from './polling'
@@ -367,10 +367,31 @@ function ensureTrayWindow(): BrowserWindow {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false,
-      webSecurity: false,
       backgroundThrottling: false
     }
+  })
+
+  // The tray menu never navigates and never opens windows: a navigation or a
+  // window.open is routed to the user's browser instead, and anything that
+  // is not a web link is dropped. Its preload only bridges IPC, so the
+  // window runs sandboxed like the main one.
+  const openWebLink = (target: string): void => {
+    try {
+      const parsed = new URL(target)
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        void shell.openExternal(parsed.toString())
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  trayWindow.webContents.setWindowOpenHandler(({ url }) => {
+    openWebLink(url)
+    return { action: 'deny' }
+  })
+  trayWindow.webContents.on('will-navigate', (event, url) => {
+    event.preventDefault()
+    openWebLink(url)
   })
 
   trayWindow.setAlwaysOnTop(true, 'pop-up-menu')
@@ -384,11 +405,12 @@ function ensureTrayWindow(): BrowserWindow {
     console.error('[Tray] Tray window renderer gone:', details.reason, 'exitCode', details.exitCode)
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
-  } else {
-    trayWindow.loadFile(path.join(__dirname, '../renderer/tray/index.html'))
-  }
+  const load = is.dev && process.env['ELECTRON_RENDERER_URL']
+    ? trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
+    : trayWindow.loadFile(path.join(__dirname, '../renderer/tray/index.html'))
+  load.catch((error) => {
+    console.error('[Tray] the tray menu failed to load:', error)
+  })
 
   trayWindow.on('blur', () => {
     if (trayMenuHideTimer) return
