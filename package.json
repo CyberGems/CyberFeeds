@@ -23,7 +23,6 @@
     "installer-graphics": "python scripts/generate-installer-graphics.py"
   },
   "dependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@tanstack/react-virtual": "^3.14.26",
     "better-sqlite3": "^13.0.3",
