@@ -343,7 +343,7 @@ const api = {
       ipcRenderer.invoke('tray:getState') as Promise<import('../shared/types').TrayMenuSnapshot>,
     action: (action: string) => ipcRenderer.invoke('tray:action', action),
     hide: () => ipcRenderer.invoke('tray:hide'),
-    reportSize: (size: { width: number; height: number }) =>
+    reportSize: (size: { width: number; height: number; prepared?: boolean }) =>
       ipcRenderer.invoke('tray:reportSize', size),
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
     onShow: (cb: (snapshot?: import('../shared/types').TrayMenuSnapshot) => void): (() => void) => {
@@ -351,6 +351,20 @@ const api = {
       ipcRenderer.on('tray:show', handler)
       return (): void => {
         ipcRenderer.removeListener('tray:show', handler)
+      }
+    },
+    onHide: (cb: () => void): (() => void) => {
+      const handler = (): void => cb()
+      ipcRenderer.on('tray:hide', handler)
+      return (): void => {
+        ipcRenderer.removeListener('tray:hide', handler)
+      }
+    },
+    onReveal: (cb: () => void): (() => void) => {
+      const handler = (): void => cb()
+      ipcRenderer.on('tray:reveal', handler)
+      return (): void => {
+        ipcRenderer.removeListener('tray:reveal', handler)
       }
     }
   }

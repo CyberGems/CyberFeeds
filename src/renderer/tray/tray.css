@@ -77,9 +77,13 @@ body {
 .tray-stage {
   display: flex;
   align-items: flex-end;
-  gap: 8px;
+  gap: 4px;
   width: 100%;
   height: 100%;
+}
+
+.tray-stage.is-offscreen {
+  visibility: hidden;
 }
 
 .tray-stage[data-flyout-side='left'] {

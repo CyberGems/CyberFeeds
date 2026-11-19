@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   BookOpen,
@@ -127,9 +127,12 @@ const SUITE_APPS = [
 
 export function TrayMenu(): React.JSX.Element {
   const [snapshot, setSnapshot] = useState<TrayMenuSnapshot>(INITIAL_SNAPSHOT)
+  const [stageVisible, setStageVisible] = useState(false)
+  const [prepareSeq, setPrepareSeq] = useState(0)
   const [activeFlyout, setActiveFlyout] = useState<TrayFlyoutId | null>(null)
   const activeFlyoutRef = useRef<TrayFlyoutId | null>(null)
   activeFlyoutRef.current = activeFlyout
+  const stageRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const helpFlyoutRef = useRef<HTMLDivElement>(null)
   const suiteFlyoutRef = useRef<HTMLDivElement>(null)
@@ -137,6 +140,7 @@ export function TrayMenu(): React.JSX.Element {
     open: null,
     close: null
   })
+  const revealRafRef = useRef<number | null>(null)
 
   const lang = snapshot.language === 'en' ? 'en' : 'es'
   const t = translations[lang].mainProcess.tray
@@ -212,18 +216,21 @@ export function TrayMenu(): React.JSX.Element {
     return Math.ceil(el.scrollHeight + borderY + 28)
   }
 
-  const reportSize = useCallback(() => {
-    const card = cardRef.current
-    if (!card) return
-    const width = 568
-    const height = Math.max(
-      measureCardHeight(card),
-      measureCardHeight(helpFlyoutRef.current),
-      snapshot.showSuitePromo ? measureCardHeight(suiteFlyoutRef.current) : 0
-    )
-    if (width < 10 || height < 10) return
-    void window.api.trayMenu.reportSize({ width, height })
-  }, [snapshot.showSuitePromo])
+  const reportSize = useCallback(
+    (prepared = false) => {
+      const card = cardRef.current
+      if (!card) return
+      const width = 568
+      const height = Math.max(
+        measureCardHeight(card),
+        measureCardHeight(helpFlyoutRef.current),
+        snapshot.showSuitePromo ? measureCardHeight(suiteFlyoutRef.current) : 0
+      )
+      if (width < 10 || height < 10) return
+      void window.api.trayMenu.reportSize({ width, height, prepared })
+    },
+    [snapshot.showSuitePromo]
+  )
 
   const applySnapshot = useCallback((next: TrayMenuSnapshot) => {
     setSnapshot(next)
@@ -262,18 +269,16 @@ export function TrayMenu(): React.JSX.Element {
     void window.api?.trayMenu?.hide()
   }
 
+  const cancelPendingReveal = useCallback(() => {
+    if (revealRafRef.current !== null) {
+      window.cancelAnimationFrame(revealRafRef.current)
+      revealRafRef.current = null
+    }
+  }, [])
+
   useEffect(() => {
     let active = true
-    window.api.trayMenu
-      .getState()
-      .then((next) => {
-        if (!active) return
-        applySnapshot(next)
-        window.requestAnimationFrame(() => window.requestAnimationFrame(reportSize))
-      })
-      .catch(() => {})
-
-    const removeListener = window.api.trayMenu.onShow((snap) => {
+    const removeShowListener = window.api.trayMenu.onShow((snap) => {
       if (snap) {
         applySnapshot(snap)
       } else {
@@ -281,26 +286,49 @@ export function TrayMenu(): React.JSX.Element {
       }
       cancelFlyoutTimers()
       setActiveFlyout(null)
-      window.requestAnimationFrame(() => reportSize())
+      setPrepareSeq((n) => n + 1)
     })
+    const removeRevealListener = window.api.trayMenu.onReveal?.(() => {
+      cancelPendingReveal()
+      revealRafRef.current = window.requestAnimationFrame(() => {
+        revealRafRef.current = null
+        setStageVisible(true)
+      })
+    })
+    const removeHideListener = window.api.trayMenu.onHide?.(() => {
+      cancelPendingReveal()
+      cancelFlyoutTimers()
+      setActiveFlyout(null)
+    })
+
+    window.api.trayMenu
+      .getState()
+      .then((next) => {
+        if (!active) return
+        applySnapshot(next)
+      })
+      .catch(() => {})
+
     return () => {
       active = false
+      cancelPendingReveal()
       cancelFlyoutTimers()
-      removeListener()
+      removeShowListener()
+      removeRevealListener?.()
+      removeHideListener?.()
     }
-  }, [applySnapshot, cancelFlyoutTimers, refresh, reportSize])
+  }, [applySnapshot, cancelFlyoutTimers, cancelPendingReveal, refresh])
+
+  useLayoutEffect(() => {
+    if (prepareSeq === 0) return
+    if (stageRef.current) void stageRef.current.offsetWidth
+    reportSize(true)
+  }, [prepareSeq, reportSize])
 
   useEffect(() => {
-    reportSize()
-    const rafId = window.requestAnimationFrame(() => {
-      reportSize()
-      window.requestAnimationFrame(reportSize)
-    })
-    const timer = setTimeout(reportSize, 50)
-    return () => {
-      window.cancelAnimationFrame(rafId)
-      clearTimeout(timer)
-    }
+    // Pre-cache exact card height during prewarm and whenever language or
+    // suite promo visibility changes while open.
+    reportSize(false)
   }, [snapshot.language, snapshot.showSuitePromo, reportSize])
 
   useEffect(() => {
@@ -373,7 +401,8 @@ export function TrayMenu(): React.JSX.Element {
       }}
     >
       <div
-        className="tray-stage"
+        ref={stageRef}
+        className={stageVisible ? 'tray-stage' : 'tray-stage is-offscreen'}
         data-flyout-side={flyoutSide}
         data-vertical-align={verticalAlign}
       >

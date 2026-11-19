@@ -21,13 +21,15 @@ const cachedFrames: Electron.NativeImage[] = []
 
 const TRAY_MENU_CARD_WIDTH = 268
 const TRAY_MENU_FLYOUT_WIDTH = 268
-const TRAY_MENU_FLYOUT_GAP = 8
+const TRAY_MENU_FLYOUT_GAP = 4
 const TRAY_MENU_FLYOUT_SPAN = TRAY_MENU_FLYOUT_GAP + TRAY_MENU_FLYOUT_WIDTH
 const TRAY_MENU_SHADOW_PAD = 12
 const TRAY_MENU_WINDOW_WIDTH =
   TRAY_MENU_CARD_WIDTH + TRAY_MENU_FLYOUT_SPAN + 2 * TRAY_MENU_SHADOW_PAD
 
 let trayWindow: BrowserWindow | null = null
+let trayWindowLoaded = false
+let trayMenuPrewarmTimer: NodeJS.Timeout | null = null
 let currentTraySize = { width: TRAY_MENU_WINDOW_WIDTH, height: 440 }
 let ipcRegistered = false
 let trayMenuFlyoutSide: 'left' | 'right' = 'left'
@@ -224,14 +226,8 @@ let trayMenuLastShown = 0
 let trayMenuHideTimer: NodeJS.Timeout | null = null
 let trayMenuShowPending = false
 let trayMenuShowFallback: NodeJS.Timeout | null = null
-let trayMenuRevealTimer: NodeJS.Timeout | null = null
 let trayMenuAnchor: any = null
-// Geometry awaiting the reveal; re-stamped after the DPI context attaches
-// because the first setBounds across displays converts the position with the
-// window's previous scale, landing the window off-target.
 let trayMenuPendingGeo: { x: number; y: number; width: number; height: number } | null = null
-let trayMenuCrossingReveal = false
-let trayMenuCrossingTimer: NodeJS.Timeout | null = null
 
 function getInitialAnchor(eventBounds?: any): { x: number; y: number; width: number; height: number } {
   let cursor: { x: number; y: number } | null = null
@@ -317,7 +313,6 @@ function calculateTrayMenuGeometry(
   const gap = 4
   const shadowPad = TRAY_MENU_SHADOW_PAD
   const cardW = TRAY_MENU_CARD_WIDTH
-  const mainWindowW = cardW + 2 * shadowPad
   const windowW = TRAY_MENU_WINDOW_WIDTH
   const cardH = windowH - 2 * shadowPad
 
@@ -346,12 +341,11 @@ function calculateTrayMenuGeometry(
     verticalAlign = 'bottom'
   }
 
-  const mainWindowX = Math.min(
-    Math.max(cardX - shadowPad, work.x + 2),
-    work.x + work.width - mainWindowW - 2
-  )
-  const spaceLeft = mainWindowX - (work.x + 2)
-  const spaceRight = work.x + work.width - 2 - (mainWindowX + mainWindowW)
+  cardX = Math.min(Math.max(cardX, work.x + 4), work.x + work.width - cardW - 4)
+  cardY = Math.min(Math.max(cardY, work.y + 4), work.y + work.height - cardH - 4)
+
+  const spaceLeft = cardX - work.x
+  const spaceRight = work.x + work.width - (cardX + cardW)
   const preferLeft = cx >= work.x + work.width / 2
   const flyoutSide: 'left' | 'right' = preferLeft
     ? spaceLeft >= TRAY_MENU_FLYOUT_SPAN || spaceLeft >= spaceRight
@@ -361,15 +355,15 @@ function calculateTrayMenuGeometry(
       ? 'right'
       : 'left'
 
+  const mainWindowX = cardX - shadowPad
   const rawWindowX =
     flyoutSide === 'left' ? mainWindowX - TRAY_MENU_FLYOUT_SPAN : mainWindowX
-  const windowX = Math.min(
-    Math.max(rawWindowX, work.x + 2),
-    work.x + work.width - windowW - 2
-  )
-  const screenBottom =
-    (display.bounds ? display.bounds.y + display.bounds.height : work.y + work.height) - 2
-  const windowY = Math.min(Math.max(cardY - shadowPad, work.y + 2), screenBottom - windowH)
+  const minWindowX = work.x - shadowPad
+  const maxWindowX = Math.max(minWindowX, work.x + work.width + shadowPad - windowW)
+  const windowX = Math.min(Math.max(rawWindowX, minWindowX), maxWindowX)
+  const minWindowY = work.y - shadowPad
+  const maxWindowY = Math.max(minWindowY, work.y + work.height + shadowPad - windowH)
+  const windowY = Math.min(Math.max(cardY - shadowPad, minWindowY), maxWindowY)
 
   trayMenuFlyoutSide = flyoutSide
   trayMenuVerticalAlign = verticalAlign
@@ -387,17 +381,20 @@ function ensureTrayWindow(): BrowserWindow {
     return trayWindow
   }
 
-  trayWindow = new BrowserWindow({
+  trayWindowLoaded = false
+  const win = new BrowserWindow({
     width: currentTraySize.width,
     height: currentTraySize.height,
     show: false,
     frame: false,
+    thickFrame: false,
     transparent: true,
     hasShadow: false,
     resizable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
     focusable: true,
+    paintWhenInitiallyHidden: true,
     backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
@@ -406,6 +403,7 @@ function ensureTrayWindow(): BrowserWindow {
       backgroundThrottling: false
     }
   })
+  trayWindow = win
 
   // The tray menu never navigates and never opens windows: a navigation or a
   // window.open is routed to the user's browser instead, and anything that
@@ -421,34 +419,34 @@ function ensureTrayWindow(): BrowserWindow {
       /* ignore */
     }
   }
-  trayWindow.webContents.setWindowOpenHandler(({ url }) => {
+  win.webContents.setWindowOpenHandler(({ url }) => {
     openWebLink(url)
     return { action: 'deny' }
   })
-  trayWindow.webContents.on('will-navigate', (event, url) => {
+  win.webContents.on('will-navigate', (event, url) => {
     event.preventDefault()
     openWebLink(url)
   })
 
-  trayWindow.setAlwaysOnTop(true, 'pop-up-menu')
-  trayWindow.webContents.setBackgroundThrottling(false)
+  win.setAlwaysOnTop(true, 'pop-up-menu')
+  win.webContents.setBackgroundThrottling(false)
 
   // Log-only: ensureTrayWindow recreates the window if it was destroyed, so a
   // dead tray renderer self-heals on the next open. Main-window recovery lives
   // in createMainWindow (index.ts).
-  trayWindow.webContents.on('render-process-gone', (_event, details) => {
+  win.webContents.on('render-process-gone', (_event, details) => {
     if (details.reason === 'clean-exit') return
     console.error('[Tray] Tray window renderer gone:', details.reason, 'exitCode', details.exitCode)
   })
 
   const load = is.dev && process.env['ELECTRON_RENDERER_URL']
-    ? trayWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
-    : trayWindow.loadFile(path.join(__dirname, '../renderer/tray/index.html'))
+    ? win.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/tray/index.html`)
+    : win.loadFile(path.join(__dirname, '../renderer/tray/index.html'))
   load.catch((error) => {
     console.error('[Tray] the tray menu failed to load:', error)
   })
 
-  trayWindow.on('blur', () => {
+  win.on('blur', () => {
     if (trayMenuHideTimer) return
     if (Date.now() - trayMenuLastShown < 250) return
     trayMenuHideTimer = setTimeout(() => {
@@ -457,21 +455,46 @@ function ensureTrayWindow(): BrowserWindow {
     }, 120)
   })
 
-  trayWindow.on('closed', () => {
-    trayWindow = null
+  win.on('closed', () => {
+    if (trayWindow === win) {
+      trayWindow = null
+      trayWindowLoaded = false
+    }
   })
 
-  return trayWindow
+  return win
 }
 
-function restampPendingGeo(): void {
-  if (!trayWindow || trayWindow.isDestroyed() || !trayWindow.isVisible()) return
-  if (!trayMenuPendingGeo) return
+function schedulePrewarmTrayWindow(): void {
+  if (trayMenuPrewarmTimer) {
+    clearTimeout(trayMenuPrewarmTimer)
+    trayMenuPrewarmTimer = null
+  }
+  if ((app as any).isQuitting || !tray || tray.isDestroyed()) return
+  trayMenuPrewarmTimer = setTimeout(() => {
+    trayMenuPrewarmTimer = null
+    if ((app as any).isQuitting || !tray || tray.isDestroyed() || trayWindow) return
+    ensureTrayWindow()
+  }, 80)
+}
+
+function boundsClose(a: Electron.Rectangle, b: Electron.Rectangle, tol = 2): boolean {
+  return (
+    Math.abs(a.x - b.x) <= tol &&
+    Math.abs(a.y - b.y) <= tol &&
+    Math.abs(a.width - b.width) <= tol &&
+    Math.abs(a.height - b.height) <= tol
+  )
+}
+
+function applyTrayBounds(win: BrowserWindow, geo: Electron.Rectangle): void {
   try {
-    const cur = trayWindow.getBounds()
-    const g = trayMenuPendingGeo
-    if (cur.x !== g.x || cur.y !== g.y || cur.width !== g.width || cur.height !== g.height) {
-      trayWindow.setBounds(g)
+    const before = win.getBounds()
+    if (boundsClose(before, geo)) return
+    win.setBounds(geo, false)
+    const after = win.getBounds()
+    if (!boundsClose(after, geo)) {
+      win.setBounds(geo, false)
     }
   } catch {
     /* ignore */
@@ -482,26 +505,19 @@ function revealTrayMenuWin(): void {
   if (!trayWindow || trayWindow.isDestroyed()) return
   if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
   trayMenuShowPending = false
+  if (trayMenuPendingGeo) {
+    applyTrayBounds(trayWindow, trayMenuPendingGeo)
+  }
+  trayMenuLastShown = Date.now()
   if (!trayWindow.isVisible()) {
-    try { trayWindow.setOpacity(0) } catch { /* ignore */ }
     trayWindow.show()
-    if (trayMenuRevealTimer) clearTimeout(trayMenuRevealTimer)
-    trayMenuRevealTimer = setTimeout(() => {
-      trayMenuRevealTimer = null
-      if (trayWindow && !trayWindow.isDestroyed()) {
-        try { trayWindow.setOpacity(1) } catch { /* ignore */ }
-      }
-    }, 40)
-  } else {
-    try { trayWindow.setOpacity(1) } catch { /* ignore */ }
   }
   trayWindow.focus()
-  trayMenuLastShown = Date.now()
-  // Windows can recenter a transparent frameless window on its first show,
-  // discarding the pre-show bounds (the notifier needed the same re-stamp).
-  // Verify shortly after revealing and correct while the menu stays open.
-  setTimeout(restampPendingGeo, 60)
-  setTimeout(restampPendingGeo, 250)
+  try {
+    trayWindow.webContents.send('tray:reveal')
+  } catch {
+    /* ignore */
+  }
 }
 
 function showTrayMenu(eventBounds?: any): void {
@@ -509,66 +525,42 @@ function showTrayMenu(eventBounds?: any): void {
     clearTimeout(trayMenuHideTimer)
     trayMenuHideTimer = null
   }
-  const win = ensureTrayWindow()
-  if (win.isDestroyed()) return
+  if (trayMenuPrewarmTimer) {
+    clearTimeout(trayMenuPrewarmTimer)
+    trayMenuPrewarmTimer = null
+  }
+  if (trayMenuShowFallback) {
+    clearTimeout(trayMenuShowFallback)
+    trayMenuShowFallback = null
+  }
+
+  // Never reuse a previously shown/hidden BrowserWindow: Chromium on Windows
+  // suspends Viz while hidden and evicts/retains stale DirectComposition frames
+  // across hide->show, causing 2nd-click flicker and cross-monitor side jumps.
+  if (trayWindow && !trayWindow.isDestroyed() && trayWindow.isVisible()) {
+    const stale = trayWindow
+    trayWindow = null
+    trayWindowLoaded = false
+    try { stale.destroy() } catch { /* ignore */ }
+  }
 
   trayMenuAnchor = getInitialAnchor(eventBounds)
   const geo = calculateTrayMenuGeometry(trayMenuAnchor, currentTraySize.width, currentTraySize.height)
+  const win = ensureTrayWindow()
+  if (win.isDestroyed()) return
 
-  let fromDisplay: Electron.Display | null = null
-  try { fromDisplay = screen.getDisplayMatching(win.getBounds()) } catch { fromDisplay = null }
-  let toDisplay: Electron.Display | null = null
-  try { toDisplay = screen.getDisplayMatching(geo) } catch { toDisplay = null }
-  const crossing =
-    !!fromDisplay && !!toDisplay &&
-    fromDisplay.id !== toDisplay.id &&
-    fromDisplay.scaleFactor !== toDisplay.scaleFactor
-
-  // To avoid flicker: hide first if visible, reposition, then show.
-  // This prevents the user from seeing the window jump from its old position.
-  const wasVisible = win.isVisible()
-  if (wasVisible) {
-    win.hide()
-  }
-
-  // Set final position while hidden
-  const current = win.getBounds()
-  if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
-    win.setBounds(geo)
-  }
+  applyTrayBounds(win, geo)
   trayMenuPendingGeo = { x: geo.x, y: geo.y, width: geo.width, height: geo.height }
 
   trayMenuShowPending = true
-  if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
   trayMenuShowFallback = setTimeout(() => {
     trayMenuShowFallback = null
     if (trayMenuShowPending) revealTrayMenuWin()
-  }, 500)
+  }, 450)
 
-  // When the hidden window crosses to a display with a different scale,
-  // Electron converts the setBounds position with the previous scale, so the
-  // window lands off-target. Let the new DPI context attach, then re-stamp
-  // the geometry and reveal. Without this the first open after launch on a
-  // monitor whose scale differs from the primary floats far from the taskbar.
-  if (crossing) {
-    trayMenuCrossingReveal = true
-    if (trayMenuCrossingTimer) clearTimeout(trayMenuCrossingTimer)
-    trayMenuCrossingTimer = setTimeout(() => {
-      trayMenuCrossingTimer = null
-      trayMenuCrossingReveal = false
-      if (!trayMenuShowPending) return
-      if (!trayWindow || trayWindow.isDestroyed()) return
-      try {
-        if (trayMenuPendingGeo) trayWindow.setBounds(trayMenuPendingGeo)
-      } catch {
-        /* ignore */
-      }
-      revealTrayMenuWin()
-    }, 120)
+  if (trayWindowLoaded) {
+    win.webContents.send('tray:show', getTrayMenuSnapshot())
   }
-
-  const snapshot = getTrayMenuSnapshot()
-  win.webContents.send('tray:show', snapshot)
 }
 
 export function hideTrayMenu(): void {
@@ -577,20 +569,20 @@ export function hideTrayMenu(): void {
     trayMenuHideTimer = null
   }
   if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
-  if (trayMenuRevealTimer) { clearTimeout(trayMenuRevealTimer); trayMenuRevealTimer = null }
-  if (trayMenuCrossingTimer) { clearTimeout(trayMenuCrossingTimer); trayMenuCrossingTimer = null }
+  if (trayMenuPrewarmTimer) { clearTimeout(trayMenuPrewarmTimer); trayMenuPrewarmTimer = null }
   trayMenuShowPending = false
-  trayMenuCrossingReveal = false
   trayMenuPendingGeo = null
-  // Keep the last reported menu size so the next open positions correctly in
-  // one step instead of first landing on the 292x380 default and jumping
-  // after the renderer reports the real height.
-  if (trayWindow && !trayWindow.isDestroyed()) {
-    try { trayWindow.setOpacity(1) } catch { /* ignore */ }
-    if (trayWindow.isVisible()) {
-      trayWindow.hide()
+  const win = trayWindow
+  trayWindow = null
+  trayWindowLoaded = false
+  if (win && !win.isDestroyed()) {
+    try {
+      win.destroy()
+    } catch {
+      /* ignore */
     }
   }
+  schedulePrewarmTrayWindow()
 }
 
 function toggleTrayMenu(eventBounds?: any): void {
@@ -678,8 +670,20 @@ function registerTrayIpc(): void {
   if (ipcRegistered) return
   ipcRegistered = true
 
-  ipcMain.handle('tray:getState', () => {
-    return getTrayMenuSnapshot()
+  ipcMain.handle('tray:getState', (event) => {
+    const snap = getTrayMenuSnapshot()
+    if (trayWindow && !trayWindow.isDestroyed() && event.sender === trayWindow.webContents) {
+      trayWindowLoaded = true
+      if (trayMenuShowPending) {
+        const win = trayWindow
+        setImmediate(() => {
+          if (trayWindow === win && !win.isDestroyed() && trayMenuShowPending) {
+            win.webContents.send('tray:show', getTrayMenuSnapshot())
+          }
+        })
+      }
+    }
+    return snap
   })
 
   ipcMain.handle('tray:action', (_event, action: string) => {
@@ -690,7 +694,7 @@ function registerTrayIpc(): void {
     hideTrayMenu()
   })
 
-  ipcMain.handle('tray:reportSize', (_event, size: { width: number; height: number }) => {
+  ipcMain.handle('tray:reportSize', (event, size: { width: number; height: number; prepared?: boolean }) => {
     if (!size || typeof size.width !== 'number' || typeof size.height !== 'number') return
     const newWidth = TRAY_MENU_WINDOW_WIDTH
     const newHeight = Math.max(200, Math.min(800, Math.round(size.height)))
@@ -703,32 +707,15 @@ function registerTrayIpc(): void {
       currentTraySize = { width: newWidth, height: newHeight }
     }
 
-    if (!trayWindow || trayWindow.isDestroyed()) return
+    if (!trayWindow || trayWindow.isDestroyed() || event.sender !== trayWindow.webContents) return
 
-    if (trayMenuShowPending) {
+    if (trayMenuShowPending && size.prepared) {
       const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
       trayMenuPendingGeo = { x: geo.x, y: geo.y, width: geo.width, height: geo.height }
-      if (trayMenuCrossingReveal) {
-        // Re-stamp the new size but defer the reveal to the crossing timer,
-        // which fires once the DPI context of the target display has attached.
-        try {
-          trayWindow.setBounds(geo)
-        } catch {
-          /* ignore */
-        }
-        return
-      }
-      const current = trayWindow.getBounds()
-      if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
-        trayWindow.setBounds(geo)
-      }
       revealTrayMenuWin()
     } else if (trayWindow.isVisible() && sizeChanged) {
       const geo = calculateTrayMenuGeometry(trayMenuAnchor, newWidth, newHeight)
-      const current = trayWindow.getBounds()
-      if (current.x !== geo.x || current.y !== geo.y || current.width !== geo.width || current.height !== geo.height) {
-        trayWindow.setBounds(geo)
-      }
+      applyTrayBounds(trayWindow, geo)
     }
   })
 }
@@ -891,6 +878,12 @@ export function destroyTray(): void {
     clearInterval(animTimer)
     animTimer = null
   }
+  if (trayMenuHideTimer) { clearTimeout(trayMenuHideTimer); trayMenuHideTimer = null }
+  if (trayMenuShowFallback) { clearTimeout(trayMenuShowFallback); trayMenuShowFallback = null }
+  if (trayMenuPrewarmTimer) { clearTimeout(trayMenuPrewarmTimer); trayMenuPrewarmTimer = null }
+  trayMenuShowPending = false
+  trayMenuPendingGeo = null
+  trayWindowLoaded = false
   unregisterGlobalShortcuts()
   if (trayWindow && !trayWindow.isDestroyed()) {
     try {
