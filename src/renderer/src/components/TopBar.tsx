@@ -21,6 +21,7 @@ import {
   Tag,
   Globe,
   Info,
+  Power,
   Sun,
   Moon,
   Coffee,
@@ -575,6 +576,20 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             >
               <Info size={14} />
               <span>{t.topBar.moreMenu.about}</span>
+            </button>
+
+            <div className="topbar-menu-divider" />
+
+            <button
+              className={`topbar-menu-item exit${menuKeyboardIndex === 9 ? ' keyboard-active' : ''}`}
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false)
+                void window.api.respondCloseChoice('quit', false)
+              }}
+            >
+              <Power size={14} />
+              <span>{t.topBar.moreMenu.exit}</span>
             </button>
           </div>
         )}

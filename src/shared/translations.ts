@@ -27,7 +27,8 @@ export const translations = {
         faq: 'Frequently Asked Questions',
         changelog: 'Changelog',
         website: 'Website',
-        about: 'About CyberFeeds...'
+        about: 'About CyberFeeds...',
+        exit: 'Exit CyberFeeds'
       },
       minimize: 'Minimize',
       maximize: 'Maximize',
@@ -978,7 +979,8 @@ export const translations = {
         faq: 'Preguntas frecuentes',
         changelog: 'Changelog',
         website: 'Sitio web',
-        about: 'Acerca de CyberFeeds...'
+        about: 'Acerca de CyberFeeds...',
+        exit: 'Salir de CyberFeeds'
       },
       minimize: 'Minimizar',
       maximize: 'Maximizar',

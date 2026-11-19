@@ -746,6 +746,15 @@ body {
   filter: drop-shadow(0 0 4px rgba(0, 216, 241, 0.6));
 }
 
+.topbar-menu-item.exit svg {
+  color: #F87171;
+}
+
+.topbar-menu-item.exit:hover svg,
+.topbar-menu-item.exit.keyboard-active:not(:hover) svg {
+  color: #F87171;
+}
+
 .topbar-menu-divider {
   height: 1px;
   background: var(--border);
