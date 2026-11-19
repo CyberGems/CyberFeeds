@@ -8,7 +8,7 @@
 
 <!-- IMPORTANT FOR AGENTS & MAINTAINERS: Always rewrite this entire section and highlights with the ACTUAL release notes for this specific new version before tagging. NEVER leave or copy previous version notes! Use 25-45 words for the summary, lead with user-facing changes, and do not repeat the app name or version. Keep the Spanish mirror inside the details block in sync: translate the summary and rewrite the highlights. -->
 <!-- changelog-summary:start -->
-Fixes the system tray menu and notification popup failing to open in sandboxed Electron windows by removing an external preload dependency blocked under sandbox isolation, and triggers immediate tray measurement on reopen.
+Eliminates system tray menu flicker on repeated opens and position jumps when switching between mixed-DPI monitors using a fresh prewarmed tray window with two-step reveal, aligns the flyout gap to 4px, and adds Exit to the titlebar More menu.
 <!-- changelog-summary:end -->
 
 > **New to CyberFeeds?** A local-first RSS and Atom reader designed for speed, privacy, and focused desktop reading.
@@ -17,15 +17,15 @@ Fixes the system tray menu and notification popup failing to open in sandboxed E
 
 ### ✨ Key Features & Highlights
 
-- 🪟 **Reliable sandboxed tray and notifications**: Removed the external `@electron-toolkit/preload` import from the preload bundle so sandboxed tray menu and toast notification windows load `window.api` cleanly on launch.
-- ⚡ **Instant tray sizing on reopen**: Triggered an immediate size measurement when `tray:show` fires so reopening the tray menu renders at full dimensions right away instead of waiting for the fallback reveal timer.
+- 🪟 **Flicker-free multi-monitor tray menu**: Replaced window hide/reuse with a fresh prewarmed tray window and two-step transparent reveal so repeated clicks and mixed-DPI monitor switches open cleanly with a `4px` flyout gap.
+- 🚪 **Exit from the titlebar menu**: Added an `Exit CyberFeeds` item to the titlebar More menu for quick full shutdown without using the system tray.
 
 <details>
 <summary><b>🇪🇸 Ver notas de la versión en Español</b></summary>
 
 ### 🚀 Novedades de esta versión
 
-Corrige el fallo que impedía abrir el menú de la bandeja y las notificaciones emergentes en ventanas con sandbox al eliminar una dependencia externa del preload bloqueada por el aislamiento, y dispara medición inmediata al reabrir la bandeja.
+Elimina el parpadeo del menú de bandeja en aperturas repetidas y los saltos de posición al cambiar entre monitores con DPI mixto mediante una ventana precalentada con revelado en dos pasos, ajusta el espacio de flyouts a 4px y añade Salir al menú Más.
 
 > **¿Nuevo en CyberFeeds?** Un lector de RSS y Atom local-first diseñado para la velocidad, la privacidad y una lectura de escritorio enfocada.
 
@@ -33,8 +33,8 @@ Corrige el fallo que impedía abrir el menú de la bandeja y las notificaciones 
 
 ### ✨ Novedades destacadas
 
-- 🪟 **Bandeja y notificaciones fiables en sandbox**: Se eliminó la importación externa `@electron-toolkit/preload` del preload compilado para que las ventanas sandboxeadas de la bandeja y las notificaciones carguen `window.api` correctamente desde el inicio.
-- ⚡ **Medición inmediata al reabrir la bandeja**: Se dispara una medición de tamaño inmediata al recibir `tray:show` para mostrar el menú al instante en aperturas repetidas sin esperar el temporizador de respaldo.
+- 🪟 **Menú de bandeja sin parpadeos en multimonitor**: Se reemplazó la reutilización tras ocultar por una ventana precalentada con revelado transparente en dos pasos para abrir sin parpadeos ni saltos entre monitores con DPI mixto y con un espacio de `4px` entre flyouts.
+- 🚪 **Opción Salir en la barra de título**: Se agregó `Salir de CyberFeeds` al menú Más de la barra de título para cerrar la aplicación por completo sin pasar por la bandeja del sistema.
 
 ### ℹ️ Antes de instalar
 
