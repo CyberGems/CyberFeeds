@@ -96,7 +96,9 @@ function loadTrayFrame(frameNumber?: number): Electron.NativeImage {
 const TRAY_TOOLTIP_MAX_LEN = 63
 
 function clampTrayTooltip(text: string): string {
-  return text.length > TRAY_TOOLTIP_MAX_LEN ? text.slice(0, TRAY_TOOLTIP_MAX_LEN) : text
+  return text.length > TRAY_TOOLTIP_MAX_LEN
+    ? `${text.slice(0, TRAY_TOOLTIP_MAX_LEN - 1)}…`
+    : text
 }
 
 function buildTrayTooltip(busy: boolean): string {
