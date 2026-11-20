@@ -319,22 +319,17 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
         if (e.key === 'F1') {
           e.preventDefault()
           openPanel('about')
-        } else if (e.key === 'F10') {
-          e.preventDefault()
-          const nextOpen = !menuOpen
-          setTopbarMenuOpen(nextOpen)
-          setMenuKeyboardIndex(0)
-          setMenuOpen(nextOpen)
-        } else if (e.key === 'F11') {
-          e.preventDefault()
-          void window.api.windowMaximize()
         }
         return
       }
 
+      // Alt+M opens the title-bar More menu, the suite convention.
       if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.key.toLowerCase() === 'm') {
         e.preventDefault()
-        void window.api.windowMaximize()
+        const nextOpen = !menuOpen
+        setTopbarMenuOpen(nextOpen)
+        setMenuKeyboardIndex(0)
+        setMenuOpen(nextOpen)
         return
       }
 
@@ -353,9 +348,6 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
       } else if (key === ',') {
         e.preventDefault()
         openPanel('settings')
-      } else if (key === 'm') {
-        e.preventDefault()
-        void window.api.windowMinimize()
       }
     }
 
@@ -447,7 +439,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
 
       {/* More Options Menu Dropdown */}
       <div className="topbar-menu-wrapper" ref={menuRef}>
-        <Tooltip label={menuOpen ? '' : withShortcut(t.topBar.more, 'F10')} placement="bottom">
+        <Tooltip label={menuOpen ? '' : withShortcut(t.topBar.more, 'Alt+M')} placement="bottom">
           <button
             ref={menuButtonRef}
             className={`btn btn-ghost btn-icon no-drag ${menuOpen ? 'active' : ''}`}

@@ -295,10 +295,11 @@ npm run format         # Formatting
 | Key | Action | Scope |
 |---|---|---|
 | `Alt+Shift+R` | Show/hide CyberFeeds | Global |
-| `Alt+M` / `F11` | Maximize / restore window | Application |
+| `Win+Up` | Maximize / restore window | Windows |
+| `Alt+M` | Open the title-bar More menu | Application |
 | `Alt+F` / `F3` | Find text in current article | Article Reader |
-| `Ctrl+M` | Minimize window | Application |
-| `Alt+F4` | Close window | Application |
+| `Win+Down` | Minimize window | Windows |
+| `Alt+F4` | Close the app, even when the X is set to minimize to the tray | Application |
 | `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
 | `Escape` | Close panel or search bar | Application |
 
