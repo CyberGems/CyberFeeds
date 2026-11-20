@@ -20,7 +20,8 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:portable": "npm run build && electron-builder --win portable",
-    "installer-graphics": "python scripts/generate-installer-graphics.py"
+    "installer-graphics": "python scripts/generate-installer-graphics.py",
+    "test": "node --test tests/tray-tooltip.test.mts"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
