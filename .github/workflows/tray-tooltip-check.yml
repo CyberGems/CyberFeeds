@@ -8,3 +8,16 @@ on:
 jobs:
   tray-tooltip:
     uses: CyberGems/.github/.github/workflows/tray-tooltip-check.yml@main
+
+  tray-tooltip-tests:
+    name: Tray tooltip tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          # The test runs TypeScript directly, which needs Node 22.18 or newer.
+          node-version: 22.18
+          cache: npm
+      - run: npm ci
+      - run: npm test

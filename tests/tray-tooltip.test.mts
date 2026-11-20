@@ -1,3 +1,5 @@
+// Runs on Node 22.18 or newer: the test imports the TypeScript formatter directly
+// and relies on Node's built-in type stripping (declared in package.json engines).
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { TRAY_TOOLTIP_MAX_LEN, formatTrayTooltip } from '../src/main/tray-tooltip.ts'

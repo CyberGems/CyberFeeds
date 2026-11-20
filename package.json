@@ -4,6 +4,9 @@
   "version": "1.32.4",
   "description": "Follow websites, YouTube and Reddit in one calm, private reading space.",
   "main": "./out/main/index.js",
+  "engines": {
+    "node": ">=22.18"
+  },
   "author": "CyberGems",
   "license": "GPL-3.0-only",
   "homepage": "https://cybergems.org",
