@@ -60,6 +60,10 @@ app.on('second-instance', () => {
 })
 
 let mainWindow: BrowserWindow | null = null
+// True while the Alt key is down. Windows turns Alt+F4 into a native close
+// before the F4 keydown reaches the webContents listener, so the close handler
+// needs it to tell an explicit quit from the X.
+let altHeld = false
 
 export function getMainWindow(): BrowserWindow | null {
   return mainWindow
@@ -439,6 +443,10 @@ function createMainWindow(): BrowserWindow {
   win.on('close', (e) => {
     // Always persist state so the last monitor is remembered
     persistMainWindowState(win)
+    // Alt+F4 arrives as a native close before its keydown: while Alt is held
+    // the close is an explicit quit, so it skips the first-close dialog and the
+    // minimize-to-tray behavior instead of just hiding the window.
+    if (altHeld && !(app as any).isQuitting) (app as any).isQuitting = true
     if (!(app as any).isQuitting) {
       const settings = getSettings()
       if (!settings.closeChoiceRemembered) {
@@ -787,7 +795,13 @@ function applyWindowsSnapFallback(win: BrowserWindow, input: Electron.Input): bo
 
 // Alt+F4 is the close shortcut even when the X is set to minimize to the tray.
 app.on('browser-window-created', (_event, window) => {
+  // Alt+Tab (or any other focus loss) swallows the Alt keyup, so a stale flag
+  // would turn a later X click into an explicit quit.
+  window.on('blur', () => {
+    altHeld = false
+  })
   window.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'Alt') altHeld = input.type !== 'keyUp'
     if (input.type === 'keyDown' && input.alt && input.key === 'F4') {
       event.preventDefault()
       ;(app as any).isQuitting = true
