@@ -11,7 +11,7 @@ These are all the connections CyberFeeds makes by itself. None of them sends you
 | When | Where | What for | How to turn it off |
 |---|---|---|---|
 | On startup and on the polling schedule | the feed URLs you subscribed to | Fetch new articles and their content | `pollingEnabled`; each feed can also be disabled individually |
-| On startup, for feeds without an icon | `www.google.com/s2/favicons` | Fetch the feed icon | No dedicated setting found |
+| On startup, for feeds without an icon | `www.google.com/s2/favicons` | Fetch the feed icon | No dedicated setting |
 | When full-content extraction is enabled | the article website and `www.youtube.com/oembed` | Show the full article or video preview | `autoFetchFullContent` (on by default) |
 | 8 seconds after launch | GitHub Releases, with release notes from `api.github.com` | Check for a newer version | `autoUpdate` |
 

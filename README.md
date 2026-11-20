@@ -1,394 +1,394 @@
-<p align="center">
-  English · <a href="./README.es.md">Español</a>
-</p>
-
-<p align="center">
-  <a href="https://cybergems.org/apps/cyberfeeds/">
-    <img src="https://cybergems.org/banners/cyberfeeds.png" alt="Follow websites, YouTube and Reddit in one place" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Download%20v&suffix=%20&style=for-the-badge&label=&labelColor=0891B2&color=0891B2" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_10%2F11_(64--bit)-2563EB?style=for-the-badge" alt="Windows 10/11 (64-bit)" /></a>
-  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-30363D?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" /></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/License-GPL--3.0-1F2428.svg?style=flat-square&color=334155" alt="License" />&nbsp;
-  <img src="https://img.shields.io/badge/Platform-Windows_10%2F11-1F2428.svg?style=flat-square&color=334155" alt="Platform" />&nbsp;
-  <img src="https://img.shields.io/badge/Electron-42-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=334155" alt="Electron" />&nbsp;
-  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=334155" alt="Wiki" /></a>&nbsp;
-  <a href="https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-475569?style=flat-square" alt="Changelog" /></a>
-</p>
-
----
-
-<div align="center">
-
-### Your RSS feeds, YouTube channels and subreddits, in one fast, private reader that keeps everything on your PC
-
-</div>
-
----
-
-## 📑 Table of Contents
-
-- [👋 Introduction](#-introduction)
-- [🖼️ Screenshots](#️-screenshots)
-- [📡 Why CyberFeeds?](#-why-cyberfeeds)
-- [✨ Key Features](#-key-features)
-- [⬇️ Installation](#️-installation)
-- [🧭 Using the App](#-using-the-app)
-- [🛠️ Tech Stack & Architecture](#️-tech-stack--architecture)
-- [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
-- [❤️ Donate](#️-donate)
-- [📄 License](#-license)
-- [❓ FAQ](#-faq)
-- [🔗 See also](#-see-also)
-
-<details>
-<summary><strong>🔗 Related links (outside this README)</strong></summary>
-
-- 🌐 [CyberFeeds on the web](https://cybergems.org/apps/cyberfeeds/) — overview, download and SmartScreen guide
-- 📚 [Documentation & FAQ — Wiki](https://github.com/CyberGems/CyberFeeds/wiki) — troubleshooting and deep-dives
-- 💾 [Releases](https://github.com/CyberGems/CyberFeeds/releases) — installers, portable builds and changelog
-- 🟣 [CyberGems suite](https://github.com/CyberGems) — all open-source apps
-
-</details>
-
----
-
-## 👋 Introduction
-
-Keeping up with the sites you actually care about usually means a dozen open tabs and a different app for every platform. CyberFeeds pulls RSS and Atom feeds, YouTube channels and playlists, and Reddit communities into one desktop library: full articles instead of truncated summaries, instant search across thousands of posts, folders, stars and read states to keep things organized, and notifications you can tune by keyword, timing and monitor. Fetching runs in worker threads over a local SQLite database, so the window stays responsive and your library stays on your PC — no account, no cloud — while automatic backups can land in any folder or drive you choose. Built with **Electron + React + TypeScript**.
-
-*Free and open source (GPLv3): no ads, no tracking, no telemetry and no analytics SDK. Just enjoy it.*
-
+<p align="center">
+  English · <a href="./README.es.md">Español</a>
+</p>
+
+<p align="center">
+  <a href="https://cybergems.org/apps/cyberfeeds/">
+    <img src="https://cybergems.org/banners/cyberfeeds.png" alt="Follow websites, YouTube and Reddit in one place" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/CyberGems/CyberFeeds/releases/latest"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FCyberGems%2FCyberFeeds%2Fmain%2Fpackage.json&query=%24.version&prefix=%20Download%20v&suffix=%20&style=for-the-badge&label=&labelColor=0891B2&color=0891B2" alt="Download Latest Release" /><img src="https://img.shields.io/badge/Windows_10%2F11_(64--bit)-2563EB?style=for-the-badge" alt="Windows 10/11 (64-bit)" /></a>
+  &nbsp;<a href="https://github.com/CyberGems/CyberFeeds/releases"><img src="https://img.shields.io/badge/All_releases-30363D?style=for-the-badge&logo=github&logoColor=white" alt="All Releases" /></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-GPL--3.0-1F2428.svg?style=flat-square&color=334155" alt="License" />&nbsp;
+  <img src="https://img.shields.io/badge/Platform-Windows_10%2F11-1F2428.svg?style=flat-square&color=334155" alt="Platform" />&nbsp;
+  <img src="https://img.shields.io/badge/Electron-42-1F2428.svg?style=flat-square&logo=electron&logoColor=white&color=334155" alt="Electron" />&nbsp;
+  <a href="https://github.com/CyberGems/CyberFeeds/wiki"><img src="https://img.shields.io/badge/Wiki-Documentation-1F2428?style=flat-square&logo=gitbook&logoColor=white&color=334155" alt="Wiki" /></a>&nbsp;
+  <a href="https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md"><img src="https://img.shields.io/badge/Changelog-475569?style=flat-square" alt="Changelog" /></a>
+</p>
+
+---
+
+<div align="center">
+
+### Your RSS feeds, YouTube channels and subreddits, in one fast, private reader that keeps everything on your PC
+
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [👋 Introduction](#-introduction)
+- [🖼️ Screenshots](#️-screenshots)
+- [📡 Why CyberFeeds?](#-why-cyberfeeds)
+- [✨ Key Features](#-key-features)
+- [⬇️ Installation](#️-installation)
+- [🧭 Using the App](#-using-the-app)
+- [🛠️ Tech Stack & Architecture](#️-tech-stack--architecture)
+- [⌨️ Keyboard Shortcuts](#️-keyboard-shortcuts)
+- [❤️ Donate](#️-donate)
+- [📄 License](#-license)
+- [❓ FAQ](#-faq)
+- [🔗 See also](#-see-also)
+
+<details>
+<summary><strong>🔗 Related links (outside this README)</strong></summary>
+
+- 🌐 [CyberFeeds on the web](https://cybergems.org/apps/cyberfeeds/) — overview, download and SmartScreen guide
+- 📚 [Documentation & FAQ — Wiki](https://github.com/CyberGems/CyberFeeds/wiki) — troubleshooting and deep-dives
+- 💾 [Releases](https://github.com/CyberGems/CyberFeeds/releases) — installers, portable builds and changelog
+- 🟣 [CyberGems suite](https://github.com/CyberGems) — all open-source apps
+
+</details>
+
+---
+
+## 👋 Introduction
+
+Keeping up with the sites you actually care about usually means a dozen open tabs and a different app for every platform. CyberFeeds pulls RSS and Atom feeds, YouTube channels and playlists, and Reddit communities into one desktop library: full articles instead of truncated summaries, instant search across thousands of posts, folders, stars and read states to keep things organized, and notifications you can tune by keyword, timing and monitor. Fetching runs in worker threads over a local SQLite database, so the window stays responsive and your library stays on your PC — no account, no cloud — while automatic backups can land in any folder or drive you choose. Built with **Electron + React + TypeScript**.
+
+*Free and open source (GPLv3): no ads, no tracking, no telemetry and no analytics SDK. Just enjoy it.*
+
 
 - **Privacy:** see [PRIVACY.md](PRIVACY.md). CyberFeeds does not send your data anywhere by itself. The only automatic connections are listed there, and none of them carries personal data.
 
----
-
-<!-- Screenshots: pending the bilingual EN/ES gallery in the capture plan at https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — replace the blockquote, keep this heading and the TOC entry. -->
-
-## 🖼️ Screenshots
-
-> Coming soon...
-
----
-
-## 📡 Why CyberFeeds?
-
-Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds is built from the ground up for **performance and usability**: worker threads keep fetching responsive, SQLite WAL mode handles thousands of articles smoothly, and a custom notification system ensures you never miss important updates.
-
-| Need | Solution |
-|---|---|
-| Follow RSS, Atom, and Reddit | Native support for all formats + Reddit subreddits and user feeds |
-| Read full articles | Content extraction via worker threads: no truncated summaries |
-| Stay updated | Smart notifications with keyword filtering, snooze, and multi-monitor support |
-| Manage large libraries | Virtualized lists, search, star/read/unread, auto-cleanup |
-| Migrate from another reader | OPML import/export with folder structure preserved |
-| Keep your data | Local SQLite database: no cloud, no accounts, no tracking |
-| Survive a disk failure | Scheduled JSON backups to any folder or drive you choose, with automatic rotation and in-app restore |
-
----
-
-## ✨ Key Features
-
-### 📰 Feed Management
-- **Universal Feed Support**: RSS, Atom, and XML with automatic discovery
-- **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app or external browser playback and CDN thumbnails
-- **Reddit Integration**: Native subreddit and user feed support with RSS/API fallback, richer post image previews, and automatic filtering of removed posts
-- **OPML Import/Export**: Migrate your feeds with folder structure preserved
-- **Welcome Wizard**: Guided first-run setup: pick language and theme with live preview, then add your first feeds from suggestions, a custom URL, or OPML
-- **Feed Preview**: Preview feed content before subscribing
-- **Feed Doctor**: Diagnostic scanner for connectivity and parsing issues
-- **Background Polling**: Configurable refresh intervals with per-feed and per-folder pause/resume
-
-### 📖 Article Management
-- **Full-Content Extraction**: Fetch complete article content via worker threads
-- **Article Tabs & Session Restore**: Open articles in background or foreground tabs, switch with an interactive dropdown menu, and restore open tabs across sessions
-- **In-Article Search**: Fast in-article text search (`Ctrl+F`) with real-time match highlighting, match counter, and next/previous match cycling
-- **Sticky Reader Header**: Floating header bar with source icon and article title on scroll, plus quick return-to-top navigation
-- **Text Selection Flyout**: Search selected text, copy it, or translate it from titles and article body without leaving the reader
-- **Star/Unstar**: Mark articles as favorites
-- **Read/Unread Tracking**: Know what you've read at a glance
-- **Soft Delete**: Move articles to trash with 30-day auto-purge
-- **Instant Search**: Search articles with instant or Enter-to-search modes; matching ignores accents and letter case
-- **Virtualized Lists & Incremental Rendering**: Smooth scrolling for large article libraries and progressive batch loading for high-volume notification panels
-- **Multiple Layouts**: Three-panel, two-panel, one-panel, and horizontal-split views
-
-### 🔔 Smart Notifications
-- **Unified Scan Batches**: Articles discovered during each polling cycle arrive in a single coordinated notification batch, sorted with newest articles first
-- **Custom Notification Window**: Built-in notifier with batching, action buttons, and scroll-aware pause protection
-- **Live Article Updates**: See newly fetched articles in a floating pill while keeping your place in the list
-- **Keyword Filtering**: Only get notified about topics that matter
-- **Notification History**: Search past alerts by title, feed, or content; configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
-- **Snooze**: Pause notifications for a configurable duration
-- **Multi-Monitor Support**: Choose which display shows notifications
-- **Sound Alerts**: Custom notification sounds
-- **Fullscreen Detection**: Suppress notifications during games or videos
-
-### 🖥️ Desktop Integration
-- **Dynamic Titlebar Ticker**: Cycles through contextual time-of-day greetings, unread counters, sync status, active feeds, and localized date with hover-pause and click navigation
-- **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, suite diamond shortcut, and animation during background polling
-- **Multi-Monitor Window Memory**: Automatically remembers active display bounds and restores window to designated monitor
-- **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+R`)
-- **Auto-Start**: Start with Windows option
-- **Interactive Auto-Updates**: Built-in update checker with release changelog preview, immediate update, and version skip options
-- **Custom Browser Detection**: Auto-detect installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or configure a custom executable
-- **Themed NSIS Installer**: Assisted setup wizard with branded side banner, multi-language support, and clean shortcuts
-
-### 🎨 Customization
-- **3 Harmonious Themes**: CyberFeeds (default dark), Grayscale (clean distraction-free monochrome), and Light (Claro)
-- **Modern Suite Toggles**: Interactive pill-switch toggles with tactile checkmarks and theme-reactive accents
-- **Greeting Personalization**: Set your custom name, use the default title, or clear it for pure greetings
-- **Interface Scale**: Quickly adjust the overall interface scale from the welcome panel, with detailed independent interface and reader controls in Settings
-- **Reading Preferences**: Font size, line height, max width, and in-app YouTube playback toggle
-- **Bilingual UI**: Full English and Spanish interface
-
-### 💾 Data Management
-- **Scheduled Automatic Backups**: JSON copies of feeds, folders, starred articles, and settings on startup, daily, weekly, or monthly, saved to the default folder or any folder and drive you choose; old copies rotate out automatically
-- **Manual Backup & Restore**: Export or import the whole configuration as a JSON file, or browse, restore, and delete any automatic backup from Settings
-- **Auto-Cleanup**: Automatically delete old read articles
-- **SQLite Database**: High-performance local storage with WAL mode
-
----
-
-## ⬇️ Installation
-
-### Install (Recommended)
-
-1. Download the latest installer from [Releases](https://github.com/CyberGems/CyberFeeds/releases/latest)
-2. Run the `.exe` installer and follow the setup wizard
-3. Launch CyberFeeds. No other requirements needed: you do **not** need Node.js or npm
-4. On first launch with an empty library, a short welcome wizard sets you up: language, theme with live preview, and your first feeds (suggestions, your own URL, or OPML). It is skippable and reopenable later from Settings > General
-
-### 🛡️ Windows SmartScreen
-
-Windows may show a SmartScreen warning the first time you run the CyberFeeds installer: this is an unsigned hobby app, so Windows hasn't built reputation for the file yet. This is expected; the source is public so you can inspect exactly what it does.
-
-To continue:
-
-<details>
-<summary><strong>See how to run the installer (step by step)</strong></summary>
-
-Windows shows this warning for any installer without a paid code-signing certificate; it does not mean the file is unsafe. Do <strong>not</strong> click "Don't run":
-
-1. Run the `CyberFeeds-Setup.exe` installer. Windows may show the blue "Windows protected your PC" dialog.
-
-![Windows SmartScreen warning](https://cybergems.org/branding/smartscreen-warning.svg)
-
-2. Click the small **More info** link. The expanded dialog shows your installer: `CyberFeeds-Setup.exe`.
-
-![SmartScreen dialog after More info](https://cybergems.org/branding/smartscreen-runanyway.svg)
-
-3. Click **Run anyway**. The installer starts normally.
-
-You can verify the file independently: compare the SHA with the GitHub release, scan it on VirusTotal, or build from source. More details: [SmartScreen guide on the website](https://cybergems.org/download#smartscreen).
-
-</details>
-
----
-
-## 🧭 Using the App
-
-CyberFeeds opens to your feed library; press `Alt+Shift+R` to show or hide it from anywhere.
-
-1. Click **Add Feed**, paste the URL of a blog or news site and check **Preview** before you subscribe.
-2. Repeat with a few sites, then group them into folders such as News, Tech and Hobbies.
-3. Each morning, open the **Unread** filter to see only what is new.
-
-On an empty library a welcome wizard sets the language, the theme and your first feeds; it can be reopened later from the settings. Everything is stored in a local SQLite database, so your library stays on your PC without an account.
-
-See [How Do You Use CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use) for everyday examples and the full guides.
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-- **Platform:** Windows (primary target), macOS, Linux
-- **Framework:** Electron 42 + React 19 + TypeScript
-- **Build:** electron-vite 5 (Vite 6)
-- **State:** Zustand 5
-- **Database:** better-sqlite3 (WAL mode)
-- **Virtualization:** TanStack Virtual
-- **Packaging:** electron-builder (NSIS)
-
-```
-src/
-├── main/                  Electron main process
-│   ├── index.ts           App initialization, window creation
-│   ├── ipc.ts             IPC channel handlers
-│   ├── db.ts              SQLite database layer
-│   ├── feed-parse.ts      Feed parsing with fallbacks
-│   ├── polling.ts         Background polling orchestration
-│   ├── tray.ts            System tray, shortcuts, context menu
-│   ├── notifications.ts   Custom notifier window
-│   ├── updater.ts         Auto-update lifecycle
-│   ├── opml.ts            OPML import/export
-│   └── workers/
-│       ├── feed-fetcher.worker.ts      Parallel feed fetching
-│       └── content-extractor.worker.ts Article content extraction
-├── preload/               Context bridge API
-│   └── index.ts           window.api exposure
-├── renderer/              React application
-│   ├── notifier/          Notification window React app
-│   └── src/
-│       ├── components/    UI components, including the text-selection flyout
-│       ├── hooks/         Custom React hooks
-│       ├── store/         Zustand stores
-│       └── styles/        Global CSS and themes
-└── shared/                Isolated shared code
-    ├── types.ts           Shared TypeScript interfaces
-    ├── translations.ts    EN/ES UI strings
-    ├── reddit.ts          Reddit URL handling
-    └── youtube.ts         YouTube URL resolution and metadata
-```
-
-### Architecture Highlights
-
-- **Worker Threads**: Feed fetching and content extraction run in dedicated workers to keep the main process responsive
-- **Optimistic UI**: Article state updates immediately in the renderer, then syncs with the main process
-- **CSS Variable Resizing**: Column/row resizing updates DOM directly during drag (zero React re-renders)
-- **Context Bridge**: Strict preload API surface with no Node integration in renderer
-- **WAL Mode SQLite**: High-performance concurrent reads with write-ahead logging
-
-### Building from Source (Developers)
-
-Only needed if you want to work on CyberFeeds or build it yourself; regular users can skip this section.
-
-#### Prerequisites
-
-- [Node.js](https://nodejs.org/) 18+
-- [npm](https://www.npmjs.com/)
-
-#### Development
-
-```bash
-npm install
-npm run dev
-```
-
-> **Note:** The `postinstall` script automatically rebuilds `better-sqlite3` for the current Electron version.
-
-#### Build
-
-```bash
-npm run build          # Production build
-npm run build:win      # Windows installer
-npm run build:unpack   # Directory output (no installer)
-```
-
-#### Code Quality
-
-```bash
-npm run typecheck      # Type checking
-npm run lint           # Linting
-npm run format         # Formatting
-```
-
----
-
-## ⌨️ Keyboard Shortcuts
-
-| Key | Action | Scope |
-|---|---|---|
-| `Alt+Shift+R` | Show/hide CyberFeeds | Global |
-| `Alt+M` / `F11` | Maximize / restore window | Application |
-| `Alt+F` / `F3` | Find text in current article | Article Reader |
-| `Ctrl+M` | Minimize window | Application |
-| `Alt+F4` | Close window | Application |
-| `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
-| `Escape` | Close panel or search bar | Application |
-
-Additional shortcuts (Notifications, Settings, Fetch Now) are configurable in Settings → Keyboard.
-
----
-
-## ❤️ Donate
-
-**CyberFeeds** is 100% free and open source. If it helps you, please consider [donating](https://cybergems.org/donate) or [starring the repo on GitHub](https://github.com/CyberGems/CyberFeeds) to support continued development. [Read the full story](https://cybergems.org/about/) behind the project. Thank you! 🙏
-
-<p align="center">
-  <a href="https://www.paypal.com/donate/?hosted_button_id=M4PY3UPJA5Y6Q"><img src="https://img.shields.io/badge/Donate-PayPal-0070BA?style=for-the-badge&logo=paypal" alt="Donate via PayPal" /></a>
-</p>
-
-<p align="center">
-  <a href="https://ko-fi.com/cybergems"><img src="https://img.shields.io/badge/Support_me_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support me on Ko-fi" /></a>
-</p>
-
-<p align="center">
-  <a href="https://buymeacoffee.com/cybergems"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
-</p>
-
-<div align="center">
-
-<details>
-<summary><b>Crypto donations (BTC, ETH, USDT, LTC): click to view addresses</b></summary>
-
-| Asset | Address | QR |
-|---|---|---|
-| **BTC** | <pre><code>bc1q5mxzz05nmvsheqzx7970euswta3fksxzcfzag4</code></pre> | <img src="resources/donate/qr-btc.png" width="90" height="90" alt="BTC QR" /> |
-| **ETH** | <pre><code>0x79b703Ec0f77493679Fcd280aF3b983E20c580B8</code></pre> | <img src="resources/donate/qr-eth.png" width="90" height="90" alt="ETH QR" /> |
-| **USDT (ERC20 / BEP20)** | <pre><code>0x79b703Ec0f77493679Fcd280aF3b983E20c580B8</code></pre> | <img src="resources/donate/qr-eth.png" width="90" height="90" alt="USDT QR" /> |
-| **USDT (TRC20)** | <pre><code>TSVbSk1HSyZ1NprCnAYiw56ECwXgH887mD</code></pre> | <img src="resources/donate/qr-usdt-tron.png" width="90" height="90" alt="USDT TRC20 QR" /> |
-| **LTC** | <pre><code>LWGnEHgcFCE2BRkzLnsdPDD8Y8ZeDK577X</code></pre> | <img src="resources/donate/qr-ltc.png" width="90" height="90" alt="LTC QR" /> |
-
-> ⚠️ Send only the selected asset on the indicated network. Using the wrong network will result in permanent loss of funds.
-
-</details>
-
-</div>
-
----
-
-## 📄 License
-
-CyberFeeds is distributed under the terms of the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full license text.
-
-Copyright (C) 2026 CyberGems
-
----
-
-## ❓ FAQ
-
-For frequently asked questions, troubleshooting guides, and detailed configuration instructions, visit the [FAQ](https://github.com/CyberGems/CyberFeeds/wiki/FAQ) or the [online documentation](https://cybergems.org/docs/cyberfeeds/FAQ).
-
----
-
-<div align="center" style="background:#0D0F17; border:1px solid rgba(0,255,255,0.12); border-radius:12px; padding:28px 20px; margin-top:32px;">
-
-### Thanks for using CyberFeeds! 🎉
-
-Made by [**CyberGems**](https://cybergems.org)
-
-</div>
-<p align="center">
-  <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F&title=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows"><img src="https://img.shields.io/badge/Share_on_Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Share on Reddit" /></a>
-  &nbsp;<a href="https://twitter.com/intent/tweet?text=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows&url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_X-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="Share on X" /></a>
-  &nbsp;<a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Share on Facebook" /></a>
-  &nbsp;<a href="mailto:?subject=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows&body=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows%20https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_by_Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Share by Email" /></a>
-  &nbsp;<a href="https://t.me/share/url?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F&text=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows"><img src="https://img.shields.io/badge/Share_on_Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Share on Telegram" /></a>
-  &nbsp;<a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Share on LinkedIn" /></a>
-</p>
-
----
-
-## 🔗 See also
-
-More free, open-source, privacy-first apps from [**CyberGems**](https://github.com/CyberGems):
-
-| App | Description |
-|:---:|---|
-| 🕐&nbsp;[**CyberClock**](https://github.com/CyberGems/CyberClock#readme) | Desktop clock with analog & digital display, calendar, timer, stopwatch and relaxation module. |
-| 🚀&nbsp;[**CyberLauncher**](https://github.com/CyberGems/CyberLauncher#readme) | Windows application launcher with hot corners, scheduler, system monitor and integrated terminal. |
-| 💻&nbsp;[**CyberManager**](https://github.com/CyberGems/CyberManager#readme) | Lightweight, high-performance task manager, virtualized and NT-native, a powerful Task Manager alternative. |
-| 📝&nbsp;[**CyberNotes**](https://github.com/CyberGems/CyberNotes#readme) | Privacy-focused note-taking app with rich text, folders, tabs and bcrypt-protected local storage. |
-| ⚡&nbsp;[**CyberPaste**](https://github.com/CyberGems/CyberPaste#readme) | Privacy-first clipboard manager for text, code, images, HTML and files. |
-| 📸&nbsp;[**CyberSnap**](https://github.com/CyberGems/CyberSnap#readme) | Screen capture and annotation suite with vector tools, high-speed OCR, screen recording and color picker. |
-| ⭐&nbsp;[**CyberTray**](https://github.com/CyberGems/CyberTray#readme) | High-performance tray launcher with hotspots, system monitoring, process manager and PIN-protected file vault. |
-| 💫&nbsp;[**CyberViewer**](https://github.com/CyberGems/CyberViewer#readme) | Full-featured image viewer and editor engineered for casual and power users. |
-| 🛡️&nbsp;[**CyberWall**](https://github.com/CyberGems/CyberWall#readme) | User-friendly Windows firewall with real-time per-app rules powered by the WFP kernel engine. |
-
-➡️ **[Browse all apps at cybergems.org](https://cybergems.org)**
+---
+
+<!-- Screenshots: pending the bilingual EN/ES gallery in the capture plan at https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — replace the blockquote, keep this heading and the TOC entry. -->
+
+## 🖼️ Screenshots
+
+> Coming soon...
+
+---
+
+## 📡 Why CyberFeeds?
+
+Most RSS readers are either slow web wrappers or abandoned projects. CyberFeeds is built from the ground up for **performance and usability**: worker threads keep fetching responsive, SQLite WAL mode handles thousands of articles smoothly, and a custom notification system ensures you never miss important updates.
+
+| Need | Solution |
+|---|---|
+| Follow RSS, Atom, and Reddit | Native support for all formats + Reddit subreddits and user feeds |
+| Read full articles | Content extraction via worker threads: no truncated summaries |
+| Stay updated | Smart notifications with keyword filtering, snooze, and multi-monitor support |
+| Manage large libraries | Virtualized lists, search, star/read/unread, auto-cleanup |
+| Migrate from another reader | OPML import/export with folder structure preserved |
+| Keep your data | Local SQLite database: no cloud, no accounts, no tracking |
+| Survive a disk failure | Scheduled JSON backups to any folder or drive you choose, with automatic rotation and in-app restore |
+
+---
+
+## ✨ Key Features
+
+### 📰 Feed Management
+- **Universal Feed Support**: RSS, Atom, and XML with automatic discovery
+- **YouTube Channels**: Native channel, handle (@name), video URL, and playlist subscriptions with in-app or external browser playback and CDN thumbnails
+- **Reddit Integration**: Native subreddit and user feed support with RSS/API fallback, richer post image previews, and automatic filtering of removed posts
+- **OPML Import/Export**: Migrate your feeds with folder structure preserved
+- **Welcome Wizard**: Guided first-run setup: pick language and theme with live preview, then add your first feeds from suggestions, a custom URL, or OPML
+- **Feed Preview**: Preview feed content before subscribing
+- **Feed Doctor**: Diagnostic scanner for connectivity and parsing issues
+- **Background Polling**: Configurable refresh intervals with per-feed and per-folder pause/resume
+
+### 📖 Article Management
+- **Full-Content Extraction**: Fetch complete article content via worker threads
+- **Article Tabs & Session Restore**: Open articles in background or foreground tabs, switch with an interactive dropdown menu, and restore open tabs across sessions
+- **In-Article Search**: Fast in-article text search (`Ctrl+F`) with real-time match highlighting, match counter, and next/previous match cycling
+- **Sticky Reader Header**: Floating header bar with source icon and article title on scroll, plus quick return-to-top navigation
+- **Text Selection Flyout**: Search selected text, copy it, or translate it from titles and article body without leaving the reader
+- **Star/Unstar**: Mark articles as favorites
+- **Read/Unread Tracking**: Know what you've read at a glance
+- **Soft Delete**: Move articles to trash with 30-day auto-purge
+- **Instant Search**: Search articles with instant or Enter-to-search modes; matching ignores accents and letter case
+- **Virtualized Lists & Incremental Rendering**: Smooth scrolling for large article libraries and progressive batch loading for high-volume notification panels
+- **Multiple Layouts**: Three-panel, two-panel, one-panel, and horizontal-split views
+
+### 🔔 Smart Notifications
+- **Unified Scan Batches**: Articles discovered during each polling cycle arrive in a single coordinated notification batch, sorted with newest articles first
+- **Custom Notification Window**: Built-in notifier with batching, action buttons, and scroll-aware pause protection
+- **Live Article Updates**: See newly fetched articles in a floating pill while keeping your place in the list
+- **Keyword Filtering**: Only get notified about topics that matter
+- **Notification History**: Search past alerts by title, feed, or content; configurable history limit, progressive batch rendering for 1,000+ items, adaptive theme-accented badges with limit warnings, and recent items in the tray
+- **Snooze**: Pause notifications for a configurable duration
+- **Multi-Monitor Support**: Choose which display shows notifications
+- **Sound Alerts**: Custom notification sounds
+- **Fullscreen Detection**: Suppress notifications during games or videos
+
+### 🖥️ Desktop Integration
+- **Dynamic Titlebar Ticker**: Cycles through contextual time-of-day greetings, unread counters, sync status, active feeds, and localized date with hover-pause and click navigation
+- **System Tray**: Minimize to tray, quick actions menu, real-time recent articles submenu, suite diamond shortcut, and animation during background polling
+- **Multi-Monitor Window Memory**: Automatically remembers active display bounds and restores window to designated monitor
+- **Global Hotkeys**: Configurable shortcuts (default show/hide: `Alt+Shift+R`)
+- **Auto-Start**: Start with Windows option
+- **Interactive Auto-Updates**: Built-in update checker with release changelog preview, immediate update, and version skip options
+- **Custom Browser Detection**: Auto-detect installed browsers (Chrome, Edge, Firefox, Brave, Opera, Vivaldi) or configure a custom executable
+- **Themed NSIS Installer**: Assisted setup wizard with branded side banner, multi-language support, and clean shortcuts
+
+### 🎨 Customization
+- **3 Harmonious Themes**: CyberFeeds (default dark), Grayscale (clean distraction-free monochrome), and Light (Claro)
+- **Modern Suite Toggles**: Interactive pill-switch toggles with tactile checkmarks and theme-reactive accents
+- **Greeting Personalization**: Set your custom name, use the default title, or clear it for pure greetings
+- **Interface Scale**: Quickly adjust the overall interface scale from the welcome panel, with detailed independent interface and reader controls in Settings
+- **Reading Preferences**: Font size, line height, max width, and in-app YouTube playback toggle
+- **Bilingual UI**: Full English and Spanish interface
+
+### 💾 Data Management
+- **Scheduled Automatic Backups**: JSON copies of feeds, folders, starred articles, and settings on startup, daily, weekly, or monthly, saved to the default folder or any folder and drive you choose; old copies rotate out automatically
+- **Manual Backup & Restore**: Export or import the whole configuration as a JSON file, or browse, restore, and delete any automatic backup from Settings
+- **Auto-Cleanup**: Automatically delete old read articles
+- **SQLite Database**: High-performance local storage with WAL mode
+
+---
+
+## ⬇️ Installation
+
+### Install (Recommended)
+
+1. Download the latest installer from [Releases](https://github.com/CyberGems/CyberFeeds/releases/latest)
+2. Run the `.exe` installer and follow the setup wizard
+3. Launch CyberFeeds. No other requirements needed: you do **not** need Node.js or npm
+4. On first launch with an empty library, a short welcome wizard sets you up: language, theme with live preview, and your first feeds (suggestions, your own URL, or OPML). It is skippable and reopenable later from Settings > General
+
+### 🛡️ Windows SmartScreen
+
+Windows may show a SmartScreen warning the first time you run the CyberFeeds installer: this is an unsigned hobby app, so Windows hasn't built reputation for the file yet. This is expected; the source is public so you can inspect exactly what it does.
+
+To continue:
+
+<details>
+<summary><strong>See how to run the installer (step by step)</strong></summary>
+
+Windows shows this warning for any installer without a paid code-signing certificate; it does not mean the file is unsafe. Do <strong>not</strong> click "Don't run":
+
+1. Run the `CyberFeeds-Setup.exe` installer. Windows may show the blue "Windows protected your PC" dialog.
+
+![Windows SmartScreen warning](https://cybergems.org/branding/smartscreen-warning.svg)
+
+2. Click the small **More info** link. The expanded dialog shows your installer: `CyberFeeds-Setup.exe`.
+
+![SmartScreen dialog after More info](https://cybergems.org/branding/smartscreen-runanyway.svg)
+
+3. Click **Run anyway**. The installer starts normally.
+
+You can verify the file independently: compare the SHA with the GitHub release, scan it on VirusTotal, or build from source. More details: [SmartScreen guide on the website](https://cybergems.org/download#smartscreen).
+
+</details>
+
+---
+
+## 🧭 Using the App
+
+CyberFeeds opens to your feed library; press `Alt+Shift+R` to show or hide it from anywhere.
+
+1. Click **Add Feed**, paste the URL of a blog or news site and check **Preview** before you subscribe.
+2. Repeat with a few sites, then group them into folders such as News, Tech and Hobbies.
+3. Each morning, open the **Unread** filter to see only what is new.
+
+On an empty library a welcome wizard sets the language, the theme and your first feeds; it can be reopened later from the settings. Everything is stored in a local SQLite database, so your library stays on your PC without an account.
+
+See [How Do You Use CyberFeeds?](https://github.com/CyberGems/CyberFeeds/wiki/How-Do-You-Use) for everyday examples and the full guides.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+- **Platform:** Windows (primary target), macOS, Linux
+- **Framework:** Electron 42 + React 19 + TypeScript
+- **Build:** electron-vite 5 (Vite 6)
+- **State:** Zustand 5
+- **Database:** better-sqlite3 (WAL mode)
+- **Virtualization:** TanStack Virtual
+- **Packaging:** electron-builder (NSIS)
+
+```
+src/
+├── main/                  Electron main process
+│   ├── index.ts           App initialization, window creation
+│   ├── ipc.ts             IPC channel handlers
+│   ├── db.ts              SQLite database layer
+│   ├── feed-parse.ts      Feed parsing with fallbacks
+│   ├── polling.ts         Background polling orchestration
+│   ├── tray.ts            System tray, shortcuts, context menu
+│   ├── notifications.ts   Custom notifier window
+│   ├── updater.ts         Auto-update lifecycle
+│   ├── opml.ts            OPML import/export
+│   └── workers/
+│       ├── feed-fetcher.worker.ts      Parallel feed fetching
+│       └── content-extractor.worker.ts Article content extraction
+├── preload/               Context bridge API
+│   └── index.ts           window.api exposure
+├── renderer/              React application
+│   ├── notifier/          Notification window React app
+│   └── src/
+│       ├── components/    UI components, including the text-selection flyout
+│       ├── hooks/         Custom React hooks
+│       ├── store/         Zustand stores
+│       └── styles/        Global CSS and themes
+└── shared/                Isolated shared code
+    ├── types.ts           Shared TypeScript interfaces
+    ├── translations.ts    EN/ES UI strings
+    ├── reddit.ts          Reddit URL handling
+    └── youtube.ts         YouTube URL resolution and metadata
+```
+
+### Architecture Highlights
+
+- **Worker Threads**: Feed fetching and content extraction run in dedicated workers to keep the main process responsive
+- **Optimistic UI**: Article state updates immediately in the renderer, then syncs with the main process
+- **CSS Variable Resizing**: Column/row resizing updates DOM directly during drag (zero React re-renders)
+- **Context Bridge**: Strict preload API surface with no Node integration in renderer
+- **WAL Mode SQLite**: High-performance concurrent reads with write-ahead logging
+
+### Building from Source (Developers)
+
+Only needed if you want to work on CyberFeeds or build it yourself; regular users can skip this section.
+
+#### Prerequisites
+
+- [Node.js](https://nodejs.org/) 18+
+- [npm](https://www.npmjs.com/)
+
+#### Development
+
+```bash
+npm install
+npm run dev
+```
+
+> **Note:** The `postinstall` script automatically rebuilds `better-sqlite3` for the current Electron version.
+
+#### Build
+
+```bash
+npm run build          # Production build
+npm run build:win      # Windows installer
+npm run build:unpack   # Directory output (no installer)
+```
+
+#### Code Quality
+
+```bash
+npm run typecheck      # Type checking
+npm run lint           # Linting
+npm run format         # Formatting
+```
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Key | Action | Scope |
+|---|---|---|
+| `Alt+Shift+R` | Show/hide CyberFeeds | Global |
+| `Alt+M` / `F11` | Maximize / restore window | Application |
+| `Alt+F` / `F3` | Find text in current article | Article Reader |
+| `Ctrl+M` | Minimize window | Application |
+| `Alt+F4` | Close window | Application |
+| `Enter` / `Shift+Enter` | Next / previous search match | Find Bar |
+| `Escape` | Close panel or search bar | Application |
+
+Additional shortcuts (Notifications, Settings, Fetch Now) are configurable in Settings → Keyboard.
+
+---
+
+## ❤️ Donate
+
+**CyberFeeds** is 100% free and open source. If it helps you, please consider [donating](https://cybergems.org/donate) or [starring the repo on GitHub](https://github.com/CyberGems/CyberFeeds) to support continued development. [Read the full story](https://cybergems.org/about/) behind the project. Thank you! 🙏
+
+<p align="center">
+  <a href="https://www.paypal.com/donate/?hosted_button_id=M4PY3UPJA5Y6Q"><img src="https://img.shields.io/badge/Donate-PayPal-0070BA?style=for-the-badge&logo=paypal" alt="Donate via PayPal" /></a>
+</p>
+
+<p align="center">
+  <a href="https://ko-fi.com/cybergems"><img src="https://img.shields.io/badge/Support_me_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support me on Ko-fi" /></a>
+</p>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/cybergems"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" /></a>
+</p>
+
+<div align="center">
+
+<details>
+<summary><b>Crypto donations (BTC, ETH, USDT, LTC): click to view addresses</b></summary>
+
+| Asset | Address | QR |
+|---|---|---|
+| **BTC** | <pre><code>bc1q5mxzz05nmvsheqzx7970euswta3fksxzcfzag4</code></pre> | <img src="resources/donate/qr-btc.png" width="90" height="90" alt="BTC QR" /> |
+| **ETH** | <pre><code>0x79b703Ec0f77493679Fcd280aF3b983E20c580B8</code></pre> | <img src="resources/donate/qr-eth.png" width="90" height="90" alt="ETH QR" /> |
+| **USDT (ERC20 / BEP20)** | <pre><code>0x79b703Ec0f77493679Fcd280aF3b983E20c580B8</code></pre> | <img src="resources/donate/qr-eth.png" width="90" height="90" alt="USDT QR" /> |
+| **USDT (TRC20)** | <pre><code>TSVbSk1HSyZ1NprCnAYiw56ECwXgH887mD</code></pre> | <img src="resources/donate/qr-usdt-tron.png" width="90" height="90" alt="USDT TRC20 QR" /> |
+| **LTC** | <pre><code>LWGnEHgcFCE2BRkzLnsdPDD8Y8ZeDK577X</code></pre> | <img src="resources/donate/qr-ltc.png" width="90" height="90" alt="LTC QR" /> |
+
+> ⚠️ Send only the selected asset on the indicated network. Using the wrong network will result in permanent loss of funds.
+
+</details>
+
+</div>
+
+---
+
+## 📄 License
+
+CyberFeeds is distributed under the terms of the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full license text.
+
+Copyright (C) 2026 CyberGems
+
+---
+
+## ❓ FAQ
+
+For frequently asked questions, troubleshooting guides, and detailed configuration instructions, visit the [FAQ](https://github.com/CyberGems/CyberFeeds/wiki/FAQ) or the [online documentation](https://cybergems.org/docs/cyberfeeds/FAQ).
+
+---
+
+<div align="center" style="background:#0D0F17; border:1px solid rgba(0,255,255,0.12); border-radius:12px; padding:28px 20px; margin-top:32px;">
+
+### Thanks for using CyberFeeds! 🎉
+
+Made by [**CyberGems**](https://cybergems.org)
+
+</div>
+<p align="center">
+  <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F&title=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows"><img src="https://img.shields.io/badge/Share_on_Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" alt="Share on Reddit" /></a>
+  &nbsp;<a href="https://twitter.com/intent/tweet?text=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows&url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_X-1DA1F2?style=for-the-badge&logo=x&logoColor=white" alt="Share on X" /></a>
+  &nbsp;<a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_Facebook-1877F2?style=for-the-badge&logo=facebook&logoColor=white" alt="Share on Facebook" /></a>
+  &nbsp;<a href="mailto:?subject=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows&body=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows%20https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_by_Email-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Share by Email" /></a>
+  &nbsp;<a href="https://t.me/share/url?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F&text=CyberFeeds%3A%20free%20%26%20open-source%20desktop%20tool%20for%20Windows"><img src="https://img.shields.io/badge/Share_on_Telegram-26A5E4?style=for-the-badge&logo=telegram&logoColor=white" alt="Share on Telegram" /></a>
+  &nbsp;<a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fcybergems.org%2Fapps%2Fcyberfeeds%2F"><img src="https://img.shields.io/badge/Share_on_LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Share on LinkedIn" /></a>
+</p>
+
+---
+
+## 🔗 See also
+
+More free, open-source, privacy-first apps from [**CyberGems**](https://github.com/CyberGems):
+
+| App | Description |
+|:---:|---|
+| 🕐&nbsp;[**CyberClock**](https://github.com/CyberGems/CyberClock#readme) | Desktop clock with analog & digital display, calendar, timer, stopwatch and relaxation module. |
+| 🚀&nbsp;[**CyberLauncher**](https://github.com/CyberGems/CyberLauncher#readme) | Windows application launcher with hot corners, scheduler, system monitor and integrated terminal. |
+| 💻&nbsp;[**CyberManager**](https://github.com/CyberGems/CyberManager#readme) | Lightweight, high-performance task manager, virtualized and NT-native, a powerful Task Manager alternative. |
+| 📝&nbsp;[**CyberNotes**](https://github.com/CyberGems/CyberNotes#readme) | Privacy-focused note-taking app with rich text, folders, tabs and bcrypt-protected local storage. |
+| ⚡&nbsp;[**CyberPaste**](https://github.com/CyberGems/CyberPaste#readme) | Privacy-first clipboard manager for text, code, images, HTML and files. |
+| 📸&nbsp;[**CyberSnap**](https://github.com/CyberGems/CyberSnap#readme) | Screen capture and annotation suite with vector tools, high-speed OCR, screen recording and color picker. |
+| ⭐&nbsp;[**CyberTray**](https://github.com/CyberGems/CyberTray#readme) | High-performance tray launcher with hotspots, system monitoring, process manager and PIN-protected file vault. |
+| 💫&nbsp;[**CyberViewer**](https://github.com/CyberGems/CyberViewer#readme) | Full-featured image viewer and editor engineered for casual and power users. |
+| 🛡️&nbsp;[**CyberWall**](https://github.com/CyberGems/CyberWall#readme) | User-friendly Windows firewall with real-time per-app rules powered by the WFP kernel engine. |
+
+➡️ **[Browse all apps at cybergems.org](https://cybergems.org)**
