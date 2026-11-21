@@ -603,13 +603,13 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
       <div className="divider" style={{ width: 1, height: 18, margin: '0 4px' }} />
 
       <div className="win-controls">
-        <Tooltip label={withShortcut(t.topBar.minimize, 'Ctrl+M')} placement="bottom">
+        <Tooltip label={withShortcut(t.topBar.minimize, 'Win+↓')} placement="bottom">
           <button className="win-btn" onClick={() => window.api.windowMinimize()}>
             <Minus size={13} />
           </button>
         </Tooltip>
         <Tooltip
-          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, 'Alt+M')}
+          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, 'Win+↑')}
           placement="bottom"
         >
           <button className="win-btn" onClick={() => window.api.windowMaximize()}>
