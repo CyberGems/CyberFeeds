@@ -367,7 +367,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
       return out
     }
     return [
-      { id: 'general', strings: grab((st) => st.general) },
+      { id: 'general', strings: grab((st) => [st.general, t.about.autoUpdates, t.about.autoUpdatesHint]) },
       { id: 'appearance', strings: grab((st) => [st.general.layout, st.general.theme, st.general.themes, st.fontSizes]) },
       { id: 'filters', strings: grab((st) => st.filters) },
       { id: 'notifications', strings: grab((st) => st.notifications) },
@@ -1678,6 +1678,23 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     </button>
                   )}
                 </label>
+                <div className="toggle" style={{ marginTop: 12, marginBottom: 0 }}>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={local.autoUpdate}
+                    aria-label={t.about.autoUpdates}
+                    aria-describedby="settings-update-notifications-desc"
+                    className={`toggle-track ${local.autoUpdate ? 'on' : ''}`}
+                    onClick={() => update({ autoUpdate: !local.autoUpdate })}
+                  >
+                    <span className="toggle-thumb" aria-hidden="true" />
+                  </button>
+                  <div>
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.about.autoUpdates}</div>
+                    <div id="settings-update-notifications-desc" style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.about.autoUpdatesHint}</div>
+                  </div>
+                </div>
               </div>
             </>
           )}

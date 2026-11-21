@@ -112,6 +112,7 @@ export function initUpdater(settings: AppSettings): void {
   // Silent check shortly after launch when auto-update is enabled.
   if (autoUpdateEnabled) {
     setTimeout(() => {
+      if (!autoUpdateEnabled) return
       autoUpdater.checkForUpdates().catch(() => {
         /* offline: ignore */
       })
