@@ -1691,8 +1691,8 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
                     <span className="toggle-thumb" aria-hidden="true" />
                   </button>
                   <div>
-                    <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{t.about.autoUpdates}</div>
-                    <div id="settings-update-notifications-desc" style={{ fontSize: 11, color: 'var(--text-muted)' }}>{t.about.autoUpdatesHint}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{t.about.autoUpdates}</div>
+                    <div id="settings-update-notifications-desc" style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{t.about.autoUpdatesHint}</div>
                   </div>
                 </div>
               </div>
