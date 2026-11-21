@@ -668,9 +668,9 @@ export const translations = {
       version: 'Version {version}',
       desc: 'Your personal RSS reader. Fast, private, and distraction-free.',
       maintenance: 'System & Updates',
-      autoUpdates: 'Automatic update checks',
+      autoUpdates: 'Update notifications',
       autoUpdatesHint:
-        'Silently checks on startup and every 6 hours. Downloading and installing always ask first.',
+        'Checks for new versions at startup and notifies you when one is available.',
       openFolder: 'Open data folder',
       checkUpdates: 'Check for updates',
       close: 'Close',
@@ -1634,9 +1634,9 @@ export const translations = {
       version: 'Versión {version}',
       desc: 'Tu lector de RSS personal. Rápido, privado y sin distracciones.',
       maintenance: 'Sistema y Actualizaciones',
-      autoUpdates: 'Comprobación automática de actualizaciones',
+      autoUpdates: 'Avisos de actualización',
       autoUpdatesHint:
-        'Comprueba en silencio al iniciar y cada 6 horas. Descargar e instalar siempre piden tu confirmación.',
+        'Busca nuevas versiones al iniciar y avisa si hay una disponible.',
       openFolder: 'Abrir carpeta de datos',
       checkUpdates: 'Buscar actualizaciones',
       close: 'Cerrar',
