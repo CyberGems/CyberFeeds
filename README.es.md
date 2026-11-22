@@ -295,10 +295,10 @@ npm run format         # Formato
 | Tecla | Acción | Ámbito |
 |---|---|---|
 | `Alt+Shift+R` | Mostrar/ocultar CyberFeeds | Global |
-| `Win+Arriba` | Maximizar / restaurar ventana | Windows |
+| `Win+Arriba` | Maximizar ventana | Windows |
 | `Alt+M` | Abrir el menú Más de la barra de título | Aplicación |
 | `Alt+F` / `F3` | Buscar texto en el artículo actual | Lector de artículos |
-| `Win+Abajo` | Minimizar ventana | Windows |
+| `Win+Abajo` | Restaurar una ventana maximizada / minimizar una normal | Windows |
 | `Alt+F4` | Cierra la app, incluso si la X está configurada para minimizar a la bandeja | Aplicación |
 | `Intro` / `Mayús+Intro` | Coincidencia siguiente / anterior | Barra de búsqueda |
 | `Escape` | Cierra el panel o la barra de búsqueda | Aplicación |
