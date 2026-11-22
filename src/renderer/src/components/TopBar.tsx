@@ -49,11 +49,11 @@ interface TopBarProps {
   onShowUpdate?: () => void
 }
 
-function withShortcut(label: string, shortcut: string): ReactNode {
+function withShortcut(label: string, shortcut?: string): ReactNode {
   return (
     <>
       <span>{label}</span>
-      <kbd className="tooltip-shortcut">{shortcut}</kbd>
+      {shortcut && <kbd className="tooltip-shortcut">{shortcut}</kbd>}
     </>
   )
 }
@@ -603,7 +603,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
       <div className="divider" style={{ width: 1, height: 18, margin: '0 4px' }} />
 
       <div className="win-controls">
-        <Tooltip label={withShortcut(t.topBar.minimize, 'Win+↓')} placement="bottom">
+        <Tooltip label={withShortcut(t.topBar.minimize, maximized ? undefined : 'Win+↓')} placement="bottom">
           <button className="win-btn" onClick={() => window.api.windowMinimize()}>
             <Minus size={13} />
           </button>
