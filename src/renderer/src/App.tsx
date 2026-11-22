@@ -170,6 +170,7 @@ export default function App(): JSX.Element {
     const offUpdates = window.api.onUpdateStatus((raw) => {
       const s = raw as UpdateStatus
       if (s.state === 'available') {
+        if (!useSettingsStore.getState().settings.autoUpdate) return
         const skipped = localStorage.getItem('cyberfeeds_skipped_update_version')
         if (skipped === s.version) {
           setUpdateStatus(null)
@@ -190,6 +191,12 @@ export default function App(): JSX.Element {
       offUpdates()
     }
   }, [])
+
+  useEffect(() => {
+    if (settings.autoUpdate) return
+    setUpdateStatus(current => current?.state === 'available' ? null : current)
+    setUpdateNoticeStatus(current => current?.state === 'available' ? null : current)
+  }, [settings.autoUpdate])
 
   // Keep the new-feed loading state visible while the first poll is in flight.
   // A timeout also handles feeds that respond successfully without any articles.

@@ -13,9 +13,12 @@ const isPortable = Boolean(process.env.PORTABLE_EXECUTABLE_DIR)
 let latestReleaseUrl: string | undefined
 
 let autoUpdateEnabled = false
-let manualCheck = false
+let manualChecks = 0
+let backgroundCheck: { requestedManually: boolean } | null = null
+let checkGeneration = 0
 
 export type UpdateStatus =
+  | { state: 'idle' }
   | { state: 'checking' }
   | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
   | { state: 'not-available'; version: string }
@@ -71,16 +74,35 @@ function broadcast(status: UpdateStatus): void {
   }
 }
 
+async function doCheckSilently(): Promise<void> {
+  if (!autoUpdateEnabled || backgroundCheck || manualChecks > 0) return
+  backgroundCheck = { requestedManually: false }
+  try {
+    await autoUpdater.checkForUpdates()
+  } catch { /* offline / rate-limit: ignore */ }
+  finally { backgroundCheck = null }
+}
+
 export function initUpdater(settings: AppSettings): void {
   autoUpdateEnabled = settings.autoUpdate
   // We manage download timing ourselves based on user confirmation.
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
 
-  autoUpdater.on('checking-for-update', () => broadcast({ state: 'checking' }))
+  autoUpdater.on('checking-for-update', () => {
+    checkGeneration++
+    broadcast({ state: 'checking' })
+  })
 
   autoUpdater.on('update-available', async (info) => {
+    const background = backgroundCheck
+    const generation = checkGeneration
     const details = await fetchReleaseDetails(info.version, info.releaseNotes)
+    if (generation !== checkGeneration) return
+    if (background && !background.requestedManually && !autoUpdateEnabled) {
+      broadcast({ state: 'idle' })
+      return
+    }
     latestReleaseUrl = details.url
     broadcast({
       state: 'available',
@@ -111,12 +133,7 @@ export function initUpdater(settings: AppSettings): void {
 
   // Silent check shortly after launch when auto-update is enabled.
   if (autoUpdateEnabled) {
-    setTimeout(() => {
-      if (!autoUpdateEnabled) return
-      autoUpdater.checkForUpdates().catch(() => {
-        /* offline: ignore */
-      })
-    }, 8000)
+    setTimeout(() => { void doCheckSilently() }, 8000)
   }
 }
 
@@ -126,7 +143,8 @@ export function setAutoUpdate(enabled: boolean): void {
 
 function registerUpdateIpc(): void {
   ipcMain.handle('update:check', async () => {
-    manualCheck = true
+    manualChecks++
+    if (backgroundCheck) backgroundCheck.requestedManually = true
     try {
       // Bound the check so a hung network request can't leave the renderer
       // spinning indefinitely, but allow enough time for a real check to finish.
@@ -151,7 +169,7 @@ function registerUpdateIpc(): void {
       console.error('[Updater] Check failed:', err)
       return { ok: false, error: String((err as Error)?.message || err) }
     } finally {
-      manualCheck = false
+      manualChecks--
     }
   })
 
@@ -187,5 +205,5 @@ function registerUpdateIpc(): void {
 
 // Exposed for potential logging hooks; referenced to satisfy noUnusedLocals.
 export function isManualCheck(): boolean {
-  return manualCheck
+  return manualChecks > 0
 }
