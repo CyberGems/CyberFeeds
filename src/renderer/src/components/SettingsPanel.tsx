@@ -315,6 +315,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
   const maintenanceCardRef = useRef<HTMLDivElement>(null)
   const closeAfterNameConfirmRef = useRef(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  // Bumped on every completed settings write so the separator pulse replays
+  // its animation on each save action (suite standard).
+  const [savePulse, setSavePulse] = useState(0)
   const [newPriorityInput, setNewPriorityInput] = useState('')
   const [newMuteInput, setNewMuteInput] = useState('')
   const [autoBackupsList, setAutoBackupsList] = useState<AutoBackupFileInfo[]>([])
@@ -699,9 +702,13 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
         clearTimeout(slowTimer)
         if (gen !== saveGen.current) return
         setSaveStatus('saved')
+        setSavePulse((p) => p + 1)
         if (feedbackTimer.current) clearTimeout(feedbackTimer.current)
         feedbackTimer.current = setTimeout(() => {
-          if (gen === saveGen.current) setSaveStatus('idle')
+          if (gen === saveGen.current) {
+            setSaveStatus('idle')
+            setSavePulse(0)
+          }
         }, 2200)
       } catch {
         clearTimeout(slowTimer)
@@ -1225,6 +1232,9 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             })}
           </div>
           <div className="settings-nav-footer">
+            {savePulse > 0 && (
+              <span key={savePulse} className="settings-save-separator-pulse" aria-hidden="true" />
+            )}
             <div
               aria-live="polite"
               className={`settings-save-status${statusVisible ? ' is-visible' : ''} ${statusClass}`.trim()}
@@ -1234,6 +1244,7 @@ export default function SettingsPanel({ onClose }: SettingsPanelProps): JSX.Elem
             </div>
             <button type="button" className="btn btn-secondary settings-nav-close" onClick={closePanel}>
               {t.settings.close}
+              <kbd className="modal-key">Esc</kbd>
             </button>
           </div>
         </aside>

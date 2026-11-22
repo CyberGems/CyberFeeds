@@ -2896,10 +2896,11 @@ mark.reader-search-match.reader-search-active {
   box-shadow: none;
 }
 .settings-nav-footer {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-top: 10px;
+  padding-top: 12px;
   margin-top: 8px;
   border-top: 1px solid var(--border-muted);
 }
@@ -2926,13 +2927,13 @@ mark.reader-search-match.reader-search-active {
     transform 0.28s ease;
 }
 .settings-save-status.is-visible {
-  max-height: 20px;
-  padding-bottom: 8px;
+  max-height: 26px;
+  padding-bottom: 12px;
   opacity: 1;
   transform: translateY(0);
 }
 .settings-save-status.is-saved {
-  color: var(--accent);
+  color: var(--green);
 }
 .settings-save-status.is-error {
   color: var(--red);
@@ -2949,6 +2950,35 @@ mark.reader-search-match.reader-search-active {
   .settings-save-status {
     transition: none;
     transform: none;
+  }
+}
+/* Suite-standard save flash: the nav-footer hairline pulses green on each
+   completed settings write (replayed per save via remount in SettingsPanel). */
+.settings-save-separator-pulse {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--green) 85%, transparent),
+    transparent
+  );
+  box-shadow: 0 0 8px color-mix(in srgb, var(--green) 45%, transparent);
+  animation: settingsSeparatorPulse 1.4s ease-out forwards;
+}
+@keyframes settingsSeparatorPulse {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 .settings-nav-close {
