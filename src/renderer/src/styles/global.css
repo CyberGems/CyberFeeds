@@ -2911,7 +2911,8 @@ mark.reader-search-match.reader-search-active {
   gap: 7px;
   min-height: 0;
   max-height: 0;
-  padding: 0 4px;
+  /* Horizontal padding leaves room for the LED's glow inside the clipped box. */
+  padding: 0 12px;
   overflow: hidden;
   font-size: 11px;
   font-weight: 700;
@@ -2922,18 +2923,20 @@ mark.reader-search-match.reader-search-active {
   transform: translateY(3px);
   transition:
     max-height 0.28s ease,
+    padding-top 0.28s ease,
     padding-bottom 0.28s ease,
     opacity 0.2s ease,
     transform 0.28s ease;
 }
 .settings-save-status.is-visible {
-  max-height: 26px;
-  padding-bottom: 12px;
+  max-height: 38px;
+  padding-top: 4px;
+  padding-bottom: 16px;
   opacity: 1;
   transform: translateY(0);
 }
 .settings-save-status.is-saved {
-  color: var(--green);
+  color: var(--text-muted);
 }
 .settings-save-status.is-error {
   color: var(--red);
@@ -2945,6 +2948,11 @@ mark.reader-search-match.reader-search-active {
   background: currentColor;
   box-shadow: 0 0 8px currentColor;
   flex-shrink: 0;
+}
+/* Saved: neutral label with a green LED, like the other suite apps. */
+.settings-save-status.is-saved .settings-save-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--green) 70%, transparent);
 }
 @media (prefers-reduced-motion: reduce) {
   .settings-save-status {
@@ -2988,6 +2996,11 @@ mark.reader-search-match.reader-search-active {
   letter-spacing: 0.06em;
   font-weight: 700;
   font-size: 12px;
+}
+/* The keycap keeps its own casing ("Esc"), unaffected by the button label. */
+.settings-nav-close .modal-key {
+  text-transform: none;
+  letter-spacing: normal;
 }
 .settings-app-footer {
   flex-shrink: 0;
