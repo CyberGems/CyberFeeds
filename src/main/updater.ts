@@ -4,9 +4,8 @@ import type { AppSettings } from '../shared/types'
 
 /**
  * Update lifecycle wired to electron-updater, surfaced to the renderer via
- * `update:*` IPC channels. Auto-download is gated on the `autoUpdate` setting:
- * when off, an available update is reported but not fetched until the user
- * triggers it from the About modal.
+ * `update:*` IPC channels. The setting controls background checks, while
+ * downloads and installation are initiated by the user.
  */
 
 const isPortable = Boolean(process.env.PORTABLE_EXECUTABLE_DIR)
@@ -15,7 +14,6 @@ let latestReleaseUrl: string | undefined
 let autoUpdateEnabled = false
 let manualChecks = 0
 let backgroundCheck: { requestedManually: boolean } | null = null
-let checkGeneration = 0
 
 export type UpdateStatus =
   | { state: 'idle' }
@@ -26,11 +24,23 @@ export type UpdateStatus =
   | { state: 'downloaded'; version: string }
   | { state: 'error'; message: string }
 
-async function fetchReleaseDetails(
+let currentStatus: UpdateStatus = { state: 'idle' }
+
+function releaseDetailsFromFeed(
   version: string,
   rawNotes?: string | null | Array<{ version: string; note: string | null }>
+): { notes?: string; url: string } {
+  const url = `https://github.com/CyberGems/CyberFeeds/releases/tag/v${version}`
+  const notes = Array.isArray(rawNotes)
+    ? rawNotes.map((release) => release.note).filter(Boolean).join('\n\n')
+    : rawNotes?.trim()
+  return { notes: notes || undefined, url }
+}
+
+async function fetchReleaseDetails(
+  version: string,
+  fallback: { notes?: string; url: string }
 ): Promise<{ notes?: string; url: string }> {
-  const defaultUrl = `https://github.com/CyberGems/CyberFeeds/releases/tag/v${version}`
 
   try {
     const res = await fetch(
@@ -47,7 +57,7 @@ async function fetchReleaseDetails(
       if (typeof data?.body === 'string' && data.body.trim().length > 0) {
         return {
           notes: data.body,
-          url: typeof data?.html_url === 'string' ? data.html_url : defaultUrl
+          url: typeof data?.html_url === 'string' ? data.html_url : fallback.url
         }
       }
     }
@@ -55,20 +65,11 @@ async function fetchReleaseDetails(
     console.warn('[Updater] Could not fetch release notes from GitHub API:', err)
   }
 
-  let existingNotes: string | undefined
-  if (typeof rawNotes === 'string' && rawNotes.trim().length > 0) {
-    existingNotes = rawNotes.trim()
-  } else if (Array.isArray(rawNotes)) {
-    existingNotes = rawNotes
-      .map((r) => r.note)
-      .filter((n): n is string => Boolean(n))
-      .join('\n\n')
-  }
-
-  return { notes: existingNotes, url: defaultUrl }
+  return fallback
 }
 
 function broadcast(status: UpdateStatus): void {
+  currentStatus = status
   for (const win of BrowserWindow.getAllWindows()) {
     win.webContents.send('update:status', status)
   }
@@ -89,27 +90,33 @@ export function initUpdater(settings: AppSettings): void {
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
 
-  autoUpdater.on('checking-for-update', () => {
-    checkGeneration++
-    broadcast({ state: 'checking' })
-  })
+  autoUpdater.on('checking-for-update', () => broadcast({ state: 'checking' }))
 
   autoUpdater.on('update-available', async (info) => {
     const background = backgroundCheck
-    const generation = checkGeneration
-    const details = await fetchReleaseDetails(info.version, info.releaseNotes)
-    if (generation !== checkGeneration) return
     if (background && !background.requestedManually && !autoUpdateEnabled) {
       broadcast({ state: 'idle' })
       return
     }
+    const details = releaseDetailsFromFeed(info.version, info.releaseNotes)
     latestReleaseUrl = details.url
-    broadcast({
+    const available: UpdateStatus = {
       state: 'available',
       version: info.version,
       releaseNotes: details.notes,
       releaseUrl: details.url
-    })
+    }
+    broadcast(available)
+
+    const enriched = await fetchReleaseDetails(info.version, details)
+    if (
+      enriched !== details &&
+      currentStatus === available &&
+      (!background || background.requestedManually || autoUpdateEnabled)
+    ) {
+      latestReleaseUrl = enriched.url
+      broadcast({ ...available, releaseNotes: enriched.notes, releaseUrl: enriched.url })
+    }
   })
 
   autoUpdater.on('update-not-available', (info) => {
@@ -148,19 +155,18 @@ function registerUpdateIpc(): void {
     try {
       // Bound the check so a hung network request can't leave the renderer
       // spinning indefinitely, but allow enough time for a real check to finish.
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Update check timed out')), 20000)
       })
-      const result = (await Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])) as any
-      const ver = result?.updateInfo?.version
-      let details: { notes?: string; url?: string } | undefined
-      if (ver) {
-        details = await fetchReleaseDetails(ver, result?.updateInfo?.releaseNotes)
-        latestReleaseUrl = details.url
-      }
+      const result = await Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])
+      const version = result?.updateInfo.version
+      const details = result?.isUpdateAvailable && version
+        ? releaseDetailsFromFeed(version, result.updateInfo.releaseNotes)
+        : undefined
       return {
         ok: true,
-        version: ver,
+        version,
+        available: result?.isUpdateAvailable,
         releaseNotes: details?.notes,
         releaseUrl: details?.url,
         isPortable

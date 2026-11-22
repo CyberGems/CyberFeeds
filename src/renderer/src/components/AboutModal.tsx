@@ -76,11 +76,13 @@ export default function AboutModal(): JSX.Element {
         setStatus({ state: 'error', message: res?.error || 'Update check failed' })
         return
       }
-      setStatus(prev =>
-        prev.state === 'checking'
-          ? { state: 'not-available', version: res.version || appVersion }
-          : prev
-      )
+      setStatus(prev => {
+        if (prev.state !== 'checking') return prev
+        if (res.available && res.version) {
+          return { state: 'available', version: res.version, releaseNotes: res.releaseNotes, releaseUrl: res.releaseUrl }
+        }
+        return { state: 'not-available', version: res.version || appVersion }
+      })
     } catch (e) {
       setStatus({ state: 'error', message: String((e as Error)?.message || e) })
     }
