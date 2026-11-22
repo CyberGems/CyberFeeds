@@ -609,7 +609,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
           </button>
         </Tooltip>
         <Tooltip
-          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, 'Win+↑')}
+          label={withShortcut(maximized ? t.topBar.restore : t.topBar.maximize, maximized ? 'Win+↓' : 'Win+↑')}
           placement="bottom"
         >
           <button className="win-btn" onClick={() => window.api.windowMaximize()}>
