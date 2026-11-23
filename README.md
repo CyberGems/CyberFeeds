@@ -348,6 +348,8 @@ Additional shortcuts (Notifications, Settings, Fetch Now) are configurable in Se
 
 CyberFeeds is distributed under the terms of the GNU General Public License v3.0. See [LICENSE](LICENSE) for the full license text.
 
+This project uses AI coding assistants. See [AI disclosure](AI-DISCLOSURE.md).
+
 Copyright (C) 2026 CyberGems
 
 ---
