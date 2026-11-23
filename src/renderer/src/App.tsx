@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useRef, useState } from 'react'
 import { useFeedsStore } from './store/feeds.store'
 import { useArticlesStore } from './store/articles.store'
 import { useUIStore } from './store/ui.store'
@@ -28,19 +28,13 @@ import CloseDialog from './components/CloseDialog'
 import OnboardingWizard from './components/OnboardingWizard'
 import Tooltip from './components/Tooltip'
 import TextContextMenu from './components/TextContextMenu'
-import { UpdateNotificationModal, ActiveUpdateStatus } from './components/UpdateNotificationModal'
+import { UpdateNotificationModal } from './components/UpdateNotificationModal'
 import { CleanupBanner } from './components/CleanupBanner'
 import { interfaceScaleToZoomFactor } from '@shared/interface-scale'
 import { getReceivedAt } from '@shared/notification-time'
+import type { PendingUpdate } from '@shared/update'
 
-export type UpdateStatus =
-  | { state: 'checking' }
-  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
-  | { state: 'not-available'; version: string }
-  | { state: 'downloading'; version?: string; percent: number }
-  | { state: 'downloaded'; version: string }
-  | { state: 'error'; message: string }
-
+const SKIPPED_UPDATE_KEY = 'cyberfeeds_skipped_update_version'
 const ARTICLE_LIST_MIN_WIDTH = 180
 const ARTICLE_VIEWER_MIN_WIDTH = 250
 const RESIZE_HANDLE_WIDTH = 4
@@ -105,12 +99,51 @@ export default function App(): JSX.Element {
   }, [closePanel])
   const dismissSettings = useOverlayDismiss(handleCloseSettings)
 
-  const [updateStatus, setUpdateStatus] = useState<ActiveUpdateStatus | null>(null)
-  const [updateNoticeStatus, setUpdateNoticeStatus] = useState<ActiveUpdateStatus | null>(null)
-  const handleShowUpdate = useCallback(() => {
-    if (updateNoticeStatus) setUpdateStatus(updateNoticeStatus)
-  }, [updateNoticeStatus])
-  const [isPortable, setIsPortable] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState<PendingUpdate | null>(null)
+  const [manualUpdateVersion, setManualUpdateVersion] = useState<string | null>(null)
+  const [hiddenUpdateStage, setHiddenUpdateStage] = useState<string | null>(null)
+  const [skippedUpdateVersion, setSkippedUpdateVersion] = useState(() => {
+    try {
+      return localStorage.getItem(SKIPPED_UPDATE_KEY)
+    } catch {
+      return null
+    }
+  })
+  const noticeRef = useRef<HTMLDivElement | null>(null)
+  const focusNextNotice = useRef(false)
+  const noticeTrigger = useRef<HTMLElement | null>(null)
+  const updateVersion = updateStatus?.release.version
+  const updateNoticeStatus = updateVersion && (
+    updateVersion === manualUpdateVersion ||
+    (bootReady && settings.autoUpdate && updateVersion !== skippedUpdateVersion)
+  ) ? updateStatus : null
+  const stage = updateStatus?.state === 'installing' ? 'downloaded' : updateStatus?.state
+  const updateStage = updateNoticeStatus ? `${updateVersion}:${stage}` : null
+
+  const attachNotice = useCallback((notice: HTMLDivElement | null) => {
+    noticeRef.current = notice
+    if (notice && focusNextNotice.current) {
+      focusNextNotice.current = false
+      notice.focus()
+    }
+  }, [])
+
+  const handleShowUpdate = useCallback((version?: string) => {
+    if (version) setManualUpdateVersion(version)
+    setHiddenUpdateStage(null)
+    const active = document.activeElement
+    if (active instanceof HTMLElement && !noticeRef.current?.contains(active)) {
+      noticeTrigger.current = active
+    }
+    if (noticeRef.current) noticeRef.current.focus()
+    else focusNextNotice.current = true
+  }, [])
+
+  const dismissUpdate = () => {
+    setHiddenUpdateStage(updateStage)
+    noticeTrigger.current?.focus()
+    noticeTrigger.current = null
+  }
   const [showCloseDialog, setShowCloseDialog] = useState(false)
 
   // ── Resize hooks — MUST be at top level, before any conditionals ──────────
@@ -160,43 +193,25 @@ export default function App(): JSX.Element {
       }
     }).catch(() => {})
 
-    // Detect portable mode
-    window.api.getVersions?.().then((v: any) => {
-      if (v?.isPortable) {
-        setIsPortable(true)
-      }
-    }).catch(() => {})
-
-    const offUpdates = window.api.onUpdateStatus((raw) => {
-      const s = raw as UpdateStatus
-      if (s.state === 'available') {
-        if (!useSettingsStore.getState().settings.autoUpdate) return
-        const skipped = localStorage.getItem('cyberfeeds_skipped_update_version')
-        if (skipped === s.version) {
-          setUpdateStatus(null)
-          setUpdateNoticeStatus(null)
-          return
-        }
-        setUpdateNoticeStatus(s)
-        setUpdateStatus(s)
-      } else if (s.state === 'downloading' || s.state === 'downloaded') {
-        setUpdateNoticeStatus(s)
-        setUpdateStatus(s)
-      } else {
-        setUpdateStatus(null)
-        setUpdateNoticeStatus(null)
-      }
-    })
-    return () => {
-      offUpdates()
-    }
   }, [])
 
   useEffect(() => {
-    if (settings.autoUpdate) return
-    setUpdateStatus(current => current?.state === 'available' ? null : current)
-    setUpdateNoticeStatus(current => current?.state === 'available' ? null : current)
-  }, [settings.autoUpdate])
+    let active = true
+    let receivedEvent = false
+    const unsubscribe = window.api.onUpdateStatus((status) => {
+      receivedEvent = true
+      setUpdateStatus(status)
+      setManualUpdateVersion((version) => version === status?.release.version ? version : null)
+      if (!status) setHiddenUpdateStage(null)
+    })
+    void window.api.getUpdateStatus().then((snapshot) => {
+      if (active && !receivedEvent) setUpdateStatus(snapshot)
+    }).catch((error) => console.warn('[Updater] Could not read the update status:', error))
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [])
 
   // Keep the new-feed loading state visible while the first poll is in flight.
   // A timeout also handles feeds that respond successfully without any articles.
@@ -569,7 +584,7 @@ export default function App(): JSX.Element {
 
       if (e.key === 'Escape') {
         if (useUIStore.getState().topbarMenuOpen || document.querySelector('[data-text-context-menu]')) return
-        if (e.target instanceof Element && e.target.closest('.form-select:open, [data-article-search-area]')) return
+        if (e.target instanceof Element && e.target.closest('.form-select:open, [data-article-search-area], .update-notification-modal')) return
         if (e.target instanceof HTMLInputElement && e.target.hasAttribute('data-notification-search') && e.target.value) return
         if (activePanel) {
           if (activePanel === 'settings') {
@@ -652,8 +667,8 @@ export default function App(): JSX.Element {
         />
       )}
       <TopBar
-        updateVersion={updateNoticeStatus?.version}
-        onShowUpdate={handleShowUpdate}
+        updateVersion={updateNoticeStatus?.release.version}
+        onShowUpdate={() => handleShowUpdate()}
       />
       {cleanupNotice && (
         <CleanupBanner notice={cleanupNotice} onDismiss={dismissCleanupNotice} />
@@ -710,42 +725,36 @@ export default function App(): JSX.Element {
       {activePanel === 'editFeed' && <EditFeedModal />}
       {activePanel === 'addFolder' && <AddFolderModal />}
       {activePanel === 'editFolder' && <EditFolderModal />}
-      {activePanel === 'about' && <AboutModal />}
+      {activePanel === 'about' && <AboutModal onUpdateAvailable={handleShowUpdate} />}
       {activePanel === 'doctor' && <DoctorPanel />}
 
       {/* Rich Notification Modal for Updates */}
-      {updateStatus && (
+      {updateNoticeStatus && updateStage !== hiddenUpdateStage && (
         <UpdateNotificationModal
-          status={updateStatus}
-          isPortable={isPortable}
-          onClose={() => setUpdateStatus(null)}
+          status={updateNoticeStatus}
+          noticeRef={attachNotice}
+          onClose={dismissUpdate}
           onSkip={(version) => {
             try {
-              localStorage.setItem('cyberfeeds_skipped_update_version', version)
-            } catch {
-              /* ignore */
+              localStorage.setItem(SKIPPED_UPDATE_KEY, version)
+            } catch (error) {
+              console.warn('[Updater] Could not save the skipped version:', error)
             }
-            setUpdateStatus(null)
-            setUpdateNoticeStatus(null)
+            setSkippedUpdateVersion(version)
+            setManualUpdateVersion(null)
+            dismissUpdate()
           }}
-          onDownload={async () => {
-            const currentVer = updateStatus.version
-            try {
-              localStorage.removeItem('cyberfeeds_skipped_update_version')
-            } catch {
-              /* ignore */
+          onDownload={(version) => {
+            if (skippedUpdateVersion === version) {
+              try {
+                localStorage.removeItem(SKIPPED_UPDATE_KEY)
+              } catch (error) {
+                console.warn('[Updater] Could not clear the skipped version:', error)
+              }
+              setSkippedUpdateVersion(null)
             }
-            const downloadingStatus: ActiveUpdateStatus = {
-              state: 'downloading',
-              version: currentVer,
-              percent: 0
-            }
-            setUpdateNoticeStatus(downloadingStatus)
-            setUpdateStatus(downloadingStatus)
-            await window.api.downloadUpdate()
-          }}
-          onInstall={() => {
-            window.api.installUpdate()
+            setManualUpdateVersion(version)
+            return window.api.downloadUpdate(version)
           }}
         />
       )}

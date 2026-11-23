@@ -59,6 +59,7 @@ a {
   --bg-1: #eceff6;
   --bg-2: #d6dae5;
   --bg-3: #cad0de;
+  --update-notice-bg: #faf8f4;
   --border: #c4cbd8;
   --border-muted: #d4d9e4;
   --text-primary: #1a1a1a;
@@ -3919,27 +3920,17 @@ input[type="radio"] {
   color: var(--green);
   border-color: color-mix(in srgb, var(--green) 40%, transparent);
 }
-.about-auto-update {
-  display: flex;
-  align-items: center;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  margin: 0;
-  gap: 8px;
-  justify-content: center;
-  padding: 2px 0 0;
-  cursor: pointer;
-}
-.about-auto-update:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-.about-auto-update > span:last-child {
+.about-check-status {
+  text-align: center;
   font-size: 12px;
   color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.about-check-status.available {
+  color: var(--accent);
+}
+.about-check-status.latest {
+  color: var(--green);
 }
 .suite-app-btn {
   background: transparent !important;
@@ -5093,8 +5084,10 @@ input[type="radio"] {
   right: 24px;
   z-index: 9999;
   width: 500px;
-  max-width: calc(100vw - 32px);
-  background: var(--bg-1);
+  max-width: calc(100% - 48px);
+  max-height: calc(100% - 48px);
+  overflow: auto;
+  background: var(--update-notice-bg, var(--bg-1));
   border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45), 0 0 16px var(--accent-subtle);
   border-radius: 12px;
@@ -5103,6 +5096,17 @@ input[type="radio"] {
   flex-direction: column;
   gap: 11px;
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.update-notification-modal:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.update-notification-close {
+  flex: none;
+  width: 26px;
+  height: 26px;
 }
 
 .update-notification-header {
@@ -5126,6 +5130,7 @@ input[type="radio"] {
 }
 
 .update-notification-title-group {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -5133,6 +5138,7 @@ input[type="radio"] {
 }
 
 .update-notification-title {
+  margin: 0;
   font-weight: 600;
   font-size: 13px;
   color: var(--text-primary);
@@ -5185,18 +5191,21 @@ input[type="radio"] {
 }
 
 .update-changelog-header {
+  margin: 0;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .update-changelog-list {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  max-height: 220px;
+  max-height: 120px;
+  margin: 0;
+  padding-left: 0;
   overflow-y: auto;
   padding-right: 4px;
   scrollbar-width: thin;
@@ -5229,6 +5238,7 @@ input[type="radio"] {
   font-size: 11.5px;
   color: var(--text-secondary);
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .update-changelog-mainitem {
@@ -5263,46 +5273,65 @@ input[type="radio"] {
 .update-notification-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 2px;
   gap: 8px;
   width: 100%;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
-.update-notification-footer-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.update-notification-btn {
-  white-space: nowrap !important;
-  font-size: 11.5px !important;
-  min-height: 32px !important;
-  height: 32px !important;
-  padding: 6px 12px !important;
-  display: inline-flex;
-  align-items: center;
+.update-notification-footer .update-notification-btn {
+  font-size: 12px;
+  min-height: 32px;
+  height: auto;
+  padding: 6px 10px;
+  white-space: normal;
   gap: 5px;
-  flex-shrink: 0;
+}
+
+.update-notification-hint,
+.update-notification-error,
+.update-progress {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.update-notification-error {
+  color: var(--text-primary);
+}
+
+.update-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .update-progress-track {
+  display: block;
   width: 100%;
   height: 6px;
+  appearance: none;
+  border: 0;
   background: var(--bg-3);
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
 }
 
-.update-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), #38bdf8);
+.update-progress-track::-webkit-progress-bar {
+  background: var(--bg-3);
+}
+
+.update-progress-track::-webkit-progress-value {
+  background: var(--accent);
   border-radius: 999px;
-  transition: width 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .update-notification-modal { animation: none; }
 }
 
 /* ─── Article Filter Chips Bar ─────────────────────────────────────────── */

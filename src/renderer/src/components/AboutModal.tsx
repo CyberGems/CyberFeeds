@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, type MouseEvent } from 'react'
 import {
-  X, RefreshCw, Download, CheckCircle2,
+  X, RefreshCw,
   Bug, Tag, ClipboardCopy, Check, Gem, BookOpen, Heart, Github
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
@@ -39,15 +39,7 @@ type AppVersions = {
   isPortable?: boolean
 }
 
-type UpdateStatus =
-  | { state: 'idle' }
-  | { state: 'checking' }
-  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
-  | { state: 'not-available'; version: string }
-  | { state: 'downloading'; percent: number }
-  | { state: 'downloaded'; version: string }
-  | { state: 'error'; message: string }
-  | { state: 'restarting' }
+type CheckStatus = 'idle' | 'checking' | 'available' | 'latest' | 'error'
 
 function platformLabel(platform: string): string {
   if (platform === 'win32') return 'Windows'
@@ -56,12 +48,15 @@ function platformLabel(platform: string): string {
   return platform
 }
 
-export default function AboutModal(): JSX.Element {
+export default function AboutModal({
+  onUpdateAvailable
+}: {
+  onUpdateAvailable: (version: string) => void
+}): JSX.Element {
   const { closePanel, aboutAutoCheck, setAboutAutoCheck } = useUIStore()
-  const { settings, update } = useSettingsStore()
+  const showSuitePromo = useSettingsStore((state) => state.settings.showSuitePromo)
   const [versions, setVersions] = useState<AppVersions | null>(null)
-  const [status, setStatus] = useState<UpdateStatus>({ state: 'idle' })
-  const [isRestarting, setIsRestarting] = useState(false)
+  const [status, setStatus] = useState<CheckStatus>('idle')
   const [diagCopied, setDiagCopied] = useState(false)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { t, language } = useTranslation()
@@ -69,30 +64,26 @@ export default function AboutModal(): JSX.Element {
   const appVersion = versions?.app || ''
 
   const handleCheck = useCallback(async (): Promise<void> => {
-    setStatus({ state: 'checking' })
+    setStatus('checking')
     try {
-      const res = await window.api.checkForUpdates()
-      if (!res?.ok) {
-        setStatus({ state: 'error', message: res?.error || 'Update check failed' })
-        return
+      const result = await window.api.checkForUpdates()
+      if (!result.ok) {
+        setStatus('error')
+      } else if (result.available) {
+        setStatus('available')
+        onUpdateAvailable(result.version)
+      } else {
+        setStatus('latest')
       }
-      setStatus(prev => {
-        if (prev.state !== 'checking') return prev
-        if (res.available && res.version) {
-          return { state: 'available', version: res.version, releaseNotes: res.releaseNotes, releaseUrl: res.releaseUrl }
-        }
-        return { state: 'not-available', version: res.version || appVersion }
-      })
-    } catch (e) {
-      setStatus({ state: 'error', message: String((e as Error)?.message || e) })
+    } catch (error) {
+      console.warn('[Updater] Could not check for updates:', error)
+      setStatus('error')
     }
-  }, [appVersion])
+  }, [onUpdateAvailable])
 
   useEffect(() => {
     window.api.getVersions().then((v) => setVersions(v as AppVersions))
-    const off = window.api.onUpdateStatus((s) => setStatus(s as UpdateStatus))
     return () => {
-      off()
       if (copiedTimer.current) clearTimeout(copiedTimer.current)
     }
   }, [])
@@ -100,30 +91,9 @@ export default function AboutModal(): JSX.Element {
   useEffect(() => {
     if (aboutAutoCheck) {
       setAboutAutoCheck(false)
-      handleCheck()
+      void handleCheck()
     }
   }, [aboutAutoCheck, handleCheck, setAboutAutoCheck])
-
-  const handleDownload = async (): Promise<void> => {
-    if (versions?.isPortable) {
-      const url = status.state === 'available' && status.releaseUrl ? status.releaseUrl : `${REPO_URL}/releases`
-      window.api.openExternal(url)
-      return
-    }
-    try {
-      localStorage.removeItem('cyberfeeds_skipped_update_version')
-    } catch {
-      /* ignore */
-    }
-    setStatus({ state: 'downloading', percent: 0 })
-    await window.api.downloadUpdate()
-  }
-
-  const handleInstall = (): void => {
-    setIsRestarting(true)
-    setStatus({ state: 'restarting' })
-    window.api.installUpdate()
-  }
 
   const handleClose = (e?: MouseEvent): void => {
     e?.stopPropagation()
@@ -330,60 +300,26 @@ export default function AboutModal(): JSX.Element {
               <div style={{ height: 1, flex: 1, background: 'var(--accent-subtle)' }} />
             </div>
 
-            <UpdateStatusLine status={status} t={t} language={language} />
+            {status !== 'idle' && (
+              <div className={`about-check-status ${status}`} role="status">
+                {t.about.statuses[status]}
+              </div>
+            )}
 
             <div className="about-maintenance">
-              {status.state === 'available' ? (
-                <button type="button" className="btn btn-primary about-action-btn" onClick={handleDownload}>
-                  <Download size={14} />
-                  <span>{versions?.isPortable ? t.about.downloadPortableUpdate : t.about.downloadBtn}</span>
-                </button>
-              ) : status.state === 'downloaded' || (status as any).state === 'restarting' ? (
-                <button
-                  type="button"
-                  className="btn btn-primary about-action-btn"
-                  onClick={handleInstall}
-                  disabled={isRestarting}
-                >
-                  {isRestarting ? (
-                    <RefreshCw size={14} className="spin" />
-                  ) : (
-                    <CheckCircle2 size={14} />
-                  )}
-                  <span>{isRestarting ? t.about.statuses.restarting : t.about.installBtn}</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn btn-ghost about-action-btn"
-                  onClick={handleCheck}
-                  disabled={status.state === 'checking' || status.state === 'downloading'}
-                >
-                  <RefreshCw size={14} className={status.state === 'checking' ? 'spin' : ''} />
-                  <span>{t.about.checkUpdates}</span>
-                </button>
-              )}
-
               <button
                 type="button"
-                className="about-auto-update"
-                role="switch"
-                aria-checked={settings.autoUpdate}
-                aria-label={t.about.autoUpdates}
-                onClick={() => update({ autoUpdate: !settings.autoUpdate })}
+                className="btn btn-ghost about-action-btn"
+                onClick={handleCheck}
+                disabled={status === 'checking'}
               >
-                <span aria-hidden="true" className={`custom-switch ${settings.autoUpdate ? 'active' : ''}`} />
-                <span>{t.about.autoUpdates}</span>
+                <RefreshCw size={14} className={status === 'checking' ? 'spin' : ''} />
+                <span>{t.about.checkUpdates}</span>
               </button>
-              {t.about.autoUpdatesHint && (
-                <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4, marginTop: 2, padding: '0 4px' }}>
-                  {t.about.autoUpdatesHint}
-                </div>
-              )}
             </div>
           </div>
 
-          {settings.showSuitePromo !== false && (
+          {showSuitePromo !== false && (
             <div style={{ textAlign: 'left', marginTop: 12 }}>
               <div
                 style={{
@@ -525,85 +461,6 @@ export default function AboutModal(): JSX.Element {
           </div>
         </div>
       </div>
-    </div>
-  )
-}
-
-function UpdateStatusLine({
-  status,
-  t,
-  language
-}: {
-  status: UpdateStatus
-  t: any
-  language: string
-}): JSX.Element | null {
-  const [showDetails, setShowDetails] = useState(false)
-  if (status.state === 'idle') return null
-  if (status.state === 'downloading') {
-    return (
-      <div style={{ textAlign: 'center', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
-        {t.about.statuses.downloading.replace('{percent}', String(status.percent))}
-      </div>
-    )
-  }
-
-  const map: Record<string, { text: string; color: string }> = {
-    checking: { text: t.about.statuses.checking, color: 'var(--text-secondary)' },
-    'not-available': { text: t.about.statuses.latest, color: 'var(--green)' },
-    available: { text: t.about.statuses.available, color: 'var(--accent)' },
-    downloaded: { text: t.about.statuses.downloaded, color: 'var(--green)' },
-    restarting: { text: t.about.statuses.restarting, color: 'var(--accent)' },
-    error: { text: t.about.statuses.error, color: 'var(--text-secondary)' }
-  }
-  const info = map[status.state]
-  if (!info) return null
-
-  return (
-    <div style={{ textAlign: 'center', fontSize: 12, color: info.color, marginBottom: 10 }}>
-      <div>{info.text}</div>
-      {status.state === 'error' && (status as any).message && (
-        <div style={{ marginTop: 6 }}>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={() => setShowDetails(prev => !prev)}
-            style={{
-              padding: '2px 8px',
-              fontSize: 10.5,
-              color: 'var(--text-muted)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 4,
-              margin: '0 auto'
-            }}
-          >
-            {showDetails
-              ? (language === 'es' ? 'Ocultar detalles' : 'Hide details')
-              : (language === 'es' ? 'Detalles' : 'Details')}
-          </button>
-          {showDetails && (
-            <div
-              style={{
-                marginTop: 6,
-                padding: '6px 8px',
-                borderRadius: 6,
-                background: 'rgba(0, 0, 0, 0.25)',
-                border: '1px solid var(--border)',
-                fontFamily: 'monospace',
-                fontSize: 10,
-                color: 'var(--text-muted)',
-                wordBreak: 'break-word',
-                maxHeight: 80,
-                overflowY: 'auto',
-                textAlign: 'left'
-              }}
-            >
-              {(status as any).message}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

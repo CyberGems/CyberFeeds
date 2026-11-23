@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webFrame } from 'electron'
 import type { NotificationHistoryItem } from '../shared/types'
 import type { TextEditCommand } from '../shared/text-edit'
+import type { PendingUpdate, UpdateCheckResult } from '../shared/update'
 
 type NotificationBatchPayload = {
   items: NotificationHistoryItem[]
@@ -218,11 +219,13 @@ const api = {
   },
 
   // Updates
-  checkForUpdates: () => ipcRenderer.invoke('update:check'),
-  downloadUpdate: () => ipcRenderer.invoke('update:download'),
-  installUpdate: () => ipcRenderer.invoke('update:install'),
-  onUpdateStatus: (cb: (status: object) => void) => {
-    const handler = (_: unknown, status: object): void => cb(status)
+  checkForUpdates: (): Promise<UpdateCheckResult> => ipcRenderer.invoke('update:check'),
+  getUpdateStatus: (): Promise<PendingUpdate | null> => ipcRenderer.invoke('update:get-status'),
+  downloadUpdate: (version: string): Promise<void> => ipcRenderer.invoke('update:download', version),
+  cancelUpdateDownload: (version: string): Promise<void> => ipcRenderer.invoke('update:cancel-download', version),
+  installUpdate: (version: string): Promise<void> => ipcRenderer.invoke('update:install', version),
+  onUpdateStatus: (cb: (status: PendingUpdate | null) => void) => {
+    const handler = (_: unknown, status: PendingUpdate | null): void => cb(status)
     ipcRenderer.on('update:status', handler)
     return () => {
       ipcRenderer.removeListener('update:status', handler)

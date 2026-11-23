@@ -1,215 +1,213 @@
+import { BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { ipcMain, BrowserWindow, shell } from 'electron'
+import { CancellationToken } from 'builder-util-runtime'
+import type { ElectronHttpExecutor } from 'electron-updater/out/electronHttpExecutor'
 import type { AppSettings } from '../shared/types'
+import type { PendingUpdate, UpdateCheckResult } from '../shared/update'
 
-/**
- * Update lifecycle wired to electron-updater, surfaced to the renderer via
- * `update:*` IPC channels. The setting controls background checks, while
- * downloads and installation are initiated by the user.
- */
-
+const REPO_URL = 'https://github.com/CyberGems/CyberFeeds'
 const isPortable = Boolean(process.env.PORTABLE_EXECUTABLE_DIR)
-let latestReleaseUrl: string | undefined
-
 let autoUpdateEnabled = false
-let manualChecks = 0
-let backgroundCheck: { requestedManually: boolean } | null = null
+let currentStatus: PendingUpdate | null = null
+let activeCheck: Promise<UpdateCheckResult> | null = null
+let activeDownload: { token: CancellationToken; requests: Set<Electron.ClientRequest> } | null = null
 
-export type UpdateStatus =
-  | { state: 'idle' }
-  | { state: 'checking' }
-  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
-  | { state: 'not-available'; version: string }
-  | { state: 'downloading'; percent: number }
-  | { state: 'downloaded'; version: string }
-  | { state: 'error'; message: string }
-
-let currentStatus: UpdateStatus = { state: 'idle' }
-
-function releaseDetailsFromFeed(
-  version: string,
-  rawNotes?: string | null | Array<{ version: string; note: string | null }>
-): { notes?: string; url: string } {
-  const url = `https://github.com/CyberGems/CyberFeeds/releases/tag/v${version}`
-  const notes = Array.isArray(rawNotes)
-    ? rawNotes.map((release) => release.note).filter(Boolean).join('\n\n')
-    : rawNotes?.trim()
-  return { notes: notes || undefined, url }
-}
-
-async function fetchReleaseDetails(
-  version: string,
-  fallback: { notes?: string; url: string }
-): Promise<{ notes?: string; url: string }> {
-
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${version}`,
-      {
-        headers: {
-          'User-Agent': 'CyberFeeds',
-          Accept: 'application/vnd.github.v3+json'
-        }
-      }
-    )
-    if (res.ok) {
-      const data = await res.json()
-      if (typeof data?.body === 'string' && data.body.trim().length > 0) {
-        return {
-          notes: data.body,
-          url: typeof data?.html_url === 'string' ? data.html_url : fallback.url
-        }
-      }
-    }
-  } catch (err) {
-    console.warn('[Updater] Could not fetch release notes from GitHub API:', err)
-  }
-
-  return fallback
-}
-
-function broadcast(status: UpdateStatus): void {
+function broadcast(status: PendingUpdate | null): void {
   currentStatus = status
   for (const win of BrowserWindow.getAllWindows()) {
-    win.webContents.send('update:status', status)
+    if (!win.isDestroyed()) win.webContents.send('update:status', status)
   }
 }
 
-async function doCheckSilently(): Promise<void> {
-  if (!autoUpdateEnabled || backgroundCheck || manualChecks > 0) return
-  backgroundCheck = { requestedManually: false }
-  try {
-    await autoUpdater.checkForUpdates()
-  } catch { /* offline / rate-limit: ignore */ }
-  finally { backgroundCheck = null }
+function refreshReleaseNotes(version: string): void {
+  void fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${version}`, {
+    signal: AbortSignal.timeout(10000),
+    headers: { 'User-Agent': 'CyberFeeds', Accept: 'application/vnd.github.v3+json' }
+  })
+    .then(async (response) => {
+      if (!response.ok) return undefined
+      const release = await response.json()
+      return typeof release?.body === 'string' && release.body.trim() ? release.body : undefined
+    })
+    .catch((error) => {
+      console.warn('[Updater] Could not fetch release notes:', error)
+      return undefined
+    })
+    .then((notes) => {
+      if (currentStatus?.release.version === version) {
+        broadcast({
+          ...currentStatus,
+          release: {
+            ...currentStatus.release,
+            releaseNotes: notes ?? currentStatus.release.releaseNotes,
+            notesLoading: false
+          }
+        })
+      }
+    })
+}
+
+function checkForUpdates(): Promise<UpdateCheckResult> {
+  if (currentStatus && currentStatus.state !== 'available') {
+    return Promise.resolve({ ok: true, available: true, version: currentStatus.release.version })
+  }
+  if (activeCheck) return activeCheck
+
+  activeCheck = autoUpdater.checkForUpdates()
+    .then<UpdateCheckResult>((result) => {
+      if (!result?.isUpdateAvailable) {
+        broadcast(null)
+        return { ok: true, available: false }
+      }
+
+      const { version, releaseNotes } = result.updateInfo
+      if (currentStatus?.release.version !== version) {
+        const notes = Array.isArray(releaseNotes)
+          ? releaseNotes.map((release) => release.note?.trim()).filter(Boolean).join('\n\n')
+          : releaseNotes?.trim()
+        broadcast({
+          state: 'available',
+          release: {
+            version,
+            releaseUrl: `${REPO_URL}/releases/tag/v${version}`,
+            releaseNotes: notes || undefined,
+            notesLoading: !notes,
+            portableUrl: isPortable
+              ? `${REPO_URL}/releases/download/v${version}/CyberFeeds-${version}-portable.exe`
+              : undefined
+          }
+        })
+        // Some feeds supply an English summary in place of the bilingual body.
+        if (!notes || !/<details\b/i.test(notes)) refreshReleaseNotes(version)
+      }
+      return { ok: true, available: true, version }
+    })
+    .catch<UpdateCheckResult>((error) => {
+      console.warn('[Updater] Check failed:', error)
+      return { ok: false, error: error instanceof Error ? error.message : String(error) }
+    })
+    .finally(() => { activeCheck = null })
+
+  return activeCheck
+}
+
+function connectDownloadCancellation(): void {
+  const { httpExecutor } = autoUpdater as typeof autoUpdater & { httpExecutor: ElectronHttpExecutor }
+  const createRequest = httpExecutor.createRequest.bind(httpExecutor)
+  httpExecutor.createRequest = (options, onResponse) => {
+    const download = activeDownload
+    if (!download) return createRequest(options, onResponse)
+
+    // ClientRequest closes its writable side before the response has arrived.
+    // Track the request until the response ends so cancellation can stop the transfer.
+    const request = createRequest(options, (response: Electron.IncomingMessage) => {
+      response.once('end', forgetRequest)
+      response.once('error', forgetRequest)
+      onResponse(response)
+    })
+    function forgetRequest(): void { download?.requests.delete(request) }
+
+    download.requests.add(request)
+    request.once('abort', forgetRequest)
+    request.once('error', forgetRequest)
+    if (download.token.cancelled) request.abort()
+    return request
+  }
 }
 
 export function initUpdater(settings: AppSettings): void {
   autoUpdateEnabled = settings.autoUpdate
-  // We manage download timing ourselves based on user confirmation.
   autoUpdater.autoDownload = false
   autoUpdater.autoInstallOnAppQuit = false
+  connectDownloadCancellation()
 
-  autoUpdater.on('checking-for-update', () => broadcast({ state: 'checking' }))
+  autoUpdater.on('download-progress', ({ percent, transferred, total }) => {
+    if (currentStatus?.state === 'downloading' && !currentStatus.cancelling) {
+      broadcast({ ...currentStatus, percent: Math.round(percent), transferred, total })
+    }
+  })
+  autoUpdater.on('error', () => {
+    if (currentStatus?.state === 'installing') {
+      broadcast({ release: currentStatus.release, state: 'downloaded', installFailed: true })
+    }
+  })
 
-  autoUpdater.on('update-available', async (info) => {
-    const background = backgroundCheck
-    if (background && !background.requestedManually && !autoUpdateEnabled) {
-      broadcast({ state: 'idle' })
+  ipcMain.handle('update:get-status', () => currentStatus)
+  ipcMain.handle('update:check', async () => {
+    let timeout: ReturnType<typeof setTimeout> | undefined
+    try {
+      return await Promise.race([
+        checkForUpdates(),
+        new Promise<UpdateCheckResult>((resolve) => {
+          timeout = setTimeout(
+            () => resolve({ ok: false, error: 'Update check timed out' }),
+            20000
+          )
+        })
+      ])
+    } finally {
+      clearTimeout(timeout)
+    }
+  })
+
+  ipcMain.handle('update:download', async (_event, version: string) => {
+    // Let an in-flight check finish selecting its installer before validating the request.
+    await activeCheck
+    if (isPortable || currentStatus?.state !== 'available' || currentStatus.release.version !== version) {
       return
     }
-    const details = releaseDetailsFromFeed(info.version, info.releaseNotes)
-    latestReleaseUrl = details.url
-    const available: UpdateStatus = {
-      state: 'available',
-      version: info.version,
-      releaseNotes: details.notes,
-      releaseUrl: details.url
+
+    const token = new CancellationToken()
+    activeDownload = { token, requests: new Set() }
+    const { release } = currentStatus
+    broadcast({ release, state: 'downloading', percent: 0 })
+    try {
+      await autoUpdater.downloadUpdate(token)
+      broadcast({ release: currentStatus?.release ?? release, state: 'downloaded' })
+    } catch (error) {
+      if (!token.cancelled) console.error('[Updater] Download failed:', error)
+      broadcast({
+        release: currentStatus?.release ?? release,
+        state: 'available',
+        downloadFailed: !token.cancelled
+      })
+    } finally {
+      activeDownload = null
+      token.dispose()
     }
-    broadcast(available)
+  })
 
-    const enriched = await fetchReleaseDetails(info.version, details)
-    if (
-      enriched !== details &&
-      currentStatus === available &&
-      (!background || background.requestedManually || autoUpdateEnabled)
-    ) {
-      latestReleaseUrl = enriched.url
-      broadcast({ ...available, releaseNotes: enriched.notes, releaseUrl: enriched.url })
+  ipcMain.handle('update:cancel-download', (_event, version: string) => {
+    if (currentStatus?.state !== 'downloading' || currentStatus.release.version !== version || !activeDownload) {
+      return
+    }
+    broadcast({ ...currentStatus, cancelling: true })
+    // The updater rejects the promise without necessarily closing the HTTP response.
+    activeDownload.token.cancel()
+    for (const request of activeDownload.requests) request.abort()
+  })
+
+  ipcMain.handle('update:install', (_event, version: string) => {
+    if (isPortable || currentStatus?.state !== 'downloaded' || currentStatus.release.version !== version) {
+      return
+    }
+    const { release } = currentStatus
+    broadcast({ release, state: 'installing' })
+    try {
+      // The assisted NSIS installer relaunches CyberFeeds when applied silently.
+      autoUpdater.quitAndInstall(true, true)
+    } catch (error) {
+      console.error('[Updater] Installation failed:', error)
+      broadcast({ release, state: 'downloaded', installFailed: true })
     }
   })
 
-  autoUpdater.on('update-not-available', (info) => {
-    broadcast({ state: 'not-available', version: info.version })
-  })
-
-  autoUpdater.on('download-progress', (p) => {
-    broadcast({ state: 'downloading', percent: Math.round(p.percent) })
-  })
-
-  autoUpdater.on('update-downloaded', (info) => {
-    broadcast({ state: 'downloaded', version: info.version })
-  })
-
-  autoUpdater.on('error', (err) => {
-    // Suppress noise on a manual check that simply found nothing reachable.
-    broadcast({ state: 'error', message: String(err?.message || err) })
-  })
-
-  registerUpdateIpc()
-
-  // Silent check shortly after launch when auto-update is enabled.
-  if (autoUpdateEnabled) {
-    setTimeout(() => { void doCheckSilently() }, 8000)
-  }
+  // CyberFeeds offers an automatic check at startup.
+  setTimeout(() => {
+    if (autoUpdateEnabled) void checkForUpdates()
+  }, 8000)
 }
 
 export function setAutoUpdate(enabled: boolean): void {
   autoUpdateEnabled = enabled
-}
-
-function registerUpdateIpc(): void {
-  ipcMain.handle('update:check', async () => {
-    manualChecks++
-    if (backgroundCheck) backgroundCheck.requestedManually = true
-    try {
-      // Bound the check so a hung network request can't leave the renderer
-      // spinning indefinitely, but allow enough time for a real check to finish.
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Update check timed out')), 20000)
-      })
-      const result = await Promise.race([autoUpdater.checkForUpdates(), timeoutPromise])
-      const version = result?.updateInfo.version
-      const details = result?.isUpdateAvailable && version
-        ? releaseDetailsFromFeed(version, result.updateInfo.releaseNotes)
-        : undefined
-      return {
-        ok: true,
-        version,
-        available: result?.isUpdateAvailable,
-        releaseNotes: details?.notes,
-        releaseUrl: details?.url,
-        isPortable
-      }
-    } catch (err) {
-      console.error('[Updater] Check failed:', err)
-      return { ok: false, error: String((err as Error)?.message || err) }
-    } finally {
-      manualChecks--
-    }
-  })
-
-  ipcMain.handle('update:download', async () => {
-    if (isPortable) {
-      if (latestReleaseUrl) {
-        shell.openExternal(latestReleaseUrl)
-      }
-      return { ok: true, isPortable: true }
-    }
-    broadcast({ state: 'downloading', percent: 0 })
-    try {
-      await autoUpdater.downloadUpdate()
-      return { ok: true }
-    } catch (err) {
-      console.error('[Updater] Download failed:', err)
-      broadcast({ state: 'error', message: String((err as Error)?.message || err) })
-      return { ok: false, error: String((err as Error)?.message || err) }
-    }
-  })
-
-  ipcMain.handle('update:install', () => {
-    if (isPortable) {
-      if (latestReleaseUrl) {
-        shell.openExternal(latestReleaseUrl)
-      }
-      return
-    }
-    // Quit and install the downloaded update silently (unattended) with auto-relaunch.
-    autoUpdater.quitAndInstall(true, true)
-  })
-}
-
-// Exposed for potential logging hooks; referenced to satisfy noUnusedLocals.
-export function isManualCheck(): boolean {
-  return manualChecks > 0
 }

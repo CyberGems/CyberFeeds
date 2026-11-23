@@ -1,20 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Sparkles, Download, ExternalLink, SkipForward, RefreshCw, X } from 'lucide-react'
+import { Sparkles, Rocket, ExternalLink, RefreshCw, X } from 'lucide-react'
 import { useTranslation } from '../hooks/useTranslation'
 import Tooltip from './Tooltip'
-
-export type ActiveUpdateStatus =
-  | { state: 'available'; version: string; releaseNotes?: string; releaseUrl?: string }
-  | { state: 'downloading'; version?: string; percent: number }
-  | { state: 'downloaded'; version: string }
+import type { PendingUpdate } from '@shared/update'
 
 interface UpdateNotificationModalProps {
-  status: ActiveUpdateStatus
+  status: PendingUpdate
+  noticeRef: (notice: HTMLDivElement | null) => void
   onClose: () => void
   onSkip: (version: string) => void
-  onDownload: () => void
-  onInstall: () => void
-  isPortable?: boolean
+  onDownload: (version: string) => Promise<void>
 }
 
 interface ChangelogItem {
@@ -166,255 +161,209 @@ export function parseChangelogPeek(
 
 export function UpdateNotificationModal({
   status,
+  noticeRef,
   onClose,
   onSkip,
-  onDownload,
-  onInstall,
-  isPortable
+  onDownload
 }: UpdateNotificationModalProps): JSX.Element {
   const { t, language } = useTranslation()
-  const targetVersion = status.version || ''
-  const [installedVersion, setInstalledVersion] = useState<string>('')
+  const labels = t.updater
+  const { version, releaseUrl, releaseNotes, notesLoading, portableUrl } = status.release
+  const [installedVersion, setInstalledVersion] = useState('')
+  const [actionError, setActionError] = useState<{ state: PendingUpdate['state']; message: string } | null>(null)
 
-  const initialNotes = status.state === 'available' ? status.releaseNotes : undefined
-  const [fetchedNotes, setFetchedNotes] = useState<string | undefined>(undefined)
-  const [fetchedUrl, setFetchedUrl] = useState<string | undefined>(undefined)
-
-  const releaseNotes = initialNotes || fetchedNotes
-  const releaseUrl =
-    status.state === 'available' && status.releaseUrl
-      ? status.releaseUrl
-      : fetchedUrl || `https://github.com/CyberGems/CyberFeeds/releases/tag/v${targetVersion}`
-
-  // Fetch installed app version for side-by-side version indicator
   useEffect(() => {
-    window.api
-      ?.getVersions?.()
-      .then((v: any) => {
-        if (v?.app) setInstalledVersion(v.app)
-      })
-      .catch(() => {})
+    let active = true
+    void window.api.getVersions().then((versions) => {
+      if (active && typeof versions?.app === 'string') setInstalledVersion(versions.app)
+    }).catch((error) => console.warn('[Updater] Could not read the installed version:', error))
+    return () => { active = false }
   }, [])
-
-  // If initial release notes are missing or lack Spanish details when user is in ES,
-  // fetch full markdown from GitHub API
-  useEffect(() => {
-    if (status.state === 'available' && status.version) {
-      const needsFetch =
-        !status.releaseNotes ||
-        (language === 'es' && !status.releaseNotes.includes('<details>'))
-
-      if (needsFetch) {
-        fetch(`https://api.github.com/repos/CyberGems/CyberFeeds/releases/tags/v${status.version}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data?.body) setFetchedNotes(data.body)
-            if (data?.html_url) setFetchedUrl(data.html_url)
-          })
-          .catch(() => {})
-      }
-    }
-  }, [status, language])
 
   const parsedItems = useMemo(
     () => parseChangelogPeek(releaseNotes, language),
     [releaseNotes, language]
   )
+  const peekItems = parsedItems.slice(0, 4)
+  const remainingCount = parsedItems.length - peekItems.length
+  const title = {
+    available: labels.available,
+    downloading: status.state === 'downloading' && status.cancelling
+      ? labels.cancelling
+      : labels.downloading,
+    downloaded: labels.downloaded,
+    installing: labels.installing
+  }[status.state]
+  const downloading = status.state === 'downloading'
+  const installing = status.state === 'installing'
+  const failure =
+    (actionError?.state === status.state && actionError.message) ||
+    (status.state === 'available' && status.downloadFailed && labels.downloadFailed) ||
+    (status.state === 'downloaded' && status.installFailed && labels.installFailed)
 
-  const rawTitle =
-    status.state === 'available'
-      ? t.about.statuses.available
-      : status.state === 'downloading'
-        ? t.about.statuses.downloading.replace('… {percent}%', '…').replace('{percent}%', '')
-        : t.about.statuses.downloaded
+  const runAction = async (action: () => Promise<void>, message: string): Promise<void> => {
+    setActionError(null)
+    try {
+      await action()
+    } catch (error) {
+      console.error('[Updater] Could not complete the requested action:', error)
+      setActionError({ state: status.state, message })
+    }
+  }
 
-  // Clean trailing period so header doesn't render awkward sentence period before version tag
-  const titleText = rawTitle.replace(/\.$/, '')
+  const formatSize = (bytes: number): string =>
+    new Intl.NumberFormat(language, {
+      style: 'unit',
+      unit: 'megabyte',
+      maximumFractionDigits: 1
+    }).format(bytes / 1_000_000)
 
   return (
-    <div role="dialog" aria-label="Update notification" className="update-notification-modal">
-      {/* Header Row */}
+    <div
+      ref={noticeRef}
+      tabIndex={-1}
+      role="dialog"
+      aria-labelledby="update-notification-title"
+      className="update-notification-modal"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault()
+          event.stopPropagation()
+          if (!installing) onClose()
+        }
+      }}
+    >
       <div className="update-notification-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <div className="update-notification-icon">
-            <Sparkles size={15} />
-          </div>
-          <div>
-            <div className="update-notification-title-group">
-              <span className="update-notification-title">{titleText}</span>
-              <div className="update-notification-version-tags">
-                {installedVersion && (
-                  <Tooltip label={t.about.installedVersion} placement="top">
-                    <span className="update-notification-badge-current">
-                      v{installedVersion}
-                    </span>
-                  </Tooltip>
-                )}
-                {installedVersion && targetVersion && (
-                  <span className="update-notification-version-arrow">→</span>
-                )}
-                {targetVersion && (
-                  <Tooltip label={t.about.availableVersion} placement="top">
-                    <span className="update-notification-badge">
-                      v{targetVersion}
-                    </span>
-                  </Tooltip>
-                )}
-              </div>
-            </div>
+        <span className="update-notification-icon" aria-hidden="true">
+          {downloading || installing ? <RefreshCw size={15} className="spin" />
+            : status.state === 'downloaded' ? <Rocket size={15} /> : <Sparkles size={15} />}
+        </span>
+        <div className="update-notification-title-group">
+          <h2 className="update-notification-title" id="update-notification-title">{title}</h2>
+          <div className="update-notification-version-tags">
+            {installedVersion && (
+              <>
+                <span className="update-notification-badge-current" aria-label={labels.installedVersion.replace('{version}', installedVersion)}>
+                  v{installedVersion}
+                </span>
+                <span className="update-notification-version-arrow" aria-hidden="true">→</span>
+              </>
+            )}
+            <span className="update-notification-badge" aria-label={labels.availableVersion.replace('{version}', version)}>
+              v{version}
+            </span>
           </div>
         </div>
 
-        <Tooltip label={t.about.dismiss} placement="left">
+        <Tooltip label={downloading ? labels.background : labels.dismiss} placement="left">
           <button
             type="button"
-            className="btn btn-ghost btn-icon"
-            style={{ width: 24, height: 24, borderRadius: 6 }}
+            className="btn btn-ghost btn-icon update-notification-close"
             onClick={onClose}
-            aria-label={t.about.dismiss}
+            disabled={installing}
+            aria-label={downloading ? labels.background : labels.dismiss}
           >
-            <X size={13} />
+            <X size={14} aria-hidden="true" />
           </button>
         </Tooltip>
       </div>
 
-      {/* Body: Available State with Changelog Peek */}
-      {status.state === 'available' && (
-        <div className="update-changelog-box">
-          <div className="update-changelog-header">{t.about.whatsNew}</div>
+      <section className="update-changelog-box" aria-label={labels.whatsNew}>
+        <h3 className="update-changelog-header">{labels.whatsNew}</h3>
+        {peekItems.length ? (
+          <>
+            <ul className="update-changelog-list">
+              {peekItems.map((item, index) => (
+                <li
+                  key={index}
+                  className={`update-changelog-item ${item.isSubItem ? 'update-changelog-subitem' : 'update-changelog-mainitem'}`}
+                >
+                  {(item.isSubItem || !STARTS_WITH_EMOJI_REGEX.test(item.text)) && (
+                    <span className="update-changelog-bullet" aria-hidden="true">•</span>
+                  )}
+                  <span>{item.text}</span>
+                </li>
+              ))}
+            </ul>
+            {remainingCount > 0 && (
+              <p className="update-notification-hint">
+                {labels.moreInFullNotes.replace('{count}', String(remainingCount))}
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="update-notification-hint">
+            {notesLoading ? labels.notesLoading : labels.notesUnavailable}
+          </p>
+        )}
+      </section>
 
-          {parsedItems.length > 0 ? (
-            <div className="update-changelog-list">
-              {parsedItems.map((item, idx) => {
-                const hasLeadEmoji = STARTS_WITH_EMOJI_REGEX.test(item.text)
-                if (item.isSubItem) {
-                  return (
-                    <div key={idx} className="update-changelog-item update-changelog-subitem">
-                      <span className="update-changelog-bullet">•</span>
-                      <span style={{ wordBreak: 'break-word' }}>{item.text}</span>
-                    </div>
-                  )
-                }
-                return (
-                  <div key={idx} className="update-changelog-item update-changelog-mainitem">
-                    {!hasLeadEmoji && <span className="update-changelog-bullet">•</span>}
-                    <span style={{ wordBreak: 'break-word', fontWeight: 600 }}>{item.text}</span>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div style={{ fontSize: 11.5, color: 'var(--text-muted)', fontStyle: 'italic' }}>
-              {t.about.releasesTooltip}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Body: Downloading Progress State */}
-      {status.state === 'downloading' && (
-        <div style={{ padding: '4px 0' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontSize: 11,
-              marginBottom: 6
-            }}
-          >
-            <span style={{ color: 'var(--text-muted)' }}>{t.about.downloadBtn}...</span>
-            <span style={{ fontWeight: 700, color: 'var(--accent)', fontFamily: 'monospace' }}>
-              {status.percent}%
+      {downloading && (
+        <div className="update-progress">
+          <div className="update-progress-label">
+            <span id="update-progress-label">{labels.progress}</span>
+            <span>
+              {status.transferred !== undefined && status.total
+                ? `${formatSize(status.transferred)} / ${formatSize(status.total)}`
+                : `${status.percent}%`}
             </span>
           </div>
-          <div className="update-progress-track">
-            <div
-              className="update-progress-bar"
-              style={{
-                width: `${Math.max(2, Math.min(100, status.percent))}%`
-              }}
-            />
-          </div>
+          <progress className="update-progress-track" max={100} value={status.percent} aria-labelledby="update-progress-label" />
         </div>
       )}
 
-      {/* Body: Downloaded State */}
-      {status.state === 'downloaded' && (
-        <div style={{ fontSize: 11.5, color: 'var(--text-accent)', fontWeight: 500 }}>
-          {t.about.restartAndApply}
-        </div>
-      )}
+      {portableUrl && <p className="update-notification-hint">{labels.portableHint}</p>}
+      {failure && <p className="update-notification-error" role="alert">{failure}</p>}
 
-      {/* Action Footer */}
       <div className="update-notification-footer">
-        {status.state === 'available' ? (
+        {status.state === 'available' && (
           <>
-            <div className="update-notification-footer-actions">
-              <button
-                type="button"
-                className="btn btn-secondary update-notification-btn"
-                onClick={() => window.api.openExternal(releaseUrl)}
-              >
-                <ExternalLink size={12} />
-                <span>{t.about.viewRelease}</span>
-              </button>
-
-              <button
-                type="button"
-                className="btn btn-secondary update-notification-btn"
-                onClick={() => onSkip(targetVersion)}
-              >
-                <SkipForward size={12} />
-                <span>{t.about.skipUpdate}</span>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              className="btn btn-primary update-notification-btn"
-              style={{ fontWeight: 600 }}
-              onClick={() => {
-                if (isPortable) {
-                  window.api.openExternal(releaseUrl)
-                  onClose()
-                } else {
-                  onDownload()
-                }
-              }}
-            >
-              <Download size={13} />
-              <span>{isPortable ? t.about.downloadPortableUpdate : t.about.downloadBtn}</span>
+            <button type="button" className="btn btn-ghost update-notification-btn" onClick={() => {
+              void runAction(() => window.api.openExternal(releaseUrl), labels.openFailed)
+            }}>
+              <ExternalLink size={13} aria-hidden="true" />
+              {labels.viewRelease}
+            </button>
+            <button type="button" className="btn btn-ghost update-notification-btn" onClick={() => onSkip(version)}>
+              {labels.skip}
+            </button>
+            <button type="button" className="btn btn-ghost update-notification-btn" onClick={onClose}>
+              {labels.later}
+            </button>
+            <button type="button" className="btn btn-primary update-notification-btn" onClick={() => {
+              if (portableUrl) {
+                void runAction(() => window.api.openExternal(portableUrl), labels.openFailed)
+              } else {
+                void runAction(() => onDownload(version), labels.downloadFailed)
+              }
+            }}>
+              {portableUrl ? labels.downloadPortable : labels.updateNow}
             </button>
           </>
-        ) : status.state === 'downloading' ? (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-            <button
-              type="button"
-              className="btn btn-secondary update-notification-btn"
-              onClick={onClose}
-            >
-              {t.about.dismiss}
+        )}
+        {downloading && (
+          <>
+            <button type="button" className="btn btn-ghost update-notification-btn" onClick={onClose}>
+              {labels.background}
             </button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%', gap: 6 }}>
-            <button
-              type="button"
-              className="btn btn-secondary update-notification-btn"
-              onClick={onClose}
-            >
-              {t.about.dismiss}
+            <button type="button" className="btn btn-secondary update-notification-btn" disabled={status.cancelling} onClick={() => {
+              void runAction(() => window.api.cancelUpdateDownload(version), labels.cancelFailed)
+            }}>
+              {labels.cancel}
             </button>
-            <button
-              type="button"
-              className="btn btn-primary update-notification-btn"
-              style={{ fontWeight: 600 }}
-              onClick={onInstall}
-            >
-              <RefreshCw size={13} />
-              <span>{t.about.installBtn}</span>
+          </>
+        )}
+        {status.state === 'downloaded' && (
+          <>
+            <button type="button" className="btn btn-ghost update-notification-btn" onClick={onClose}>
+              {labels.later}
             </button>
-          </div>
+            <button type="button" className="btn btn-primary update-notification-btn" onClick={() => {
+              void runAction(() => window.api.installUpdate(version), labels.installFailed)
+            }}>
+              {labels.restart}
+            </button>
+          </>
         )}
       </div>
     </div>
