@@ -25,7 +25,7 @@
 
 <div align="center">
 
-### Tus feeds RSS, canales de YouTube y comunidades de Reddit, en un lector rápido y privado que guarda todo en tu PC
+### Sigue sitios web, canales de YouTube y comunidades de Reddit en un lector tranquilo y privado.
 
 </div>
 

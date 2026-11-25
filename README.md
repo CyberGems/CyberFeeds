@@ -25,7 +25,7 @@
 
 <div align="center">
 
-### Your RSS feeds, YouTube channels and subreddits, in one fast, private reader that keeps everything on your PC
+### Follow websites, YouTube channels and Reddit communities in one calm, private reader.
 
 </div>
 
