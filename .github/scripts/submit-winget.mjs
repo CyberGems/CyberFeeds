@@ -11,8 +11,8 @@ const sourceRepository = 'CyberGems/CyberFeeds';
 const manifestNames = [
   `${packageId}.installer.yaml`, `${packageId}.locale.en-US.yaml`, `${packageId}.yaml`,
 ];
-const startMarker = '<!-- cybersnap-winget:start -->';
-const endMarker = '<!-- cybersnap-winget:end -->';
+const startMarker = '<!-- cyberfeeds-winget:start -->';
+const endMarker = '<!-- cyberfeeds-winget:end -->';
 const packageMention = /(?:^|[^A-Za-z0-9_.])CyberGems\.CyberFeeds(?=$|[^A-Za-z0-9_.])/;
 
 export function compareVersions(left, right) {
