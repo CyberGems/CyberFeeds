@@ -71,9 +71,15 @@ Estar al día con los sitios que de verdad te importan suele significar una doce
 
 ## 🖼️ Capturas
 
-<img src="./docs/screenshots/main-es.png" alt="Ventana de tres paneles de CyberFeeds con carpetas, fuentes, lista de artículos y lector abierto" />
+<p align="center">
+  <img src="./docs/screenshots/main-es.png" alt="Ventana de tres paneles de CyberFeeds con carpetas, fuentes, lista de artículos y lector abierto" />
+</p>
+<p align="center"><em>Vista oscura de tres paneles con carpetas y fuentes a la izquierda, artículos con tarjetas de vídeo al centro y un artículo completo abierto en el lector.</em></p>
 
-_Vista oscura de tres paneles con carpetas y fuentes a la izquierda, artículos con tarjetas de vídeo al centro y un artículo completo abierto en el lector._
+<p align="center">
+  <img src="./docs/screenshots/reader-es.png" alt="Vista de lector enfocado en un solo panel de CyberFeeds con barra de lectura limpia, tipografía clara y botón para obtener el artículo completo" />
+</p>
+<p align="center"><em>Modo de lectura enfocada en un solo panel que oculta la barra lateral y la lista de artículos.</em></p>
 
 ---
 

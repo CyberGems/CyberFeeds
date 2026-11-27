@@ -71,9 +71,15 @@ Keeping up with the sites you actually care about usually means a dozen open tab
 
 ## 🖼️ Screenshots
 
-<img src="./docs/screenshots/main-en.png" alt="CyberFeeds three-panel window with folders, sources, article list and open reader" />
+<p align="center">
+  <img src="./docs/screenshots/main-en.png" alt="CyberFeeds three-panel window with folders, sources, article list and open reader" />
+</p>
+<p align="center"><em>Three-panel dark view showing folders and sources on the left, articles with video cards in the center, and a full article open in the reader.</em></p>
 
-_Three-panel dark view showing folders and sources on the left, articles with video cards in the center, and a full article open in the reader._
+<p align="center">
+  <img src="./docs/screenshots/reader-en.png" alt="CyberFeeds distraction-free single-panel Focus Reader view with toolbar, clean article typography, and full-article fetch button" />
+</p>
+<p align="center"><em>Distraction-free single-panel Focus Reader hiding the sidebar and article list for focused reading.</em></p>
 
 ---
 
