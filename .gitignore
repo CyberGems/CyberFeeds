@@ -14,3 +14,7 @@ artifacts/
 
 # Local scratch
 scratch/
+
+# Frontend build output
+dist/
+out/
