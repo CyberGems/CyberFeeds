@@ -69,11 +69,11 @@ Keeping up with the sites you actually care about usually means a dozen open tab
 
 ---
 
-<!-- Screenshots: pending the bilingual EN/ES gallery in the capture plan at https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — replace the blockquote, keep this heading and the TOC entry. -->
-
 ## 🖼️ Screenshots
 
-> Coming soon...
+<img src="./docs/screenshots/main-en.png" alt="CyberFeeds three-panel window with folders, sources, article list and open reader" />
+
+_Three-panel dark view showing folders and sources on the left, articles with video cards in the center, and a full article open in the reader._
 
 ---
 

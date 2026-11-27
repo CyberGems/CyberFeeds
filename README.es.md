@@ -69,11 +69,11 @@ Estar al día con los sitios que de verdad te importan suele significar una doce
 
 ---
 
-<!-- Capturas: pendiente de la galería bilingüe ES/EN del plan en https://github.com/CyberGems/CyberGems.github.io/blob/main/docs/screenshots.md — sustituir la cita, conservar este título y su entrada en el índice. -->
-
 ## 🖼️ Capturas
 
-> Próximamente...
+<img src="./docs/screenshots/main-es.png" alt="Ventana de tres paneles de CyberFeeds con carpetas, fuentes, lista de artículos y lector abierto" />
+
+_Vista oscura de tres paneles con carpetas y fuentes a la izquierda, artículos con tarjetas de vídeo al centro y un artículo completo abierto en el lector._
 
 ---
 
