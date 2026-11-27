@@ -79,6 +79,8 @@ Elimina el parpadeo del menú de bandeja en aperturas repetidas y los saltos de 
 {{PORTABLE_HASH}}
 ```
 
+The checksums are also available as a downloadable [SHA256SUMS.txt](https://github.com/CyberGems/CyberFeeds/releases/download/{{VERSION}}/SHA256SUMS.txt).
+
 ---
 
 📜 **Full changelog:** browse every version in [CHANGELOG.md](https://github.com/CyberGems/CyberFeeds/blob/main/CHANGELOG.md).
