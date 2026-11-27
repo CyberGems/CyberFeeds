@@ -4,3 +4,13 @@ artifacts/
 
 # OS generated files
 .DS_Store
+
+# Logs
+*.log*
+
+# Diagnostics and caches
+*.tsbuildinfo
+.eslintcache
+
+# Local scratch
+scratch/
