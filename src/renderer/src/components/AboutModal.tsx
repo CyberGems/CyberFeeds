@@ -1,7 +1,8 @@
+import { useGitHubStar } from '../useGitHubStar';
 import { useState, useEffect, useRef, useCallback, type MouseEvent } from 'react'
 import {
   X, RefreshCw,
-  Bug, Tag, ClipboardCopy, Check, Gem, BookOpen, Heart, Github
+  Bug, Tag, ClipboardCopy, Check, Gem, BookOpen, Star, Heart, Github
 } from 'lucide-react'
 import { useUIStore } from '../store/ui.store'
 import { useSettingsStore } from '../store/settings.store'
@@ -60,6 +61,7 @@ export default function AboutModal({
   const [diagCopied, setDiagCopied] = useState(false)
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { t, language } = useTranslation()
+  const { giveStar, starState, starLabel } = useGitHubStar(() => window.api.starRepository(), language === 'es');
 
   const appVersion = versions?.app || ''
 
@@ -445,6 +447,17 @@ export default function AboutModal({
                 aria-label={t.about.releasesTooltip}
               >
                 <Tag size={14} />
+              </button>
+            </Tooltip>
+            <Tooltip label={starLabel} placement="top">
+              <button
+                type="button"
+                className="btn btn-ghost btn-icon"
+                style={{ width: 28, height: 28 }}
+                onClick={() => void giveStar()}
+                aria-label={starLabel} aria-busy={starState === 'busy'} disabled={starState === 'busy' || starState === 'starred'}
+              >
+                <Star size={14} fill={starState === 'starred' ? 'currentColor' : 'none'} />
               </button>
             </Tooltip>
             <Tooltip label={t.about.donateTooltip} placement="top">

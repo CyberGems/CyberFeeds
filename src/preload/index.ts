@@ -94,6 +94,7 @@ const api = {
 
   // Shell
   openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  starRepository: () => ipcRenderer.invoke('github:star'),
   copyImageToClipboard: (imageUrl: string) => ipcRenderer.invoke('clipboard:copyImage', imageUrl),
   copyImageAt: (x: number, y: number) => ipcRenderer.invoke('clipboard:copyImageAt', x, y),
   writeImageBuffer: (buffer: ArrayBuffer) =>
@@ -349,6 +350,7 @@ const api = {
     reportSize: (size: { width: number; height: number; prepared?: boolean }) =>
       ipcRenderer.invoke('tray:reportSize', size),
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+    starRepository: () => ipcRenderer.invoke('github:star'),
     onShow: (cb: (snapshot?: import('../shared/types').TrayMenuSnapshot) => void): (() => void) => {
       const handler = (_: unknown, snapshot?: import('../shared/types').TrayMenuSnapshot): void => cb(snapshot)
       ipcRenderer.on('tray:show', handler)

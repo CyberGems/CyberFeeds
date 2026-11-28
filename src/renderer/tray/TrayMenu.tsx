@@ -1,3 +1,4 @@
+import { githubStarLabels } from '../src/useGitHubStar'
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
@@ -16,6 +17,7 @@ import {
   Power,
   RefreshCw,
   ScrollText,
+  Star,
   Settings
 } from 'lucide-react'
 import { translations } from '../../shared/translations'
@@ -597,6 +599,18 @@ export function TrayMenu(): React.JSX.Element {
             <div className="tray-divider" />
 
             <div className="tray-group">
+              <button
+                type="button"
+                role="menuitem"
+                className="tray-item tray-sub-item"
+                onClick={() => void window.api.trayMenu.hide().then(() => window.api.trayMenu.starRepository()).catch(console.error)}
+              >
+                <span className="tray-item-icon">
+                  <Star size={14} />
+                </span>
+                <span className="tray-item-label">{githubStarLabels[snapshot.language === 'es' ? 'es' : 'en'].idle}</span>
+              </button>
+              <div className="tray-sub-sep" />
               <button
                 type="button"
                 role="menuitem"

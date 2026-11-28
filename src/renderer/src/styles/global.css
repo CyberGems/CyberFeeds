@@ -720,6 +720,7 @@ body {
 .topbar-menu-item:active {
   transform: scale(0.98);
 }
+.topbar-menu-item:focus-visible,
 .topbar-menu-item.keyboard-active:not(:hover) {
   background: var(--bg-2);
   color: var(--text-primary);

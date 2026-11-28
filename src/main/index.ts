@@ -1,4 +1,6 @@
-import { app, BrowserWindow, screen, ipcMain, session, dialog } from 'electron'
+import { createGitHubStarAction } from './github-star';
+import { app, BrowserWindow, screen, ipcMain, session, dialog, shell } from 'electron'
+
 import path from 'path'
 import fs from 'fs'
 import { is } from '@electron-toolkit/utils'
@@ -46,6 +48,9 @@ if (is.dev) {
 initLogger()
 
 // Single instance lock
+const starRepository = createGitHubStarAction(() => shell.openExternal('https://github.com/CyberGems/CyberFeeds'));
+ipcMain.handle('github:star', () => starRepository());
+
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {

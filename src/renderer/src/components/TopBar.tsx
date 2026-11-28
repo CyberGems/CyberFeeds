@@ -1,3 +1,4 @@
+import { githubStarLabels } from '../useGitHubStar'
 import { memo, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, type ReactNode } from 'react'
 import logoPng from '../../../../resources/icon.png'
 import {
@@ -18,6 +19,8 @@ import {
   Stethoscope,
   Book,
   HelpCircle,
+  Star,
+  ChevronRight,
   Tag,
   Globe,
   Info,
@@ -73,6 +76,8 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
   const { unreadCounts, feeds } = useFeedsStore()
   const [maximized, setMaximized] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [helpMenuOpen, setHelpMenuOpen] = useState(false)
+  useEffect(() => { if (!menuOpen) setHelpMenuOpen(false) }, [menuOpen])
   const [menuKeyboardIndex, setMenuKeyboardIndex] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
@@ -460,7 +465,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
         {menuOpen && (
           <div className="topbar-dropdown-menu" role="menu" onKeyDown={handleMenuKeyDown}>
             <button
-              className={`topbar-menu-item donate${menuKeyboardIndex === 0 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item donate"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -474,7 +479,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             <div className="topbar-menu-divider" />
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 1 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -486,7 +491,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             </button>
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 2 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={handleTogglePolling}
             >
@@ -495,7 +500,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             </button>
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 3 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -508,8 +513,19 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
 
             <div className="topbar-menu-divider" />
 
+            <button type="button" className="topbar-menu-item" role="menuitem"
+              aria-haspopup="menu" aria-expanded={helpMenuOpen} onClick={() => setHelpMenuOpen(!helpMenuOpen)}>
+              <HelpCircle size={14} /><span>{language === 'es' ? 'Ayuda' : 'Help'}</span><ChevronRight size={14} />
+            </button>
+            {helpMenuOpen && <div role="menu" aria-label={language === 'es' ? 'Ayuda' : 'Help'}
+              onKeyDown={(event) => { if (event.key === 'ArrowLeft') { setHelpMenuOpen(false); (event.currentTarget.previousElementSibling as HTMLButtonElement)?.focus() } }}>
+              <button type="button" className="topbar-menu-item" role="menuitem"
+                onClick={() => { setMenuOpen(false); void window.api.starRepository().catch(console.error) }}>
+                <Star size={14} /><span>{githubStarLabels[language === 'es' ? 'es' : 'en'].idle}</span>
+              </button>
+              <div className="topbar-menu-divider" />
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 4 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -521,7 +537,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             </button>
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 5 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -533,7 +549,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             </button>
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 6 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -545,7 +561,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             </button>
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 7 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -559,7 +575,7 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
             <div className="topbar-menu-divider" />
 
             <button
-              className={`topbar-menu-item${menuKeyboardIndex === 8 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
@@ -569,11 +585,12 @@ const TopBar = memo(function TopBar({ updateVersion, onShowUpdate }: TopBarProps
               <Info size={14} />
               <span>{t.topBar.moreMenu.about}</span>
             </button>
+            </div>}
 
             <div className="topbar-menu-divider" />
 
             <button
-              className={`topbar-menu-item exit${menuKeyboardIndex === 9 ? ' keyboard-active' : ''}`}
+              className="topbar-menu-item exit"
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false)
